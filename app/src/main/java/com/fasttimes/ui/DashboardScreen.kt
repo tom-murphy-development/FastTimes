@@ -5,11 +5,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -28,11 +28,11 @@ fun DashboardScreen(
     val stats = viewModel.stats.collectAsState().value
     val history = viewModel.history.collectAsState().value
     val coroutineScope = rememberCoroutineScope()
-    var elapsedTime by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(0L) }
+    var elapsedTime by remember { mutableStateOf(0L) }
 
     // Timer effect for current fast
     if (currentFast != null) {
-        androidx.compose.runtime.LaunchedEffect(currentFast.id, currentFast.startTime, currentFast.endTime) {
+        LaunchedEffect(currentFast.id, currentFast.startTime, currentFast.endTime) {
             while (currentFast.endTime == null) {
                 elapsedTime = System.currentTimeMillis() - currentFast.startTime
                 delay(1000)
@@ -112,8 +112,12 @@ fun DashboardScreen(
                     if (history.isEmpty()) {
                         Text("No fasts yet.")
                     } else {
+                        val sdf = SimpleDateFormat("HH:mm, dd MMM yyyy", Locale.getDefault())
                         history.take(3).forEach { fast ->
-                            Text("${'$'}{fast.startTime} - ${'$'}{fast.endTime ?: "Ongoing"}")
+                            val endTimeText = fast.endTime?.let { endTime ->
+                                sdf.format(Date(endTime))
+                            } ?: "In Progress"
+                            Text("${sdf.format(Date(fast.startTime))} - $endTimeText")
                         }
                     }
                 }

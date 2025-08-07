@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 // Placeholder for stats data class
 data class DashboardStats(
     val totalFasts: Int = 0,
-    val longestFast: Int = 0 // in hours
+    val longestFast: Long = 0L // Changed to Long to match duration calculation
 )
 
 @HiltViewModel
@@ -36,9 +36,8 @@ class DashboardViewModel @Inject constructor(
                 _stats.value = DashboardStats(
                     totalFasts = fasts.size,
                     longestFast = fasts.maxOfOrNull { fast ->
-                        val duration = (fast.endTime ?: System.currentTimeMillis()) - fast.startTime
-                        duration / 1000 / 60 / 60 // hours
-                    } ?: 0
+                        (fast.endTime ?: System.currentTimeMillis()) - fast.startTime
+                    }?.let { it / (1000 * 60 * 60) } ?: 0L // Convert to hours
                 )
             }
         }

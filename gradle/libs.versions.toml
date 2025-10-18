@@ -5,12 +5,12 @@ kotlin = "1.9.10"  # Matching Kotlin version with Compose compiler
 composeCompiler = "1.5.3"
 
 # AndroidX Core Libraries
-core-ktx = "1.12.0"
+core-ktx = "1.13.1"
 appcompat = "1.6.1"
-activity = "1.8.1"
+activity = "1.9.0"
 lifecycle = "2.6.2"
 compose-bom = "2023.10.01"
-navigation = "2.7.5"
+navigation = "2.7.7"
 
 # DI
 hilt = "2.50"
@@ -20,14 +20,14 @@ hilt-navigation = "1.2.0"
 room = "2.6.1"
 
 # Async
-coroutines = "1.7.3"
+coroutines = "1.8.1"
 
 # Testing
 junit = "4.13.2"
 androidx-test-ext = "1.1.5"
 espresso = "3.5.1"
-mockk = "1.13.8"
-turbine = "1.0.0"
+mockk = "1.13.10"
+turbine = "1.1.0"
 
 [libraries]
 # AndroidX

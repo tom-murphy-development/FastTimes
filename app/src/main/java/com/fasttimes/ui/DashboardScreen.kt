@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -155,7 +156,7 @@ fun DashboardScreenContent(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Current Fast", style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth())
+                    Text("Current Fast", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(16.dp))
                     AnimatedVisibility(
                         visible = currentFast != null,
@@ -226,7 +227,7 @@ fun DashboardScreenContent(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Choose a Profile", style = MaterialTheme.typography.titleMedium)
+                        Text("Choose a Profile", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                         Spacer(Modifier.height(16.dp))
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
@@ -249,7 +250,7 @@ fun DashboardScreenContent(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Stats")
+                    Text("Statistics", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                     Text("Total Fasts: ${stats.totalFasts}")
                     Text("Longest Fast: ${stats.longestFast}h")
                     Text("Total Fasting Time: ${stats.totalFastingTime}h")
@@ -261,7 +262,7 @@ fun DashboardScreenContent(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("History")
+                    Text("History", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                     if (history.isEmpty()) {
                         Text("No fasts yet.")
                     } else {

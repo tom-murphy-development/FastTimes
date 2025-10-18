@@ -16,7 +16,15 @@ import com.fasttimes.data.fast.FastRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,7 +47,7 @@ class DashboardViewModel @Inject constructor(
      * Exposes the list of selectable profiles (all except MANUAL).
      */
     val profiles: StateFlow<List<FastingProfile>> = flowOf(
-        FastingProfile.values().filter { it != FastingProfile.MANUAL }
+        FastingProfile.entries.filter { it != FastingProfile.MANUAL }
     ).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /**
@@ -113,7 +121,7 @@ class DashboardViewModel @Inject constructor(
      */
     val remainingTime: StateFlow<Long> = currentFast.flatMapLatest { fast ->
         if (fast != null && fast.profile != FastingProfile.MANUAL && fast.targetDuration != null) {
-            val targetEndTime = fast.startTime + fast.targetDuration!!
+            val targetEndTime = fast.startTime + fast.targetDuration
             flow {
                 while (true) {
                     val remaining = targetEndTime - System.currentTimeMillis()

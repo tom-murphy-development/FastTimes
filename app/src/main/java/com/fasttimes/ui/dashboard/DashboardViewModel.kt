@@ -23,7 +23,8 @@ import javax.inject.Inject
 // Placeholder for stats data class
 data class DashboardStats(
     val totalFasts: Int = 0,
-    val longestFast: Long = 0L // Changed to Long to match duration calculation
+    val longestFast: Long = 0L, // Changed to Long to match duration calculation
+    val totalFastingTime: Long = 0L // in hours
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -56,11 +57,16 @@ class DashboardViewModel @Inject constructor(
      */
     val stats: StateFlow<DashboardStats> = history
         .map { fasts ->
+            val totalTimeInMillis = fasts
+                .filter { it.endTime != null } // only completed fasts
+                .sumOf { it.endTime!! - it.startTime }
+
             DashboardStats(
                 totalFasts = fasts.size,
                 longestFast = fasts.maxOfOrNull { fast ->
                     (fast.endTime ?: System.currentTimeMillis()) - fast.startTime
-                }?.let { it / (1000 * 60 * 60) } ?: 0L // Convert to hours
+                }?.let { it / (1000 * 60 * 60) } ?: 0L, // Convert to hours
+                totalFastingTime = totalTimeInMillis / (1000 * 60 * 60) // Convert to hours
             )
         }
         .stateIn(

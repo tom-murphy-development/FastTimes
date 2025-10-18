@@ -1,6 +1,5 @@
 package com.fasttimes.ui
 
-import android.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -32,7 +31,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -179,9 +177,8 @@ fun DashboardScreenContent(
 
                                     Box(contentAlignment = Alignment.Center) {
                                         CircularProgressIndicator(
-                                            progress = { progress },
+                                            progress = progress,
                                             modifier = Modifier.size(200.dp),
-                                            color = ProgressIndicatorDefaults.circularColor,
                                             strokeWidth = 8.dp,
                                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                                             strokeCap = StrokeCap.Round,
@@ -255,6 +252,7 @@ fun DashboardScreenContent(
                     Text("Stats")
                     Text("Total Fasts: ${stats.totalFasts}")
                     Text("Longest Fast: ${stats.longestFast}h")
+                    Text("Total Fasting Time: ${stats.totalFastingTime}h")
                 }
             }
 
@@ -323,7 +321,7 @@ fun DashboardScreenPreview_NoFast() {
             currentFast = null,
             elapsedTime = 0,
             remainingTime = 0,
-            stats = DashboardStats(totalFasts = 10, longestFast = 20),
+            stats = DashboardStats(totalFasts = 10, longestFast = 20, totalFastingTime = 120),
             history = listOf(),
             profiles = listOf(FastingProfile.SIXTEEN_EIGHT, FastingProfile.FOURTEEN_TEN),
             modalProfile = null,
@@ -339,19 +337,13 @@ fun DashboardScreenPreview_NoFast() {
 
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun DashboardScreenDarkPreview_CountingDown() {
-    FastTimesTheme(darkTheme = true) {
+fun DashboardScreenPreview_ManualFast() {
+    FastTimesTheme {
         DashboardScreenContent(
-            currentFast = Fast(
-                id = 1,
-                startTime = System.currentTimeMillis() - 1000 * 60 * 60 * 4,
-                endTime = null,
-                profile = FastingProfile.SIXTEEN_EIGHT,
-                targetDuration = 1000 * 60 * 60 * 16
-            ),
-            elapsedTime = 1000 * 60 * 60 * 4,
-            remainingTime = 1000 * 60 * 60 * 12,
-            stats = DashboardStats(totalFasts = 10, longestFast = 20),
+            currentFast = Fast(startTime = System.currentTimeMillis() - 1000 * 60 * 60 * 3, profile = FastingProfile.MANUAL),
+            elapsedTime = 1000 * 60 * 60 * 3 + 1000 * 60 * 20 + 5,
+            remainingTime = 0,
+            stats = DashboardStats(totalFasts = 10, longestFast = 20, totalFastingTime = 120),
             history = listOf(),
             profiles = listOf(FastingProfile.SIXTEEN_EIGHT, FastingProfile.FOURTEEN_TEN),
             modalProfile = null,

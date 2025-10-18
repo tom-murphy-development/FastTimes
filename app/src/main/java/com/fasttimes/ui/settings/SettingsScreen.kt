@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fasttimes.data.Theme
 import com.fasttimes.ui.theme.FastTimesTheme
+import com.fasttimes.ui.settings.SettingsUiState.Success
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,7 +47,7 @@ fun SettingsScreen(
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -57,10 +58,13 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(it)
         ) {
-            ThemeSettingItem(
-                selectedTheme = uiState.selectedTheme,
-                onThemeChange = viewModel::onThemeChange
-            )
+            val currentUiState = uiState
+            if (currentUiState is Success) {
+                ThemeSettingItem(
+                    selectedTheme = currentUiState.selectedTheme,
+                    onThemeChange = viewModel::onThemeChange
+                )
+            }
         }
     }
 }

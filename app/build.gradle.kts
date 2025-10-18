@@ -71,6 +71,9 @@ dependencies {
     implementation(libs.androidx.appcompat)  // Will define this in versions catalog
     implementation(libs.androidx.activity.compose)
 
+    // Splash Screen
+    implementation(libs.androidx.splashscreen)
+
     // Compose UI
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)

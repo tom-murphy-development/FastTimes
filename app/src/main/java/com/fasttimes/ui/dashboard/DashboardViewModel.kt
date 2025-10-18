@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -24,6 +25,7 @@ data class DashboardStats(
     val longestFast: Long = 0L // Changed to Long to match duration calculation
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val fastRepository: FastRepository

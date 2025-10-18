@@ -12,9 +12,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class SettingsUiState(
-    val selectedTheme: Theme
-)
+sealed interface SettingsUiState {
+    data object Loading : SettingsUiState
+    data class Success(val selectedTheme: Theme) : SettingsUiState
+}
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -22,11 +23,11 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> = userPreferencesRepository.theme
-        .map { theme -> SettingsUiState(selectedTheme = theme) }
+        .map { theme -> SettingsUiState.Success(selectedTheme = theme) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = SettingsUiState(Theme.SYSTEM)
+            initialValue = SettingsUiState.Loading
         )
 
     fun onThemeChange(theme: Theme) {

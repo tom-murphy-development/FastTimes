@@ -1,49 +1,37 @@
 package com.fasttimes.ui.settings
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.fasttimes.data.Theme
+import com.fasttimes.data.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * Represents the available theme options in the app.
- */
-enum class Theme {
-    LIGHT,
-    DARK
-}
-
-/**
- * UI state for the Settings screen.
- *
- * @param selectedTheme The currently selected theme option.
- */
 data class SettingsUiState(
-    val selectedTheme: Theme = Theme.LIGHT
+    val selectedTheme: Theme
 )
 
-/**
- * ViewModel for the Settings screen.
- *
- * This class holds the business logic for user-configurable settings, such as theme preferences.
- */
 @HiltViewModel
-class SettingsViewModel @Inject constructor() : ViewModel() {
+class SettingsViewModel @Inject constructor(
+    private val userPreferencesRepository: UserPreferencesRepository
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SettingsUiState())
-    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<SettingsUiState> = userPreferencesRepository.theme
+        .map { theme -> SettingsUiState(selectedTheme = theme) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = SettingsUiState(Theme.SYSTEM)
+        )
 
-    /**
-     * Handles the theme change event from the UI.
-     *
-     * @param theme The new theme selected by the user.
-     */
     fun onThemeChange(theme: Theme) {
-        _uiState.update { currentState ->
-            currentState.copy(selectedTheme = theme)
+        viewModelScope.launch {
+            userPreferencesRepository.setTheme(theme)
         }
     }
 }

@@ -90,6 +90,9 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
+    // DataStore
+    implementation(libs.datastore.preferences)
+
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

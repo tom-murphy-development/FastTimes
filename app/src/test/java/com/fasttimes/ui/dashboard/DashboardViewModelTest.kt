@@ -42,18 +42,22 @@ class DashboardViewModelTest {
 
     @Test
     fun `stats are calculated correctly`() = runTest {
+        val now = System.currentTimeMillis()
+        val hour = 3_600_000L
         val fasts = listOf(
-            Fast(1, 1000, 2000, 1000, null),
-            Fast(2, 2000, 4000, 2000, null)
+            // A 2-hour fast
+            Fast(id = 1, startTime = now - (4 * hour), endTime = now - (2 * hour), targetDuration = 1000, notes = null),
+            // A 4-hour fast
+            Fast(id = 2, startTime = now - (10 * hour), endTime = now - (6 * hour), targetDuration = 2000, notes = null)
         )
         whenever(repository.getAllFasts()).thenReturn(flowOf(fasts))
         viewModel = DashboardViewModel(repository)
         viewModel.stats.test {
             val stats = awaitItem()
             assertEquals(2, stats.totalFasts)
-            assertEquals(0, stats.longestFast) // duration in hours (mocked data)
+            // Now we can properly assert the longest fast is 4 hours
+            assertEquals(4, stats.longestFast)
             cancelAndIgnoreRemainingEvents()
         }
     }
 }
-

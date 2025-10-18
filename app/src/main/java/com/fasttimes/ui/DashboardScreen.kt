@@ -1,61 +1,101 @@
+/**
+ * The main dashboard screen of the Fasting App.
+ *
+ * This screen displays the current fast status, historical data, and user statistics.
+ * It observes state from the [DashboardViewModel] and provides callbacks for user actions
+ * like starting or ending a fast.
+ *
+ * @param viewModel The ViewModel that provides state and handles business logic for this screen.
+ */
 package com.fasttimes.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.fasttimes.ui.dashboard.DashboardViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.fasttimes.ui.dashboard.DashboardViewModel
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    viewModel: DashboardViewModel = hiltViewModel()
+    viewModel: DashboardViewModel = hiltViewModel(),
+    onSettingsClick: () -> Unit
 ) {
-    val currentFast = viewModel.currentFast.collectAsState().value
-    val stats = viewModel.stats.collectAsState().value
-    val history = viewModel.history.collectAsState().value
-    val coroutineScope = rememberCoroutineScope()
-    var elapsedTime by remember { mutableStateOf(0L) }
+    val currentFast by viewModel.currentFast.collectAsState()
+    val elapsedTime by viewModel.elapsedTime.collectAsState()
+    val stats by viewModel.stats.collectAsState()
+    val history by viewModel.history.collectAsState()
 
-    // Timer effect for current fast
-    if (currentFast != null) {
-        LaunchedEffect(currentFast.id, currentFast.startTime, currentFast.endTime) {
-            while (currentFast.endTime == null) {
-                elapsedTime = System.currentTimeMillis() - currentFast.startTime
-                delay(1000)
-            }
-            if (currentFast.endTime != null) {
-                elapsedTime = currentFast.endTime - currentFast.startTime
+    val sdf = remember { SimpleDateFormat("HH:mm, dd MMM yyyy", Locale.getDefault()) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Fasting Dashboard") },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = currentFast == null,
+                enter = fadeIn(animationSpec = tween(500)),
+                exit = fadeOut(animationSpec = tween(500))
+            ) {
+                FloatingActionButton(
+                    onClick = { viewModel.startFast() },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = "Start Fast")
+                }
             }
         }
-    } else {
-        elapsedTime = 0L
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text(
-                text = "Fasting Dashboard",
-                style = MaterialTheme.typography.headlineMedium
-            )
             // Current Fast Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -68,18 +108,20 @@ fun DashboardScreen(
                         enter = fadeIn(animationSpec = tween(500)),
                         exit = fadeOut(animationSpec = tween(500))
                     ) {
-                        if (currentFast != null) {
-                            val sdf = SimpleDateFormat("HH:mm, dd MMM yyyy", Locale.getDefault())
-                            Text("Started: ${'$'}{sdf.format(Date(currentFast.startTime))}")
-                            Text("Elapsed: ${'$'}{formatElapsed(elapsedTime)}", style = MaterialTheme.typography.bodyLarge)
-                            Spacer(Modifier.height(8.dp))
-                            Button(
-                                onClick = { viewModel.endCurrentFast() },
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-                            ) {
-                                Icon(Icons.Filled.Stop, contentDescription = "End Fast")
-                                Spacer(Modifier.width(8.dp))
-                                Text("End Fast")
+                        currentFast?.let { fast ->
+                            // Use a Column to arrange children vertically and prevent overlap.
+                            Column {
+                                Text("Started: ${sdf.format(Date(fast.startTime))}")
+                                Text("Elapsed: ${formatElapsed(elapsedTime)}", style = MaterialTheme.typography.bodyLarge)
+                                Spacer(Modifier.height(8.dp))
+                                Button(
+                                    onClick = { viewModel.endCurrentFast() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                                ) {
+                                    Icon(Icons.Filled.Stop, contentDescription = "End Fast")
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("End Fast")
+                                }
                             }
                         }
                     }
@@ -92,17 +134,19 @@ fun DashboardScreen(
                     }
                 }
             }
+
             // Stats Section
             Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Stats")
-                    Text("Total Fasts: ${'$'}{stats.totalFasts}")
-                    Text("Longest Fast: ${'$'}{stats.longestFast}h")
+                    Text("Total Fasts: ${stats.totalFasts}")
+                    Text("Longest Fast: ${stats.longestFast}h")
                     // Add more stats as needed
                 }
             }
+
             // History Section
             Card(
                 modifier = Modifier.fillMaxWidth()
@@ -112,7 +156,6 @@ fun DashboardScreen(
                     if (history.isEmpty()) {
                         Text("No fasts yet.")
                     } else {
-                        val sdf = SimpleDateFormat("HH:mm, dd MMM yyyy", Locale.getDefault())
                         history.take(3).forEach { fast ->
                             val endTimeText = fast.endTime?.let { endTime ->
                                 sdf.format(Date(endTime))
@@ -123,25 +166,13 @@ fun DashboardScreen(
                 }
             }
         }
-        // FAB for starting a fast
-        AnimatedVisibility(
-            visible = currentFast == null,
-            modifier = Modifier.align(Alignment.BottomEnd),
-            enter = fadeIn(animationSpec = tween(500)),
-            exit = fadeOut(animationSpec = tween(500))
-        ) {
-            FloatingActionButton(
-                onClick = { viewModel.startFast() },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = "Start Fast")
-            }
-        }
     }
 }
 
-// Helper function for formatting elapsed time
-fun formatElapsed(ms: Long): String {
+/**
+ * Formats a duration in milliseconds into a HH:mm:ss string.
+ */
+private fun formatElapsed(ms: Long): String {
     val totalSeconds = ms / 1000
     val hours = totalSeconds / 3600
     val minutes = (totalSeconds % 3600) / 60

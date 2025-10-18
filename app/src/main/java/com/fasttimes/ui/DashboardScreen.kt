@@ -1,12 +1,3 @@
-/**
- * The main dashboard screen of the Fasting App.
- *
- * This screen displays the current fast status, historical data, and user statistics.
- * It observes state from the [DashboardViewModel] and provides callbacks for user actions
- * like starting or ending a fast.
- *
- * @param viewModel The ViewModel that provides state and handles business logic for this screen.
- */
 package com.fasttimes.ui
 
 import androidx.compose.animation.AnimatedVisibility
@@ -43,9 +34,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fasttimes.data.fast.Fast
+import com.fasttimes.ui.dashboard.DashboardStats
 import com.fasttimes.ui.dashboard.DashboardViewModel
+import com.fasttimes.ui.theme.FastTimesTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -61,6 +56,28 @@ fun DashboardScreen(
     val stats by viewModel.stats.collectAsState()
     val history by viewModel.history.collectAsState()
 
+    DashboardScreenContent(
+        currentFast = currentFast,
+        elapsedTime = elapsedTime,
+        stats = stats,
+        history = history,
+        onStartFast = viewModel::startFast,
+        onEndFast = viewModel::endCurrentFast,
+        onSettingsClick = onSettingsClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DashboardScreenContent(
+    currentFast: Fast?,
+    elapsedTime: Long,
+    stats: DashboardStats,
+    history: List<Fast>,
+    onStartFast: () -> Unit,
+    onEndFast: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
     val sdf = remember { SimpleDateFormat("HH:mm, dd MMM yyyy", Locale.getDefault()) }
 
     Scaffold(
@@ -81,7 +98,7 @@ fun DashboardScreen(
                 exit = fadeOut(animationSpec = tween(500))
             ) {
                 FloatingActionButton(
-                    onClick = { viewModel.startFast() },
+                    onClick = onStartFast,
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = "Start Fast")
@@ -115,7 +132,7 @@ fun DashboardScreen(
                                 Text("Elapsed: ${formatElapsed(elapsedTime)}", style = MaterialTheme.typography.bodyLarge)
                                 Spacer(Modifier.height(8.dp))
                                 Button(
-                                    onClick = { viewModel.endCurrentFast() },
+                                    onClick = onEndFast,
                                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                                 ) {
                                     Icon(Icons.Filled.Stop, contentDescription = "End Fast")
@@ -178,4 +195,48 @@ private fun formatElapsed(ms: Long): String {
     val minutes = (totalSeconds % 3600) / 60
     val seconds = totalSeconds % 60
     return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardScreenPreview() {
+    FastTimesTheme {
+        DashboardScreenContent(
+            currentFast = null,
+            elapsedTime = 0,
+            stats = DashboardStats(totalFasts = 10, longestFast = 20),
+            history = listOf(
+                Fast(
+                    id = 1,
+                    startTime = System.currentTimeMillis() - 1000 * 60 * 60 * 24,
+                    endTime = System.currentTimeMillis() - 1000 * 60 * 60 * 8,
+                    targetDuration = 16 * 60 * 60 * 1000
+                )
+            ),
+            onStartFast = {},
+            onEndFast = {},
+            onSettingsClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun DashboardScreenDarkPreview() {
+    FastTimesTheme(darkTheme = true) {
+        DashboardScreenContent(
+            currentFast = Fast(
+                id = 1,
+                startTime = System.currentTimeMillis() - 1000 * 60 * 60 * 4,
+                endTime = null,
+                targetDuration = 16 * 60 * 60 * 1000
+            ),
+            elapsedTime = 1000 * 60 * 60 * 4 + 1000 * 60 * 30 + 15,
+            stats = DashboardStats(totalFasts = 10, longestFast = 20),
+            history = listOf(),
+            onStartFast = {},
+            onEndFast = {},
+            onSettingsClick = {}
+        )
+    }
 }

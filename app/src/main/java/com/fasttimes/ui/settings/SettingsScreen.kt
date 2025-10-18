@@ -25,10 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fasttimes.data.Theme
+import com.fasttimes.ui.theme.FastTimesTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,5 +98,40 @@ fun ThemeSettingItem(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsScreenPreview() {
+    FastTimesTheme {
+        // This preview uses the default hiltViewModel, which doesn't work in previews.
+        // The screen will render, but interactions might not work as expected.
+        // For a more robust preview, a fake ViewModel could be provided.
+        SettingsScreen(onNavigateUp = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsScreenDarkPreview() {
+    FastTimesTheme(darkTheme = true) {
+        SettingsScreen(onNavigateUp = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ThemeSettingItemPreview() {
+    FastTimesTheme {
+        ThemeSettingItem(selectedTheme = Theme.LIGHT, onThemeChange = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ThemeSettingItemDarkPreview() {
+    FastTimesTheme(darkTheme = true) {
+        ThemeSettingItem(selectedTheme = Theme.DARK, onThemeChange = {})
     }
 }

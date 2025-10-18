@@ -1,10 +1,12 @@
 package com.fasttimes.ui
 
+import android.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -23,11 +26,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -152,7 +158,7 @@ fun DashboardScreenContent(
             ) {
                 Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Current Fast", style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(16.dp))
                     AnimatedVisibility(
                         visible = currentFast != null,
                         enter = fadeIn(animationSpec = tween(500)),
@@ -163,10 +169,37 @@ fun DashboardScreenContent(
                                 if (fast.profile == FastingProfile.MANUAL) {
                                     Text("Elapsed: ${formatDuration(elapsedTime)}", style = MaterialTheme.typography.displaySmall)
                                 } else {
-                                    Text("${fast.profile.displayName} Profile", style = MaterialTheme.typography.titleMedium)
-                                    Text("Time Remaining: ${formatDuration(remainingTime)}", style = MaterialTheme.typography.displaySmall)
+                                    val progress = remember(fast.targetDuration, remainingTime) {
+                                        if (fast.targetDuration != null && fast.targetDuration > 0) {
+                                            1f - (remainingTime.toFloat() / fast.targetDuration.toFloat())
+                                        } else {
+                                            0f
+                                        }
+                                    }
+
+                                    Box(contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator(
+                                            progress = { progress },
+                                            modifier = Modifier.size(200.dp),
+                                            color = ProgressIndicatorDefaults.circularColor,
+                                            strokeWidth = 8.dp,
+                                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                            strokeCap = StrokeCap.Round,
+                                        )
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                fast.profile.displayName,
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                            Spacer(Modifier.height(4.dp))
+                                            Text(
+                                                formatDuration(remainingTime),
+                                                style = MaterialTheme.typography.displaySmall
+                                            )
+                                        }
+                                    }
                                 }
-                                Spacer(Modifier.height(4.dp))
+                                Spacer(Modifier.height(16.dp))
                                 Text("Started: ${sdf.format(Date(fast.startTime))}")
                                 Spacer(Modifier.height(16.dp))
                                 Button(
@@ -206,7 +239,7 @@ fun DashboardScreenContent(
                             profiles.forEach { profile ->
                                 Button(onClick = { onShowProfile(profile) }) {
                                     Text(profile.displayName)
-                                }
+                                 }
                             }
                         }
                     }
@@ -314,13 +347,13 @@ fun DashboardScreenDarkPreview_CountingDown() {
                 startTime = System.currentTimeMillis() - 1000 * 60 * 60 * 4,
                 endTime = null,
                 profile = FastingProfile.SIXTEEN_EIGHT,
-                targetDuration = 16 * 60 * 60 * 1000
+                targetDuration = 1000 * 60 * 60 * 16
             ),
-            elapsedTime = 0,
-            remainingTime = 1000 * 60 * 60 * 11 + 1000 * 60 * 29 + 45, // approx 11.5 hours remaining
+            elapsedTime = 1000 * 60 * 60 * 4,
+            remainingTime = 1000 * 60 * 60 * 12,
             stats = DashboardStats(totalFasts = 10, longestFast = 20),
             history = listOf(),
-            profiles = listOf(),
+            profiles = listOf(FastingProfile.SIXTEEN_EIGHT, FastingProfile.FOURTEEN_TEN),
             modalProfile = null,
             onStartManualFast = {},
             onStartProfileFast = {},

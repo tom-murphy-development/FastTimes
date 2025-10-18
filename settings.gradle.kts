@@ -4,6 +4,11 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+    plugins {
+        val agpVersion = "8.2.0" // Match this with your version catalog
+        id("com.android.application") version agpVersion apply false
+        id("com.android.library") version agpVersion apply false
+    }
 }
 
 @Suppress("UnstableApiUsage")
@@ -12,19 +17,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-    }
-}
-
-// Ensure consistent AGP version across the project
-gradle.beforeProject {
-    val agpVersion = "8.2.0" // Match this with your version catalog
-    extensions.findByName("pluginManagement")?.let { pluginManagement ->
-        (pluginManagement as PluginManagementSpec).apply {
-            plugins {
-                id("com.android.application") version agpVersion
-                id("com.android.library") version agpVersion
-            }
-        }
     }
 }
 

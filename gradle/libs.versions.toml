@@ -1,6 +1,7 @@
 [versions]
 # Gradle & Kotlin
 agp = "8.12.3"  # Using stable version of AGP
+expressive = "1.0.0"
 kotlin = "1.9.10"  # Matching Kotlin version with Compose compiler
 composeCompiler = "1.5.3"
 
@@ -53,6 +54,7 @@ compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-material-icons = { group = "androidx.compose.material", name = "material-icons-extended" }
 
 # Navigation
+expressive = { module = "io.github.cioccarellia.compose-expressive:expressive", version.ref = "expressive" }
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 
 # Dependency Injection

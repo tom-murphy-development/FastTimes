@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -31,10 +30,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,18 +42,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.dashboard.DashboardStats
 import com.fasttimes.ui.dashboard.DashboardViewModel
-import com.fasttimes.ui.theme.FastTimesTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,8 +83,7 @@ fun DashboardScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class
-)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DashboardScreenContent(
     currentFast: Fast?,
@@ -171,33 +164,41 @@ fun DashboardScreenContent(
                                 if (fast.profile == FastingProfile.MANUAL) {
                                     Text("Elapsed: ${formatDuration(elapsedTime)}", style = MaterialTheme.typography.displayMedium)
                                 } else {
-                                    val progress = remember(fast.targetDuration, remainingTime) {
-                                        if (fast.targetDuration != null && fast.targetDuration > 0) {
-                                            1f - (remainingTime.toFloat() / fast.targetDuration.toFloat())
-                                        } else {
-                                            0f
-                                        }
-                                    }
-
+                                    val isComplete = remainingTime <= 0
                                     Box(contentAlignment = Alignment.Center) {
                                         CircularProgressIndicator(
-                                            progress = { progress },
+                                            progress = {
+                                                if (fast.targetDuration != null && fast.targetDuration > 0L) {
+                                                    val elapsed = (fast.targetDuration - remainingTime).coerceAtLeast(0L)
+                                                    if (isComplete || elapsed >= fast.targetDuration) {
+                                                        1f
+                                                    } else {
+                                                        (elapsed.toFloat() / fast.targetDuration.toFloat()).coerceIn(0f, 1f)
+                                                    }
+                                                } else {
+                                                    0f
+                                                }
+                                            },
                                             modifier = Modifier.size(260.dp),
                                             color = MaterialTheme.colorScheme.primary,
-                                            //strokeWidth = ProgressIndicatorDefaults.CircularStrokeWidth,
                                             strokeWidth = 20.dp,
                                             trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
-                                            strokeCap = StrokeCap.Round,
-                                            gapSize = ProgressIndicatorDefaults.CircularIndicatorTrackGapSize
+                                            strokeCap = StrokeCap.Round
                                         )
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 fast.profile.displayName,
                                                 style = MaterialTheme.typography.titleMedium
                                             )
-                                            Spacer(Modifier.height(4.dp))
+                                            Spacer(Modifier.height(8.dp))
+
                                             Text(
-                                                formatDuration(remainingTime),
+                                                text = if (isComplete) "Elapsed" else "Remaining",
+                                                style = MaterialTheme.typography.titleSmall
+                                            )
+
+                                            Text(
+                                                text = if (isComplete) formatDuration(elapsedTime) else formatDuration(remainingTime),
                                                 style = MaterialTheme.typography.displaySmall
                                             )
                                         }
@@ -246,7 +247,7 @@ fun DashboardScreenContent(
                             profiles.forEach { profile ->
                                 Button(onClick = { onShowProfile(profile) }) {
                                     Text(profile.displayName)
-                                 }
+                                }
                             }
                         }
                     }
@@ -260,9 +261,12 @@ fun DashboardScreenContent(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Statistics", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Spacer(Modifier.height(16.dp))
                     Text("Total Fasts: ${stats.totalFasts}")
-                    Text("Longest Fast: ${stats.longestFast}h")
-                    Text("Total Fasting Time: ${stats.totalFastingTime}h")
+                    Spacer(Modifier.height(8.dp))
+                    Text("Longest Fast: ${formatDuration(stats.longestFast)}")
+                    Spacer(Modifier.height(8.dp))
+                    Text("Total Fasting Time: ${formatDuration(stats.totalFastingTime)}")
                 }
             }
 
@@ -277,75 +281,14 @@ fun DashboardScreenContent(
                     } else {
                         history.take(3).forEach { fast ->
                             val endTimeText = fast.endTime?.let { endTime ->
-                                sdf.format(Date(endTime))
-                            } ?: "In Progress"
-                            Text("${sdf.format(Date(fast.startTime))} - $endTimeText")
+                                "ended at ${sdf.format(Date(endTime))}"
+                            } ?: "in progress"
+                            val duration = (fast.endTime ?: System.currentTimeMillis()) - fast.startTime
+                            Text("${fast.profile.displayName} for ${formatDuration(duration)}, $endTimeText")
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun ProfileDetailsModal(
-    profile: FastingProfile,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = "${profile.displayName} Profile") },
-        text = { Text(text = profile.description) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Start Fast")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-
-/**
- * Formats a duration in milliseconds into a HH:mm:ss string.
- */
-fun formatDuration(millis: Long): String {
-    val hours = TimeUnit.MILLISECONDS.toHours(millis)
-    val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
-    val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
-    return String.format("%02d:%02d:%02d", hours, minutes, seconds)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DashboardScreenPreview() {
-    FastTimesTheme {
-        DashboardScreenContent(
-            currentFast = null,
-            elapsedTime = 0,
-            remainingTime = 0,
-            stats = DashboardStats(0, 0, 0),
-            history = emptyList(),
-            profiles = listOf(
-                FastingProfile.SIXTEEN_EIGHT,
-                FastingProfile.EIGHTEEN_SIX,
-                FastingProfile.TWENTY_FOUR,
-                FastingProfile.TWELVE_TWELVE,
-                FastingProfile.FOURTEEN_TEN
-            ),
-            modalProfile = null,
-            onStartManualFast = {},
-            onStartProfileFast = {},
-            onEndFast = {},
-            onSettingsClick = {},
-            onShowProfile = {},
-            onDismissProfile = {}
-        )
     }
 }

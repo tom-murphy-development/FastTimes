@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.fasttimes.ui.settings.SettingsScreen
 
+
 @Composable
 fun FastTimesNavHost() {
     val navController = rememberNavController()

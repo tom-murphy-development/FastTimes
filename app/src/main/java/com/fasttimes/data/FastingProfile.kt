@@ -31,5 +31,15 @@ enum class FastingProfile(
         durationHours = 12,
         displayName = "12/12",
         description = "A simple and basic schedule with a 12-hour fasting period and a 12-hour eating window."
+    ),
+    EIGHTEEN_SIX(
+        durationHours = 18,
+        displayName = "18/6",
+        description = "Fast for 18 hours and eat within a 6-hour window. A more advanced method for experienced fasters."
+    ),
+    TWENTY_FOUR (
+        durationHours = 24,
+        displayName = "24-Hour Fast",
+        description = "A full day fast, typically done once or twice a week. Involves fasting for 24 hours straight."
     )
 }

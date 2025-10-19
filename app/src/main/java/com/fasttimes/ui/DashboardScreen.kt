@@ -1,9 +1,5 @@
 package com.fasttimes.ui
 
-// import androidx.compose.material3.CircularWavyProgressIndicator
-// import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-// import androidx.compose.material3.WavyProgressIndicatorDefaults
-import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -60,6 +56,7 @@ import com.fasttimes.ui.theme.FastTimesTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -172,7 +169,7 @@ fun DashboardScreenContent(
                         currentFast?.let { fast ->
                             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                                 if (fast.profile == FastingProfile.MANUAL) {
-                                    Text("Elapsed: ${formatDuration(elapsedTime)}", style = MaterialTheme.typography.displaySmall)
+                                    Text("Elapsed: ${formatDuration(elapsedTime)}", style = MaterialTheme.typography.displayMedium)
                                 } else {
                                     val progress = remember(fast.targetDuration, remainingTime) {
                                         if (fast.targetDuration != null && fast.targetDuration > 0) {
@@ -185,9 +182,10 @@ fun DashboardScreenContent(
                                     Box(contentAlignment = Alignment.Center) {
                                         CircularProgressIndicator(
                                             progress = { progress },
-                                            modifier = Modifier.size(120.dp),
+                                            modifier = Modifier.size(260.dp),
                                             color = MaterialTheme.colorScheme.primary,
-                                            strokeWidth = ProgressIndicatorDefaults.CircularStrokeWidth,
+                                            //strokeWidth = ProgressIndicatorDefaults.CircularStrokeWidth,
+                                            strokeWidth = 20.dp,
                                             trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
                                             strokeCap = StrokeCap.Round,
                                             gapSize = ProgressIndicatorDefaults.CircularIndicatorTrackGapSize
@@ -317,47 +315,30 @@ fun ProfileDetailsModal(
 /**
  * Formats a duration in milliseconds into a HH:mm:ss string.
  */
-private fun formatDuration(ms: Long): String {
-    val totalSeconds = ms / 1000
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
+fun formatDuration(millis: Long): String {
+    val hours = TimeUnit.MILLISECONDS.toHours(millis)
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
+    val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
     return String.format("%02d:%02d:%02d", hours, minutes, seconds)
 }
 
 @Preview(showBackground = true)
 @Composable
-fun DashboardScreenPreview_NoFast() {
+fun DashboardScreenPreview() {
     FastTimesTheme {
         DashboardScreenContent(
             currentFast = null,
             elapsedTime = 0,
             remainingTime = 0,
-            stats = DashboardStats(totalFasts = 10, longestFast = 20, totalFastingTime = 120),
-            history = listOf(),
-            profiles = listOf(FastingProfile.SIXTEEN_EIGHT, FastingProfile.FOURTEEN_TEN),
-            modalProfile = null,
-            onStartManualFast = {},
-            onStartProfileFast = {},
-            onEndFast = {},
-            onSettingsClick = {},
-            onShowProfile = {},
-            onDismissProfile = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun DashboardScreenPreview_ManualFast() {
-    FastTimesTheme {
-        DashboardScreenContent(
-            currentFast = Fast(startTime = System.currentTimeMillis() - 1000 * 60 * 60 * 3, profile = FastingProfile.MANUAL),
-            elapsedTime = 1000 * 60 * 60 * 3 + 1000 * 60 * 20 + 5,
-            remainingTime = 0,
-            stats = DashboardStats(totalFasts = 10, longestFast = 20, totalFastingTime = 120),
-            history = listOf(),
-            profiles = listOf(FastingProfile.SIXTEEN_EIGHT, FastingProfile.FOURTEEN_TEN),
+            stats = DashboardStats(0, 0, 0),
+            history = emptyList(),
+            profiles = listOf(
+                FastingProfile.SIXTEEN_EIGHT,
+                FastingProfile.EIGHTEEN_SIX,
+                FastingProfile.TWENTY_FOUR,
+                FastingProfile.TWELVE_TWELVE,
+                FastingProfile.FOURTEEN_TEN
+            ),
             modalProfile = null,
             onStartManualFast = {},
             onStartProfileFast = {},

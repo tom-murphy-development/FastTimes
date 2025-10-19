@@ -4,16 +4,17 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
     namespace = "com.fasttimes"
-    compileSdk = 34  // Updated to latest stable version
+    compileSdk = 36  // Updated to latest stable version
 
     defaultConfig {
         applicationId = "com.fasttimes"
         minSdk = 24
-        targetSdk = 34  // Updated to match compileSdk
+        targetSdk = 35  // Updated to match compileSdk
         versionCode = 1
         versionName = "1.0"
 
@@ -81,6 +82,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons)
+    implementation(libs.compose.material3)
 
     // Navigation
     implementation(libs.navigation.compose)
@@ -99,6 +101,7 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.androidx.material3)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 

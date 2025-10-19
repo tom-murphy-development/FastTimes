@@ -8,6 +8,7 @@ pluginManagement {
         val agpVersion = "8.2.0" // Match this with your version catalog
         id("com.android.application") version agpVersion apply false
         id("com.android.library") version agpVersion apply false
+
     }
 }
 

@@ -1,5 +1,9 @@
 package com.fasttimes.ui
 
+// import androidx.compose.material3.CircularWavyProgressIndicator
+// import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+// import androidx.compose.material3.WavyProgressIndicatorDefaults
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -31,6 +35,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -87,7 +92,8 @@ fun DashboardScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class
+)
 @Composable
 fun DashboardScreenContent(
     currentFast: Fast?,
@@ -178,11 +184,13 @@ fun DashboardScreenContent(
 
                                     Box(contentAlignment = Alignment.Center) {
                                         CircularProgressIndicator(
-                                            progress = progress,
-                                            modifier = Modifier.size(200.dp),
-                                            strokeWidth = 8.dp,
-                                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                            progress = { progress },
+                                            modifier = Modifier.size(120.dp),
+                                            color = MaterialTheme.colorScheme.primary,
+                                            strokeWidth = ProgressIndicatorDefaults.CircularStrokeWidth,
+                                            trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
                                             strokeCap = StrokeCap.Round,
+                                            gapSize = ProgressIndicatorDefaults.CircularIndicatorTrackGapSize
                                         )
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
@@ -339,7 +347,7 @@ fun DashboardScreenPreview_NoFast() {
     }
 }
 
-@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun DashboardScreenPreview_ManualFast() {
     FastTimesTheme {

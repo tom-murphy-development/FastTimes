@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.fasttimes.ui.history.HistoryScreen
 import com.fasttimes.ui.settings.SettingsScreen
 
 
@@ -14,12 +15,18 @@ fun FastTimesNavHost() {
     NavHost(navController = navController, startDestination = "dashboard") {
         composable("dashboard") {
             DashboardScreen(
-                onSettingsClick = { navController.navigate("settings") }
+                onSettingsClick = { navController.navigate("settings") },
+                onHistoryClick = { navController.navigate("history") }
             )
         }
         composable("settings") {
             SettingsScreen(
                 onNavigateUp = { navController.navigateUp() }
+            )
+        }
+        composable("history") {
+            HistoryScreen(
+                onBackClick = { navController.navigateUp() }
             )
         }
     }

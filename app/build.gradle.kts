@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.fasttimes"
-        minSdk = 24
+        minSdk = 33
         targetSdk = 35  // Updated to match compileSdk
         versionCode = 1
         versionName = "1.0"

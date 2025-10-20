@@ -12,6 +12,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,12 +73,12 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onHistoryClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val profiles by viewModel.profiles.collectAsState(initial = emptyList())
     val stats by viewModel.stats.collectAsState()
-    val history by viewModel.history.collectAsState(initial = emptyList())
     val modalProfile by viewModel.modalProfile.collectAsState()
     val showAlarmPermissionRationale by viewModel.showAlarmPermissionRationale.collectAsState()
 
@@ -346,20 +347,15 @@ fun DashboardScreen(
             }
 
             // History Section
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onHistoryClick() }
+            ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("History", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(16.dp))
-                    if (history.isEmpty()) {
-                        Text("No completed fasts yet.")
-                    } else {
-                        history.forEach { fast ->
-                            fast.endTime?.let { endTime ->
-                                val duration = endTime - fast.startTime
-                                Text("Started: ${sdf.format(Date(fast.startTime))}, Duration: ${formatDuration(duration.milliseconds)}")
-                            }
-                        }
-                    }
+                    Text("View your complete fasting history.")
                 }
             }
         }

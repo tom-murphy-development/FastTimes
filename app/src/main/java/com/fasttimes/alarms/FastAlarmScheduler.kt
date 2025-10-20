@@ -17,7 +17,7 @@ interface AlarmScheduler {
 }
 
 class FastAlarmScheduler @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : AlarmScheduler {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 

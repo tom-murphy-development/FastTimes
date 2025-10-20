@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 // Placeholder for stats data class
 data class DashboardStats(
@@ -82,15 +84,40 @@ class DashboardViewModel @Inject constructor(
         )
 
     /**
-     * The currently active fast, or `null` if no fast is in progress.
+     * The core UI state for the dashboard, representing the current fasting status.
      */
-    val currentFast: StateFlow<Fast?> = history
-        .map { it.firstOrNull { fast -> fast.endTime == null } }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
+    val uiState: StateFlow<DashboardUiState> = history.flatMapLatest { fasts ->
+        val activeFast = fasts.firstOrNull { it.endTime == null }
+
+        if (activeFast == null) {
+            flowOf<DashboardUiState>(DashboardUiState.NoFast)
+        } else {
+            // The main timer flow that updates every second
+            flow {
+                while (true) {
+                    val now = System.currentTimeMillis()
+                    val startTime = activeFast.startTime
+                    val targetDuration = activeFast.targetDuration?.milliseconds ?: Duration.ZERO
+                    val targetEndTime = startTime + targetDuration.inWholeMilliseconds
+
+                    // Check if the goal has been reached
+                    if (now >= targetEndTime) {
+                        // For Manual fasts or fasts that have passed their goal
+                        val elapsedTime = (now - startTime).milliseconds
+                        emit(DashboardUiState.FastingGoalReached(activeFast, elapsedTime))
+                    } else {
+                        // For fasts still counting down
+                        val remainingTime = (targetEndTime - now).milliseconds
+                        val progress = 1f - (remainingTime.inWholeMilliseconds.toFloat() / targetDuration.inWholeMilliseconds)
+                        emit(DashboardUiState.FastingInProgress(activeFast, remainingTime, progress))
+                    }
+
+                    delay(1000)
+                }
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.NoFast)
+
 
     /**
      * State for the Profile Details Modal, holding the profile being viewed.
@@ -103,41 +130,6 @@ class DashboardViewModel @Inject constructor(
      */
     private val _showAlarmPermissionRationale = MutableStateFlow(false)
     val showAlarmPermissionRationale: StateFlow<Boolean> = _showAlarmPermissionRationale.asStateFlow()
-
-    /**
-     * Elapsed time for Manual (count up) fasts. Emits 0 otherwise.
-     */
-    val elapsedTime: StateFlow<Long> = currentFast.flatMapLatest { fast ->
-        if (fast?.profile == FastingProfile.MANUAL) {
-            flow {
-                while (true) {
-                    emit(System.currentTimeMillis() - fast.startTime)
-                    delay(1000)
-                }
-            }
-        } else {
-            flowOf(0L)
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
-
-    /**
-     * Remaining time for Profile (count down) fasts. Emits 0 otherwise.
-     */
-    val remainingTime: StateFlow<Long> = currentFast.flatMapLatest { fast ->
-        if (fast != null && fast.profile != FastingProfile.MANUAL && fast.targetDuration != null) {
-            val targetEndTime = fast.startTime + fast.targetDuration
-            flow {
-                while (true) {
-                    val remaining = targetEndTime - System.currentTimeMillis()
-                    emit(if (remaining > 0) remaining else 0)
-                    if (remaining <= 0) break
-                    delay(1000)
-                }
-            }
-        } else {
-            flowOf(0L)
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
 
 
     // --- ACTIONS ---
@@ -208,7 +200,13 @@ class DashboardViewModel @Inject constructor(
      * Ends the currently active fast.
      */
     fun endCurrentFast() {
-        val fast = currentFast.value ?: return
+        val fastToEnd = when (val state = uiState.value) {
+            is DashboardUiState.FastingInProgress -> state.activeFast
+            is DashboardUiState.FastingGoalReached -> state.activeFast
+            else -> null
+        }
+
+        val fast = fastToEnd ?: return
         viewModelScope.launch {
             alarmScheduler.cancel(fast)
             fastRepository.endFast(fast.id, System.currentTimeMillis())

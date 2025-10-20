@@ -1,15 +1,11 @@
-/**
- * ViewModel for the Dashboard screen.
- *
- * This ViewModel is responsible for providing data to the Dashboard screen and handling user
- * interactions. It uses a [FastRepository] to interact with the data layer.
- *
- * @property fastRepository The repository for accessing fast data.
- */
+
 package com.fasttimes.ui.dashboard
 
+import android.app.AlarmManager
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fasttimes.alarms.AlarmScheduler
 import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastRepository
@@ -38,7 +34,9 @@ data class DashboardStats(
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val fastRepository: FastRepository
+    private val fastRepository: FastRepository,
+    private val alarmScheduler: AlarmScheduler,
+    private val alarmManager: AlarmManager
 ) : ViewModel() {
 
     // --- STATE ---
@@ -101,6 +99,12 @@ class DashboardViewModel @Inject constructor(
     val modalProfile: StateFlow<FastingProfile?> = _modalProfile.asStateFlow()
 
     /**
+     * Signals the UI to show a rationale for the exact alarm permission.
+     */
+    private val _showAlarmPermissionRationale = MutableStateFlow(false)
+    val showAlarmPermissionRationale: StateFlow<Boolean> = _showAlarmPermissionRationale.asStateFlow()
+
+    /**
      * Elapsed time for Manual (count up) fasts. Emits 0 otherwise.
      */
     val elapsedTime: StateFlow<Long> = currentFast.flatMapLatest { fast ->
@@ -153,6 +157,13 @@ class DashboardViewModel @Inject constructor(
     }
 
     /**
+     * Dismisses the alarm permission rationale dialog.
+     */
+    fun dismissAlarmPermissionRationale() {
+        _showAlarmPermissionRationale.value = false
+    }
+
+    /**
      * Starts a new fast in Manual (count-up) mode.
      */
     fun startManualFast() {
@@ -170,19 +181,26 @@ class DashboardViewModel @Inject constructor(
 
     /**
      * Starts a new fast in Profile (count-down) mode.
+     * Checks for exact alarm permissions before scheduling a notification.
      */
     fun startProfileFast(profile: FastingProfile) {
         viewModelScope.launch {
-            val durationMillis = profile.duration?.inWholeMilliseconds
-            val fast = Fast(
-                startTime = System.currentTimeMillis(),
-                profile = profile,
-                targetDuration = durationMillis,
-                endTime = null,
-                notes = "Started ${profile.displayName} fast"
-            )
-            fastRepository.insertFast(fast)
-            dismissProfileModal() // Close modal after starting
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+                _showAlarmPermissionRationale.value = true
+                dismissProfileModal()
+            } else {
+                val durationMillis = profile.duration?.inWholeMilliseconds
+                val fast = Fast(
+                    startTime = System.currentTimeMillis(),
+                    profile = profile,
+                    targetDuration = durationMillis,
+                    endTime = null,
+                    notes = "Started ${profile.displayName} fast"
+                )
+                val fastId = fastRepository.insertFast(fast)
+                alarmScheduler.schedule(fast.copy(id = fastId))
+                dismissProfileModal() // Close modal after starting
+            }
         }
     }
 
@@ -192,6 +210,7 @@ class DashboardViewModel @Inject constructor(
     fun endCurrentFast() {
         val fast = currentFast.value ?: return
         viewModelScope.launch {
+            alarmScheduler.cancel(fast)
             fastRepository.endFast(fast.id, System.currentTimeMillis())
         }
     }

@@ -47,7 +47,7 @@ enum class FastingProfile(
         description = "A full day fast, typically done once or twice a week. Involves fasting for 24 hours straight."
     ),
     TEST_TIMER (
-        duration = 30.seconds,
+        duration = 10.seconds,
         displayName = "Test Timer",
         description = "A short-duration fast for testing purposes."
     )

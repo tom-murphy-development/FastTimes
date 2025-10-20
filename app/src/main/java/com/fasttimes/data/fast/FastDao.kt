@@ -10,8 +10,11 @@ interface FastDao {
     @Query("SELECT * FROM fast_table ORDER BY startTime DESC")
     fun getAllFasts(): Flow<List<Fast>>
 
+    @Query("SELECT * FROM fast_table WHERE id = :id")
+    suspend fun getFast(id: Long): Fast?
+
     @Insert
-    suspend fun insertFast(fast: Fast)
+    suspend fun insertFast(fast: Fast): Long
 
     @Query("UPDATE fast_table SET endTime = :endTime WHERE id = :id")
     suspend fun updateFastEndTime(id: Long, endTime: Long)

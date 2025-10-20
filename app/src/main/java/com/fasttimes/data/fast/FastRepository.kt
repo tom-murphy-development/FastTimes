@@ -10,8 +10,9 @@ class FastRepository(private val fastDao: FastDao) {
         fasts.firstOrNull { it.endTime == null }
     }
 
-    suspend fun insertFast(fast: Fast) = fastDao.insertFast(fast)
+    suspend fun getFast(id: Long): Fast? = fastDao.getFast(id)
+
+    suspend fun insertFast(fast: Fast): Long = fastDao.insertFast(fast)
 
     suspend fun endFast(id: Long, endTime: Long) = fastDao.updateFastEndTime(id, endTime)
 }
-

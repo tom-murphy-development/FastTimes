@@ -173,7 +173,7 @@ class DashboardViewModel @Inject constructor(
      */
     fun startProfileFast(profile: FastingProfile) {
         viewModelScope.launch {
-            val durationMillis = profile.durationHours?.let { it * 60 * 60 * 1000L }
+            val durationMillis = profile.duration?.inWholeMilliseconds
             val fast = Fast(
                 startTime = System.currentTimeMillis(),
                 profile = profile,

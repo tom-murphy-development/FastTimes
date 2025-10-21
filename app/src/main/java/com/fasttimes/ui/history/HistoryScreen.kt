@@ -45,7 +45,7 @@ fun HistoryScreen(
             uiState = uiState,
             onPreviousMonth = viewModel::onPreviousMonth,
             onNextMonth = viewModel::onNextMonth,
-            onDayClick = viewModel::onDaySelected,
+            onDayClick = viewModel::onDayClick,
             modifier = Modifier.padding(paddingValues)
         )
 

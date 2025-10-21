@@ -47,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.fasttimes.ui.theme.FastTimesTheme
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -60,11 +61,17 @@ fun CalendarView(
     val currentMonth = uiState.selectedDate
     val daysOfWeek = listOf("M", "T", "W", "T", "F", "S", "S")
 
+    val nextCalendarMonth = YearMonth.from(currentMonth).plusMonths(1)
+    val systemCalendarMonth = YearMonth.now()
+    val isNextMonthEnabled = !nextCalendarMonth.isAfter(systemCalendarMonth)
+
+
     Column(modifier = modifier.padding(16.dp)) {
         CalendarHeader(
             monthTitle = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
             onPreviousClick = onPreviousMonth,
-            onNextClick = onNextMonth
+            onNextClick = onNextMonth,
+            isNextEnabled = isNextMonthEnabled
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -84,6 +91,7 @@ private fun CalendarHeader(
     monthTitle: String,
     onPreviousClick: () -> Unit,
     onNextClick: () -> Unit,
+    isNextEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -101,7 +109,7 @@ private fun CalendarHeader(
             text = monthTitle,
             style = MaterialTheme.typography.titleLarge,
         )
-        IconButton(onClick = onNextClick) {
+        IconButton(onClick = onNextClick, enabled = isNextEnabled) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Next Month"
@@ -151,6 +159,7 @@ private fun CalendarGrid(
                 week.forEach { day ->
                     DayCell(
                         day = day,
+                        currentMonth = currentMonth,
                         isSelected = uiState.selectedDay == day,
                         status = day?.let { uiState.dayStatusByDayOfMonth[it] },
                         segments = day?.let { uiState.dailyTimelineSegments[it] } ?: emptyList(),
@@ -171,28 +180,36 @@ private fun CalendarGrid(
 @Composable
 private fun RowScope.DayCell(
     day: Int?,
+    currentMonth: LocalDate,
     isSelected: Boolean,
     status: DayStatus?,
     segments: List<TimelineSegment>,
     onDayClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isFutureDay = day != null && currentMonth.withDayOfMonth(day).isAfter(LocalDate.now())
     Column(
         modifier = modifier
             .weight(1f)
             .height(60.dp)
             .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
-            .clickable(enabled = day != null) { day?.let { onDayClick(it) } },
+            .clickable(enabled = day != null && !isFutureDay) { day?.let { onDayClick(it) } },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         if (day != null) {
+            val textColor = if (isFutureDay) {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
             Text(
                 text = day.toString(),
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                color = textColor
             )
 
-            if (segments.isNotEmpty()) {
+            if (segments.isNotEmpty() && !isFutureDay) {
                 WeeklyTimeline(segments = segments, modifier = Modifier.height(4.dp).padding(horizontal = 2.dp))
             } else {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -203,7 +220,7 @@ private fun RowScope.DayCell(
                 DayStatus.GOAL_NOT_MET -> Color.Gray
                 null -> Color.Transparent
             }
-            if (status != null) {
+            if (status != null && !isFutureDay) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)

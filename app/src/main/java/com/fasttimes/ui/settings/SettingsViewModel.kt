@@ -22,8 +22,8 @@ class SettingsViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
-    val uiState: StateFlow<SettingsUiState> = userPreferencesRepository.theme
-        .map { theme -> SettingsUiState.Success(selectedTheme = theme) }
+    val uiState: StateFlow<SettingsUiState> = userPreferencesRepository.userData
+        .map { SettingsUiState.Success(it.theme) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),

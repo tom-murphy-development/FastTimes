@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -70,6 +71,8 @@ private fun FastDetailItem(
     modifier: Modifier = Modifier
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+    val multiDayFormatter = DateTimeFormatter.ofPattern("EEE d/MM")
+
     val startTime = fast.startTime.toLocalDateTime()
     val endTime = fast.endTime?.toLocalDateTime()
 
@@ -86,8 +89,12 @@ private fun FastDetailItem(
         val startFormatted = startTime.format(timeFormatter)
         val endFormatted = endTime.format(timeFormatter)
         val dayDiff = endTime.dayOfYear - startTime.dayOfYear
+
         if (dayDiff > 0) {
-            "$startFormatted - $endFormatted (+$dayDiff)"
+            // Multi-day fast: show short start and end dates plus times, e.g. "Mon 20/10 8:00 - Wed 22/10 10:00"
+            val startDateFormatted = startTime.format(multiDayFormatter)
+            val endDateFormatted = endTime.format(multiDayFormatter)
+            "$startDateFormatted ${startFormatted} - $endDateFormatted ${endFormatted}"
         } else {
             "$startFormatted - $endFormatted"
         }
@@ -96,8 +103,15 @@ private fun FastDetailItem(
     }
 
     val goalString = if (fast.targetDuration != null) {
-        val hours = fast.targetDuration / 3600
-        "${hours} hours"
+        // targetDuration is stored in milliseconds across the app. Use ofMillis to convert correctly.
+        val duration = Duration.ofMillis(fast.targetDuration)
+        val hours = duration.toHours()
+        val minutes = (duration.toMinutes() % 60)
+        if (hours > 0) {
+            if (minutes > 0) "${hours}h ${minutes}m" else "${hours}h"
+        } else {
+            "${minutes}m"
+        }
     } else {
         "No goal set"
     }
@@ -130,7 +144,7 @@ private fun FastDetailItem(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
-                imageVector = Icons.Default.CheckCircle,
+                imageVector = if (goalReached) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
                 contentDescription = if (goalReached) "Goal Reached" else "Goal Not Reached",
                 tint = if (goalReached) Color(0xFF388E3C) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
@@ -143,8 +157,9 @@ private fun Fast.goalReached(): Boolean {
     val duration = Duration.between(
         startTime.toLocalDateTime(),
         endTime.toLocalDateTime()
-    ).seconds
-    return duration >= targetDuration
+    )
+    // Compare in milliseconds since targetDuration is stored in ms
+    return duration.toMillis() >= targetDuration
 }
 
 @Preview(showBackground = true)
@@ -157,13 +172,14 @@ private fun DailyFastDetailsSheetPreview() {
                 id = 1,
                 startTime = previewDate.atTime(20, 15).toEpochSecond(java.time.ZoneOffset.UTC),
                 endTime = previewDate.plusDays(1).atTime(14, 47).toEpochSecond(java.time.ZoneOffset.UTC),
-                targetDuration = 16 * 3600
+                // targetDuration is in milliseconds: 16 hours = 16 * 3600 * 1000
+                targetDuration = 16 * 3600 * 1000L
             ),
             Fast(
                 id = 2,
                 startTime = previewDate.atTime(6, 0).toEpochSecond(java.time.ZoneOffset.UTC),
                 endTime = previewDate.atTime(10, 11).toEpochSecond(java.time.ZoneOffset.UTC),
-                targetDuration = 12 * 3600
+                targetDuration = 12 * 3600 * 1000L
             )
         )
         DailyFastDetailsSheet(date = previewDate, fasts = previewFasts)

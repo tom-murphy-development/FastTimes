@@ -9,6 +9,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("unused")
 abstract class DataModule {
 
     @Binds

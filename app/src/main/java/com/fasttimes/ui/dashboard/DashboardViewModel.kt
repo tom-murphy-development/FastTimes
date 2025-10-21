@@ -1,7 +1,8 @@
-
 package com.fasttimes.ui.dashboard
 
 import android.app.AlarmManager
+import android.app.Application
+import android.content.Intent
 import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,8 @@ import com.fasttimes.alarms.AlarmScheduler
 import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastRepository
+import com.fasttimes.data.settings.SettingsRepository
+import com.fasttimes.service.FastTimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -37,8 +41,10 @@ data class DashboardStats(
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val fastRepository: FastRepository,
+    private val settingsRepository: SettingsRepository,
     private val alarmScheduler: AlarmScheduler,
-    private val alarmManager: AlarmManager
+    private val alarmManager: AlarmManager,
+    private val application: Application
 ) : ViewModel() {
 
     // --- STATE ---
@@ -168,6 +174,7 @@ class DashboardViewModel @Inject constructor(
                 notes = null
             )
             fastRepository.insertFast(fast)
+            startService()
         }
     }
 
@@ -191,6 +198,7 @@ class DashboardViewModel @Inject constructor(
                 )
                 val fastId = fastRepository.insertFast(fast)
                 alarmScheduler.schedule(fast.copy(id = fastId))
+                startService()
                 dismissProfileModal() // Close modal after starting
             }
         }
@@ -210,6 +218,23 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             alarmScheduler.cancel(fast)
             fastRepository.endFast(fast.id, System.currentTimeMillis())
+            stopService()
+        }
+    }
+
+    private suspend fun startService() {
+        if (settingsRepository.showLiveProgress.first()) {
+            Intent(application, FastTimerService::class.java).also {
+                it.action = FastTimerService.ACTION_START
+                application.startService(it)
+            }
+        }
+    }
+
+    private fun stopService() {
+        Intent(application, FastTimerService::class.java).also {
+            it.action = FastTimerService.ACTION_STOP
+            application.startService(it)
         }
     }
 }

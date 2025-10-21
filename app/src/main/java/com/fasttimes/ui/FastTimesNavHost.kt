@@ -21,7 +21,7 @@ fun FastTimesNavHost() {
         }
         composable("settings") {
             SettingsScreen(
-                onNavigateUp = { navController.navigateUp() }
+                onBackClick = { navController.navigateUp() }
             )
         }
         composable("history") {

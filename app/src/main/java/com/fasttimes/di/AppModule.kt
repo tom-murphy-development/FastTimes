@@ -8,6 +8,8 @@ import androidx.room.Room
 import com.fasttimes.data.AppDatabase
 import com.fasttimes.data.fast.FastDao
 import com.fasttimes.data.fast.FastRepository
+import com.fasttimes.data.settings.DefaultSettingsRepository
+import com.fasttimes.data.settings.SettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,6 +28,10 @@ object AppModule {
     fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
         return context.dataStore
     }
+
+    @Provides
+    @Singleton
+    fun provideSettingsRepository(dataStore: DataStore<Preferences>): SettingsRepository = DefaultSettingsRepository(dataStore)
 
     @Provides
     @Singleton

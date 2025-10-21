@@ -92,7 +92,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.lifecycle.viewmodel)
-    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.lifecycle.service)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)

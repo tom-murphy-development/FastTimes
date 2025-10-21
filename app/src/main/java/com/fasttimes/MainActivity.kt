@@ -17,7 +17,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.fasttimes.data.Theme
+import com.fasttimes.data.AppTheme
 import com.fasttimes.ui.FastTimesNavHost
 import com.fasttimes.ui.settings.SettingsUiState
 import com.fasttimes.ui.settings.SettingsViewModel
@@ -37,14 +37,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        var uiState: SettingsUiState by mutableStateOf(SettingsUiState.Loading)
+        var uiState: SettingsUiState by mutableStateOf(SettingsUiState())
 
         // Keep the splash screen on-screen until the UI state is loaded.
         splashScreen.setKeepOnScreenCondition {
-            when (uiState) {
-                SettingsUiState.Loading -> true
-                is SettingsUiState.Success -> false
-            }
+            // Basic check, you might want a more robust loading state
+            uiState == SettingsUiState()
         }
 
         // Start collecting the theme settings
@@ -57,13 +55,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val useDarkTheme = when (val state = uiState) {
-                SettingsUiState.Loading -> isSystemInDarkTheme() // Default while loading
-                is SettingsUiState.Success -> when (state.selectedTheme) {
-                    Theme.LIGHT -> false
-                    Theme.DARK -> true
-                    Theme.SYSTEM -> isSystemInDarkTheme()
-                }
+            val useDarkTheme = when (uiState.theme) {
+                AppTheme.LIGHT -> false
+                AppTheme.DARK -> true
+                AppTheme.SYSTEM -> isSystemInDarkTheme()
             }
 
             FastTimesTheme(darkTheme = useDarkTheme) {

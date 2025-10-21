@@ -50,5 +50,10 @@ enum class FastingProfile(
         duration = 10.seconds,
         displayName = "Test Timer",
         description = "A short-duration fast for testing purposes."
+    ),
+    ONE_HOUR_TIMER (
+    duration = 1.hours,
+    displayName = "Test 1 Hour",
+    description = "A short-duration fast for testing purposes."
     )
 }

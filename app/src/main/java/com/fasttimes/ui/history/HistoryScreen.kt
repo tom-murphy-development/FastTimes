@@ -50,13 +50,17 @@ fun HistoryScreen(
         )
 
         if (uiState.selectedDay != null) {
+            val selectedDate = uiState.selectedDate.withDayOfMonth(uiState.selectedDay!!)
+            val timelineSegments = uiState.dailyTimelineSegments[uiState.selectedDay!!] ?: emptyList()
+
             ModalBottomSheet(
                 onDismissRequest = viewModel::onDismissDetails,
                 sheetState = sheetState
             ) {
                 DailyFastDetailsSheet(
-                    date = uiState.selectedDate.withDayOfMonth(uiState.selectedDay!!),
-                    fasts = uiState.selectedDayFasts
+                    date = selectedDate,
+                    fasts = uiState.selectedDayFasts,
+                    timeline = timelineSegments
                 )
             }
         }

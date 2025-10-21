@@ -3,8 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may
- * obtain a copy of the License at
+ * You may obtain a copy of the License at
  *
  *     https://www.apache.org/licenses/LICENSE-2.0
  *
@@ -17,193 +16,150 @@
 
 package com.fasttimes.ui.history
 
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fasttimes.data.UserData
-import com.fasttimes.data.UserPreferencesRepository
 import com.fasttimes.data.fast.Fast
-import com.fasttimes.data.fast.FastDao
+import com.fasttimes.data.fast.FastsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import java.time.Duration
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val fastDao: FastDao,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val fastsRepository: FastsRepository,
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
-    private val _isDetailsSheetShown = MutableStateFlow(false)
+    private val _selectedDay = MutableStateFlow<Int?>(null)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<HistoryUiState> =
-        _selectedDate.flatMapLatest { date ->
-            val monthStart = date.withDayOfMonth(1).atStartOfDay().toInstant(ZoneOffset.UTC)
-            val monthEnd =
-                date.plusMonths(1).withDayOfMonth(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+    /**
+     * A data class to hold all calculated data for a given month.
+     * This avoids re-calculating data multiple times downstream.
+     */
+    private data class HistoryMonth(
+        val year: Int,
+        val month: Int,
+        val fastsInMonth: List<Fast>,
+    ) {
+        /**
+         * A map of day-of-month to a list of fasts that occurred on that day.
+         */
+        val fastsByDay: Map<Int, List<Fast>> = run {
+            val dailyFasts = mutableMapOf<Int, MutableList<Fast>>()
+            val selectedDate = LocalDate.of(year, month, 1)
 
-            val fastsForSelectedMonth = fastDao.getFastsForDay(
-                dayStart = monthStart.toEpochMilli(),
-                dayEnd = monthEnd.toEpochMilli()
-            )
+            for (fast in fastsInMonth) {
+                var currentFastDate = fast.start.toLocalDate()
+                val endFastDate = (fast.end ?: ZonedDateTime.now()).toLocalDate()
 
-            combine(
-                fastsForSelectedMonth,
-                _isDetailsSheetShown,
-                userPreferencesRepository.userData
-            ) { fasts: List<Fast>, isSheetShown: Boolean, userData: UserData ->
-                toHistoryUiState(date, fasts, userData, isSheetShown)
+                while (!currentFastDate.isAfter(endFastDate)) {
+                    if (currentFastDate.year == selectedDate.year && currentFastDate.month == selectedDate.month) {
+                        dailyFasts.computeIfAbsent(currentFastDate.dayOfMonth) { mutableListOf() }
+                            .add(fast)
+                    }
+                    if (currentFastDate.year > selectedDate.year ||
+                        (currentFastDate.year == selectedDate.year && currentFastDate.month > selectedDate.month)
+                    ) {
+                        break
+                    }
+                    currentFastDate = currentFastDate.plusDays(1)
+                }
             }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = HistoryUiState()
+            dailyFasts
+        }
+
+        /**
+         * A map of day-of-month to its [DayStatus] (goal met or not).
+         */
+        val dayStatusByDayOfMonth: Map<Int, DayStatus> = fastsByDay.mapValues { (_, fastsOnDay) ->
+            if (fastsOnDay.any { it.goalMet() }) DayStatus.GOAL_MET else DayStatus.GOAL_NOT_MET
+        }
+
+        /**
+         * A map of day-of-month to its [TimelineSegment] list for the calendar view.
+         */
+        val dailyTimelineSegments: Map<Int, List<TimelineSegment>> = run {
+            val date = LocalDate.of(year, month, 1)
+            (1..date.lengthOfMonth()).associateWith { dayOfMonth ->
+                val day = date.withDayOfMonth(dayOfMonth)
+                generateTimelineSegments(day, fastsInMonth)
+            }
+        }
+    }
+
+    /**
+     * A flow that emits a [HistoryMonth] object whenever the selected month or the underlying
+     * fasts data changes. This is the single source of truth for all monthly calendar data.
+     */
+    private val historyMonth: StateFlow<HistoryMonth> = combine(
+        _selectedDate,
+        fastsRepository.getFasts()
+    ) { date, fasts ->
+        val zone = ZoneId.systemDefault()
+        val monthStart = date.withDayOfMonth(1).atStartOfDay(zone)
+        val monthEnd = monthStart.plusMonths(1)
+
+        val fastsForMonth = fasts.filter {
+            val fastEnd = it.end
+            it.start.isBefore(monthEnd) && (fastEnd == null || fastEnd.isAfter(monthStart))
+        }
+        HistoryMonth(date.year, date.monthValue, fastsForMonth)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = HistoryMonth(LocalDate.now().year, LocalDate.now().monthValue, emptyList())
+    )
+
+    /**
+     * The UI state for the History screen, derived from combining all data sources.
+     */
+    val uiState: StateFlow<HistoryUiState> = combine(
+        historyMonth,
+        _selectedDay,
+    ) { month, selectedDay ->
+        val fastsForSelectedDay = if (selectedDay != null) {
+            month.fastsByDay[selectedDay] ?: emptyList()
+        } else {
+            emptyList()
+        }
+
+        HistoryUiState(
+            selectedDate = LocalDate.of(month.year, month.month, 1),
+            selectedDay = selectedDay,
+            dayStatusByDayOfMonth = month.dayStatusByDayOfMonth,
+            dailyTimelineSegments = month.dailyTimelineSegments,
+            selectedDayFasts = fastsForSelectedDay
         )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = HistoryUiState(),
+    )
 
     fun onPreviousMonth() {
         _selectedDate.value = _selectedDate.value.minusMonths(1)
-        _isDetailsSheetShown.value = false
     }
 
     fun onNextMonth() {
         _selectedDate.value = _selectedDate.value.plusMonths(1)
-        _isDetailsSheetShown.value = false
     }
 
     fun onDayClick(day: Int) {
-        _selectedDate.value = _selectedDate.value.withDayOfMonth(day)
-        _isDetailsSheetShown.value = true
+        if (_selectedDay.value == day) {
+            _selectedDay.value = null
+        } else {
+            _selectedDay.value = day
+        }
     }
 
     fun onDismissDetails() {
-        _isDetailsSheetShown.value = false
-    }
-
-    private fun toHistoryUiState(
-        date: LocalDate,
-        fasts: List<Fast>,
-        userData: UserData,
-        isSheetShown: Boolean
-    ): HistoryUiState {
-        val fastingGoal = userData.fastingGoal.seconds
-
-        // 1. Pre-process fasts into a map for efficient O(1) lookup by day.
-        val fastsByDay = mutableMapOf<Int, MutableList<Fast>>()
-        for (fast in fasts) {
-            val fastStartInstant = Instant.ofEpochMilli(fast.startTime)
-            val fastEndInstant = fast.endTime?.let { Instant.ofEpochMilli(it) } ?: Instant.now()
-
-            val fastStartDate = LocalDate.ofInstant(fastStartInstant, ZoneOffset.UTC)
-            val fastEndDate = LocalDate.ofInstant(fastEndInstant, ZoneOffset.UTC)
-
-            // Clamp the date range to the currently visible month.
-            val startDay = if (fastStartDate.monthValue == date.monthValue && fastStartDate.year == date.year) {
-                fastStartDate.dayOfMonth
-            } else {
-                1 // Fast starts before the beginning of this month.
-            }
-
-            val endDay = if (fastEndDate.monthValue == date.monthValue && fastEndDate.year == date.year) {
-                fastEndDate.dayOfMonth
-            } else {
-                date.month.length(date.isLeapYear) // Fast ends after this month.
-            }
-
-            // Add the fast to the map for each day that it overlaps with.
-            for (day in startDay..endDay) {
-                fastsByDay.getOrPut(day) { mutableListOf() }.add(fast)
-            }
-        }
-
-
-        val dayStatusByDayOfMonth = mutableMapOf<Int, DayStatus>()
-        val dailyTimelineSegments = mutableMapOf<Int, List<TimelineSegment>>()
-
-        // 2. Efficiently calculate status and timelines using the pre-processed map.
-        fastsByDay.forEach { (dayOfMonth, fastsForDay) ->
-            val currentDay = date.withDayOfMonth(dayOfMonth)
-            val dayStart = currentDay.atStartOfDay().toInstant(ZoneOffset.UTC)
-            val dayEnd = currentDay.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
-
-            val totalFastDurationForDay = fastsForDay.sumOf { fast ->
-                calculateDurationForDay(fast, dayStart, dayEnd)
-            }
-
-            if (totalFastDurationForDay > 0) {
-                dayStatusByDayOfMonth[dayOfMonth] =
-                    if (totalFastDurationForDay >= fastingGoal) DayStatus.GOAL_MET else DayStatus.GOAL_NOT_MET
-            }
-
-            dailyTimelineSegments[dayOfMonth] =
-                createTimelineSegments(fastsForDay, dayStart, dayEnd, fastingGoal)
-        }
-
-        return HistoryUiState(
-            selectedDate = date,
-            selectedDay = if (isSheetShown) date.dayOfMonth else null,
-            dayStatusByDayOfMonth = dayStatusByDayOfMonth,
-            dailyTimelineSegments = dailyTimelineSegments,
-            // 3. Get the selected day's fasts with an efficient map lookup.
-            selectedDayFasts = if (isSheetShown) fastsByDay[date.dayOfMonth] ?: emptyList() else emptyList()
-        )
-    }
-
-    private fun calculateDurationForDay(
-        fast: Fast,
-        dayStart: Instant,
-        dayEnd: Instant
-    ): Long {
-        val fastStart = Instant.ofEpochMilli(fast.startTime)
-        val fastEnd = fast.endTime?.let { Instant.ofEpochMilli(it) } ?: Instant.now()
-
-        val start = if (fastStart.isBefore(dayStart)) dayStart else fastStart
-        val end = if (fastEnd.isAfter(dayEnd)) dayEnd else fastEnd
-
-        return if (start.isBefore(end)) {
-            Duration.between(start, end).seconds
-        } else {
-            0
-        }
-    }
-
-    private fun createTimelineSegments(
-        fasts: List<Fast>,
-        dayStart: Instant,
-        dayEnd: Instant,
-        fastingGoal: Long
-    ): List<TimelineSegment> {
-        val dayDuration = Duration.between(dayStart, dayEnd).toMillis()
-        if (dayDuration == 0L) return emptyList()
-
-        return fasts.map { fast ->
-            val fastStart = Instant.ofEpochMilli(fast.startTime)
-            val fastEnd = fast.endTime?.let { Instant.ofEpochMilli(it) } ?: Instant.now()
-
-            val segmentStart = if (fastStart.isBefore(dayStart)) dayStart else fastStart
-            val segmentEnd = if (fastEnd.isAfter(dayEnd)) dayEnd else fastEnd
-
-            val segmentDuration = Duration.between(segmentStart, segmentEnd).toMillis()
-            val weight = (segmentDuration.toFloat() / dayDuration.toFloat()).coerceIn(0f, 1f)
-
-            val duration = (fast.endTime ?: System.currentTimeMillis()) - fast.startTime
-            val goalReached = Duration.ofMillis(duration).seconds >= fastingGoal
-
-            TimelineSegment(
-                color = if (goalReached) Color.Green else Color.Blue,
-                weight = weight
-            )
-        }
+        _selectedDay.value = null
     }
 }

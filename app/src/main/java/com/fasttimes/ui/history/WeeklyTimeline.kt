@@ -26,18 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-
-/**
- * Represents a single colored segment in the weekly timeline.
- * @param color The color of the segment.
- * @param weight The proportional width of the segment (should sum to 1.0 for a full week).
- */
-data class TimelineSegment(
-    val color: Color,
-    val weight: Float
-)
 
 /**
  * Renders a continuous horizontal bar representing fasting activity over a week.

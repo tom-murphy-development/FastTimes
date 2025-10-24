@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import javax.inject.Inject
@@ -36,7 +37,7 @@ class HistoryViewModel @Inject constructor(
     fastsRepository: FastsRepository,
 ) : ViewModel() {
 
-    private val _selectedDate = MutableStateFlow(LocalDate.now())
+    private val _displayedMonth = MutableStateFlow(YearMonth.now())
     private val _selectedDay = MutableStateFlow<Int?>(null)
 
     /**
@@ -44,8 +45,7 @@ class HistoryViewModel @Inject constructor(
      * This avoids re-calculating data multiple times downstream.
      */
     private data class HistoryMonth(
-        val year: Int,
-        val month: Int,
+        val yearMonth: YearMonth,
         val fastsInMonth: List<Fast>,
     ) {
         /**
@@ -53,7 +53,7 @@ class HistoryViewModel @Inject constructor(
          */
         val fastsByDay: Map<Int, List<Fast>> = run {
             val dailyFasts = mutableMapOf<Int, MutableList<Fast>>()
-            val selectedDate = LocalDate.of(year, month, 1)
+            val selectedDate = yearMonth.atDay(1)
 
             for (fast in fastsInMonth) {
                 var currentFastDate = fast.start.toLocalDate()
@@ -86,7 +86,7 @@ class HistoryViewModel @Inject constructor(
          * A map of day-of-month to its [TimelineSegment] list for the calendar view.
          */
         val dailyTimelineSegments: Map<Int, List<TimelineSegment>> = run {
-            val date = LocalDate.of(year, month, 1)
+            val date = yearMonth.atDay(1)
             (1..date.lengthOfMonth()).associateWith { dayOfMonth ->
                 val day = date.withDayOfMonth(dayOfMonth)
                 generateTimelineSegments(day, fastsInMonth)
@@ -99,22 +99,22 @@ class HistoryViewModel @Inject constructor(
      * fasts data changes. This is the single source of truth for all monthly calendar data.
      */
     private val historyMonth: StateFlow<HistoryMonth> = combine(
-        _selectedDate,
+        _displayedMonth,
         fastsRepository.getFasts()
-    ) { date, fasts ->
+    ) { month, fasts ->
         val zone = ZoneId.systemDefault()
-        val monthStart = date.withDayOfMonth(1).atStartOfDay(zone)
+        val monthStart = month.atDay(1).atStartOfDay(zone)
         val monthEnd = monthStart.plusMonths(1)
 
         val fastsForMonth = fasts.filter {
             val fastEnd = it.end
             it.start.isBefore(monthEnd) && (fastEnd == null || fastEnd.isAfter(monthStart))
         }
-        HistoryMonth(date.year, date.monthValue, fastsForMonth)
+        HistoryMonth(month, fastsForMonth)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = HistoryMonth(LocalDate.now().year, LocalDate.now().monthValue, emptyList())
+        initialValue = HistoryMonth(YearMonth.now(), emptyList())
     )
 
     /**
@@ -122,8 +122,9 @@ class HistoryViewModel @Inject constructor(
      */
     val uiState: StateFlow<HistoryUiState> = combine(
         historyMonth,
+        _displayedMonth,
         _selectedDay,
-    ) { month, selectedDay ->
+    ) { month, displayedMonth, selectedDay ->
         val fastsForSelectedDay = if (selectedDay != null) {
             month.fastsByDay[selectedDay] ?: emptyList()
         } else {
@@ -131,7 +132,8 @@ class HistoryViewModel @Inject constructor(
         }
 
         HistoryUiState(
-            selectedDate = LocalDate.of(month.year, month.month, 1),
+            displayedMonth = displayedMonth,
+            selectedDate = displayedMonth.atDay(1).withDayOfMonth(selectedDay ?: 1),
             selectedDay = selectedDay,
             dayStatusByDayOfMonth = month.dayStatusByDayOfMonth,
             dailyTimelineSegments = month.dailyTimelineSegments,
@@ -144,11 +146,47 @@ class HistoryViewModel @Inject constructor(
     )
 
     fun onPreviousMonth() {
-        _selectedDate.value = _selectedDate.value.minusMonths(1)
+        _displayedMonth.value = _displayedMonth.value.minusMonths(1)
     }
 
     fun onNextMonth() {
-        _selectedDate.value = _selectedDate.value.plusMonths(1)
+        val nextMonth = _displayedMonth.value.plusMonths(1)
+        if (nextMonth.isAfter(YearMonth.now())) return
+        _displayedMonth.value = nextMonth
+    }
+
+    fun onPreviousDay() {
+        val day = _selectedDay.value
+        if (day != null) {
+            val displayedMonth = _displayedMonth.value
+            if (day > 1) {
+                _selectedDay.value = day - 1
+            } else {
+                val previousMonth = displayedMonth.minusMonths(1)
+                _displayedMonth.value = previousMonth
+                _selectedDay.value = previousMonth.lengthOfMonth()
+            }
+        }
+    }
+
+    fun onNextDay() {
+        val day = _selectedDay.value
+        val displayedMonth = _displayedMonth.value
+        if (day != null) {
+            val nextDate = displayedMonth.atDay(day).plusDays(1)
+            if (nextDate.isAfter(LocalDate.now())) {
+                return // Don't go to the future
+            }
+
+            if (day < displayedMonth.lengthOfMonth()) {
+                _selectedDay.value = day + 1
+            } else {
+                val nextMonth = displayedMonth.plusMonths(1)
+                if (nextMonth.isAfter(YearMonth.now())) return
+                _displayedMonth.value = nextMonth
+                _selectedDay.value = 1
+            }
+        }
     }
 
     fun onDayClick(day: Int) {
@@ -156,6 +194,7 @@ class HistoryViewModel @Inject constructor(
             _selectedDay.value = null
         } else {
             _selectedDay.value = day
+            _displayedMonth.value = YearMonth.from(uiState.value.displayedMonth.atDay(day))
         }
     }
 

@@ -2,6 +2,7 @@ package com.fasttimes.ui.history
 
 import com.fasttimes.data.fast.Fast
 import java.time.LocalDate
+import java.time.YearMonth
 
 enum class DayStatus {
     GOAL_MET,
@@ -9,6 +10,7 @@ enum class DayStatus {
 }
 
 data class HistoryUiState(
+    val displayedMonth: YearMonth = YearMonth.now(),
     val selectedDate: LocalDate = LocalDate.now(),
     val selectedDay: Int? = null,
     val fastsByDay: Map<LocalDate, List<Fast>> = emptyMap(),

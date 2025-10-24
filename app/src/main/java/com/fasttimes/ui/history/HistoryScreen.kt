@@ -60,7 +60,9 @@ fun HistoryScreen(
                 DailyFastDetailsSheet(
                     date = selectedDate,
                     fasts = uiState.selectedDayFasts,
-                    timeline = timelineSegments
+                    timeline = timelineSegments,
+                    onSwipeLeft = viewModel::onNextDay,
+                    onSwipeRight = viewModel::onPreviousDay
                 )
             }
         }

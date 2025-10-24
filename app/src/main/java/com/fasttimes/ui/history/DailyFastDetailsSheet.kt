@@ -1,5 +1,6 @@
 package com.fasttimes.ui.history
 
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,9 +17,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,20 +34,42 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
 @Composable
 fun DailyFastDetailsSheet(
     date: LocalDate,
     fasts: List<Fast>,
     timeline: List<TimelineSegment>,
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = DateTimeFormatter.ofPattern("MMMM d")
+    var swipeOffset by remember { mutableStateOf(0f) }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(24.dp)
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        swipeOffset += dragAmount.x
+                    },
+                    onDragEnd = {
+                        if (abs(swipeOffset) > 100) {
+                            if (swipeOffset > 0) {
+                                onSwipeRight()
+                            } else {
+                                onSwipeLeft()
+                            }
+                        }
+                        swipeOffset = 0f
+                    }
+                )
+            }
     ) {
         Text(
             text = "Details for ${date.format(dateFormatter)}",
@@ -160,18 +188,36 @@ private fun DailyFastDetailsSheetPreview() {
         val previewFasts = listOf(
             Fast(
                 id = 1,
-                startTime = ZonedDateTime.of(previewDate.atTime(20, 15), java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                endTime = ZonedDateTime.of(previewDate.plusDays(1).atTime(14, 47), java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                startTime = ZonedDateTime.of(
+                    previewDate.atTime(20, 15),
+                    java.time.ZoneId.systemDefault()
+                ).toInstant().toEpochMilli(),
+                endTime = ZonedDateTime.of(
+                    previewDate.plusDays(1).atTime(14, 47),
+                    java.time.ZoneId.systemDefault()
+                ).toInstant().toEpochMilli(),
                 targetDuration = 16 * 3600 * 1000L
             ),
             Fast(
                 id = 2,
-                startTime = ZonedDateTime.of(previewDate.atTime(6, 0), java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                endTime = ZonedDateTime.of(previewDate.atTime(10, 11), java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                startTime = ZonedDateTime.of(
+                    previewDate.atTime(6, 0),
+                    java.time.ZoneId.systemDefault()
+                ).toInstant().toEpochMilli(),
+                endTime = ZonedDateTime.of(
+                    previewDate.atTime(10, 11),
+                    java.time.ZoneId.systemDefault()
+                ).toInstant().toEpochMilli(),
                 targetDuration = 12 * 3600 * 1000L
             )
         )
         val timeline = generateTimelineSegments(previewDate, previewFasts)
-        DailyFastDetailsSheet(date = previewDate, fasts = previewFasts, timeline = timeline)
+        DailyFastDetailsSheet(
+            date = previewDate,
+            fasts = previewFasts,
+            timeline = timeline,
+            onSwipeLeft = {},
+            onSwipeRight = {},
+        )
     }
 }

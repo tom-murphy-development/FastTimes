@@ -18,6 +18,7 @@ package com.fasttimes.ui.history
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,10 +39,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,6 +55,7 @@ import com.fasttimes.ui.theme.FastTimesTheme
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
 @Composable
 fun CalendarView(
@@ -61,17 +68,45 @@ fun CalendarView(
     val currentMonth = uiState.selectedDate
     val daysOfWeek = listOf("M", "T", "W", "T", "F", "S", "S")
 
-    val nextCalendarMonth = YearMonth.from(currentMonth).plusMonths(1)
+    val displayedMonth = uiState.displayedMonth
     val systemCalendarMonth = YearMonth.now()
-    val isNextMonthEnabled = !nextCalendarMonth.isAfter(systemCalendarMonth)
+    val isNextMonthEnabled = displayedMonth <= systemCalendarMonth
+    val isNextMonthEnabledIcon = displayedMonth < systemCalendarMonth
+
+    var swipeOffset by remember { mutableStateOf(0f) }
 
 
-    Column(modifier = modifier.padding(16.dp)) {
+    Column(
+        modifier = modifier
+            .padding(16.dp)
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        swipeOffset += dragAmount.x
+                    },
+                    onDragEnd = {
+                        if (abs(swipeOffset) > 100) {
+                            if (swipeOffset > 0) {
+                                // Swipe right - go to previous month
+                                onPreviousMonth()
+                            } else {
+                                // Swipe left - go to next month
+                                if (isNextMonthEnabled) {
+                                    onNextMonth()
+                                }
+                            }
+                        }
+                        swipeOffset = 0f
+                    }
+                )
+            }
+    ) {
         CalendarHeader(
-            monthTitle = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+            monthTitle = displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
             onPreviousClick = onPreviousMonth,
             onNextClick = onNextMonth,
-            isNextEnabled = isNextMonthEnabled
+            isNextEnabled = isNextMonthEnabledIcon
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -168,7 +203,9 @@ private fun CalendarGrid(
                 }
                 if (week.size < 7) {
                     for (i in 1..(7 - week.size)) {
-                        Box(modifier = Modifier.weight(1f).height(60.dp))
+                        Box(modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp))
                     }
                 }
             }
@@ -210,7 +247,12 @@ private fun RowScope.DayCell(
             )
 
             if (segments.isNotEmpty() && !isFutureDay) {
-                WeeklyTimeline(segments = segments, modifier = Modifier.height(4.dp).padding(horizontal = 2.dp))
+                WeeklyTimeline(
+                    segments = segments,
+                    modifier = Modifier
+                        .height(4.dp)
+                        .padding(horizontal = 2.dp)
+                )
             } else {
                 Spacer(modifier = Modifier.height(4.dp))
             }
@@ -248,7 +290,12 @@ private fun CalendarViewPreview() {
     FastTimesTheme {
         CalendarView(
             uiState = HistoryUiState(
-                dayStatusByDayOfMonth = mapOf(1 to DayStatus.GOAL_MET, 5 to DayStatus.GOAL_NOT_MET, 10 to DayStatus.GOAL_MET, 23 to DayStatus.GOAL_NOT_MET),
+                dayStatusByDayOfMonth = mapOf(
+                    1 to DayStatus.GOAL_MET,
+                    5 to DayStatus.GOAL_NOT_MET,
+                    10 to DayStatus.GOAL_MET,
+                    23 to DayStatus.GOAL_NOT_MET
+                ),
                 dailyTimelineSegments = mapOf(
                     1 to listOf(TimelineSegment(Color.Green, 1f)),
                     5 to listOf(TimelineSegment(Color.Green, 0.5f), TimelineSegment(Color.Gray, 0.5f)),

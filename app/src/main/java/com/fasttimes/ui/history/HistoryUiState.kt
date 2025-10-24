@@ -1,6 +1,8 @@
 package com.fasttimes.ui.history
 
 import com.fasttimes.data.fast.Fast
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -13,8 +15,8 @@ data class HistoryUiState(
     val displayedMonth: YearMonth = YearMonth.now(),
     val selectedDate: LocalDate = LocalDate.now(),
     val selectedDay: Int? = null,
-    val fastsByDay: Map<LocalDate, List<Fast>> = emptyMap(),
-    val dayStatusByDayOfMonth: Map<Int, DayStatus> = emptyMap(),
-    val dailyTimelineSegments: Map<Int, List<TimelineSegment>> = emptyMap(),
+    val fastsByDay: ImmutableMap<LocalDate, List<Fast>> = persistentMapOf(),
+    val dayStatusByDayOfMonth: ImmutableMap<Int, DayStatus> = persistentMapOf(),
+    val dailyTimelineSegments: ImmutableMap<Int, List<TimelineSegment>> = persistentMapOf(),
     val selectedDayFasts: List<Fast> = emptyList()
 )

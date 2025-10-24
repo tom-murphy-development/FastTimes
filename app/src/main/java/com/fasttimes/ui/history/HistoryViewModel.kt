@@ -21,6 +21,7 @@ import androidx.lifecycle.viewModelScope
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -135,8 +136,8 @@ class HistoryViewModel @Inject constructor(
             displayedMonth = displayedMonth,
             selectedDate = displayedMonth.atDay(1).withDayOfMonth(selectedDay ?: 1),
             selectedDay = selectedDay,
-            dayStatusByDayOfMonth = month.dayStatusByDayOfMonth,
-            dailyTimelineSegments = month.dailyTimelineSegments,
+            dayStatusByDayOfMonth = month.dayStatusByDayOfMonth.toImmutableMap(),
+            dailyTimelineSegments = month.dailyTimelineSegments.toImmutableMap(),
             selectedDayFasts = fastsForSelectedDay
         )
     }.stateIn(

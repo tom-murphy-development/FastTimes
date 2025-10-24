@@ -58,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.fasttimes.ui.theme.FastTimesTheme
+import kotlinx.collections.immutable.toImmutableMap
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -74,8 +75,8 @@ fun CalendarView(
 
     val displayedMonth = uiState.displayedMonth
     val systemCalendarMonth = YearMonth.now()
-    val isNextMonthEnabled = displayedMonth <= systemCalendarMonth
-    val isNextMonthEnabledIcon = displayedMonth < systemCalendarMonth
+    val isNextMonthEnabled = displayedMonth < systemCalendarMonth
+    val isNextMonthEnabledSwipe = displayedMonth <= systemCalendarMonth
 
     Column(
         modifier = modifier.padding(16.dp)
@@ -84,7 +85,7 @@ fun CalendarView(
             monthTitle = displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
             onPreviousClick = onPreviousMonth,
             onNextClick = onNextMonth,
-            isNextEnabled = isNextMonthEnabledIcon
+            isNextEnabled = isNextMonthEnabled
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -104,7 +105,7 @@ fun CalendarView(
                         val swipeThreshold = 100
                         if (totalDrag > swipeThreshold) {
                             onPreviousMonth()
-                        } else if (totalDrag < -swipeThreshold && isNextMonthEnabled) {
+                        } else if (totalDrag < -swipeThreshold && isNextMonthEnabledSwipe) {
                             onNextMonth()
                         }
                     }
@@ -308,13 +309,13 @@ private fun CalendarViewPreview() {
                     5 to DayStatus.GOAL_NOT_MET,
                     10 to DayStatus.GOAL_MET,
                     23 to DayStatus.GOAL_NOT_MET
-                ),
+                ).toImmutableMap(),
                 dailyTimelineSegments = mapOf(
                     1 to listOf(TimelineSegment(Color.Green, 1f)),
                     5 to listOf(TimelineSegment(Color.Green, 0.5f), TimelineSegment(Color.Gray, 0.5f)),
                     10 to listOf(TimelineSegment(Color.Gray, 0.2f), TimelineSegment(Color.Green, 0.8f)),
                     23 to listOf(TimelineSegment(Color.Green, 1f)),
-                )
+                ).toImmutableMap()
             ),
             onPreviousMonth = {},
             onNextMonth = {},

@@ -111,6 +111,8 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
+
     testImplementation(libs.junit)
     // Testing libraries required by unit tests
     testImplementation(libs.kotlinx.coroutines.test)

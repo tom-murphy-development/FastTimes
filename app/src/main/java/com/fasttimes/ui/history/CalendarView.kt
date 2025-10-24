@@ -64,7 +64,6 @@ fun CalendarView(
     onDayClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currentMonth = uiState.selectedDate
     val daysOfWeek = listOf("M", "T", "W", "T", "F", "S", "S")
 
     val displayedMonth = uiState.displayedMonth
@@ -97,9 +96,9 @@ fun CalendarView(
                             slideOutHorizontally { width -> width } + fadeOut()
                 }
             }
-        ) { _ ->
+        ) { targetMonth ->
             CalendarGrid(
-                currentMonth = currentMonth,
+                currentMonth = targetMonth.atDay(1),
                 uiState = uiState,
                 onDayClick = onDayClick
             )

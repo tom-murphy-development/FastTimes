@@ -46,7 +46,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -92,7 +92,7 @@ fun CalendarView(
         DayOfWeekHeader(daysOfWeek = daysOfWeek)
         Spacer(modifier = Modifier.height(8.dp))
 
-        var totalDrag by remember { mutableStateOf(0f) }
+        var totalDrag by remember { mutableFloatStateOf(0f) }
         Box(
             modifier = Modifier.pointerInput(Unit) {
                 detectHorizontalDragGestures(
@@ -216,10 +216,12 @@ private fun CalendarGrid(
                     )
                 }
                 if (week.size < 7) {
-                    for (i in 1..(7 - week.size)) {
-                        Box(modifier = Modifier
-                            .weight(1f)
-                            .height(60.dp))
+                    repeat(7 - week.size) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(60.dp)
+                        )
                     }
                 }
             }

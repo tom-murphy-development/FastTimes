@@ -69,22 +69,16 @@ fun CalendarView(
 
     val displayedMonth = uiState.displayedMonth
     val systemCalendarMonth = YearMonth.now()
-    val isNextMonthEnabled = displayedMonth <= systemCalendarMonth
-    val isNextMonthEnabledIcon = displayedMonth < systemCalendarMonth
+    val isNextMonthEnabled = displayedMonth < systemCalendarMonth
 
     Column(
-        modifier = modifier
-            .padding(16.dp)
-            .horizontalSwipe(
-                onSwipeLeft = { if (isNextMonthEnabled) onNextMonth() },
-                onSwipeRight = onPreviousMonth
-            )
+        modifier = modifier.padding(16.dp)
     ) {
         CalendarHeader(
             monthTitle = displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
             onPreviousClick = onPreviousMonth,
             onNextClick = onNextMonth,
-            isNextEnabled = isNextMonthEnabledIcon 
+            isNextEnabled = isNextMonthEnabled
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -92,10 +86,10 @@ fun CalendarView(
         Spacer(modifier = Modifier.height(8.dp))
 
         AnimatedContent(
-            targetState = uiState,
+            targetState = uiState.displayedMonth,
             label = "Calendar Animation",
             transitionSpec = {
-                if (targetState.displayedMonth.isAfter(initialState.displayedMonth)) {
+                if (targetState.isAfter(initialState)) {
                     slideInHorizontally { width -> width } + fadeIn() togetherWith
                             slideOutHorizontally { width -> -width } + fadeOut()
                 } else {
@@ -103,10 +97,10 @@ fun CalendarView(
                             slideOutHorizontally { width -> width } + fadeOut()
                 }
             }
-        ) { targetUiState ->
+        ) { _ ->
             CalendarGrid(
-                currentMonth = targetUiState.selectedDate,
-                uiState = targetUiState,
+                currentMonth = currentMonth,
+                uiState = uiState,
                 onDayClick = onDayClick
             )
         }

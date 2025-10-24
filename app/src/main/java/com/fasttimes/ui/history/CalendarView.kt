@@ -16,15 +16,16 @@
 
 package com.fasttimes.ui.history
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.exponentialDecay
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.snapTo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -45,6 +47,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -53,16 +57,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.fasttimes.ui.theme.FastTimesTheme
 import kotlinx.collections.immutable.toImmutableMap
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
+private enum class DragAnchors {
+    Previous,
+    Current,
+    Next,
+}
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CalendarView(
     uiState: HistoryUiState,
@@ -76,10 +90,51 @@ fun CalendarView(
     val displayedMonth = uiState.displayedMonth
     val systemCalendarMonth = YearMonth.now()
     val isNextMonthEnabled = displayedMonth < systemCalendarMonth
-    val isNextMonthEnabledSwipe = displayedMonth <= systemCalendarMonth
+
+    val density = LocalDensity.current
+    var boxWidthPx by remember { mutableFloatStateOf(0f) }
+
+    val draggableState = remember {
+        AnchoredDraggableState<DragAnchors>(
+            initialValue = DragAnchors.Current,
+            positionalThreshold = { totalDistance -> totalDistance * 0.5f },
+            velocityThreshold = { with(density) { 100.dp.toPx() } },
+            snapAnimationSpec = tween(),
+            decayAnimationSpec = exponentialDecay()
+        )
+    }
+
+    SideEffect {
+        val newAnchors = DraggableAnchors {
+            DragAnchors.Previous at boxWidthPx
+            DragAnchors.Current at 0f
+            if (isNextMonthEnabled) {
+                DragAnchors.Next at -boxWidthPx
+            }
+        }
+        draggableState.updateAnchors(newAnchors)
+    }
+
+    LaunchedEffect(uiState.displayedMonth) {
+        draggableState.snapTo(DragAnchors.Current)
+    }
+
+    LaunchedEffect(draggableState.currentValue) {
+        if (draggableState.currentValue == DragAnchors.Previous) {
+            onPreviousMonth()
+        }
+        if (draggableState.currentValue == DragAnchors.Next) {
+            onNextMonth()
+        }
+    }
+
 
     Column(
-        modifier = modifier.padding(16.dp)
+        modifier = modifier
+            .padding(16.dp)
+            .onSizeChanged {
+                boxWidthPx = it.width.toFloat()
+            }
     ) {
         CalendarHeader(
             monthTitle = displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
@@ -92,45 +147,27 @@ fun CalendarView(
         DayOfWeekHeader(daysOfWeek = daysOfWeek)
         Spacer(modifier = Modifier.height(8.dp))
 
-        var totalDrag by remember { mutableFloatStateOf(0f) }
         Box(
-            modifier = Modifier.pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragStart = { totalDrag = 0f },
-                    onHorizontalDrag = { change, dragAmount ->
-                        change.consume()
-                        totalDrag += dragAmount
-                    },
-                    onDragEnd = {
-                        val swipeThreshold = 100
-                        if (totalDrag > swipeThreshold) {
-                            onPreviousMonth()
-                        } else if (totalDrag < -swipeThreshold && isNextMonthEnabledSwipe) {
-                            onNextMonth()
-                        }
-                    }
+            modifier = Modifier
+                .anchoredDraggable(
+                    state = draggableState,
+                    orientation = Orientation.Horizontal,
+                    reverseDirection = false
                 )
-            }
         ) {
-            AnimatedContent(
-                targetState = uiState.displayedMonth,
-                label = "Calendar Animation",
-                transitionSpec = {
-                    if (targetState.isAfter(initialState)) {
-                        slideInHorizontally { width -> width } + fadeIn() togetherWith
-                                slideOutHorizontally { width -> -width } + fadeOut()
-                    } else {
-                        slideInHorizontally { width -> -width } + fadeIn() togetherWith
-                                slideOutHorizontally { width -> width } + fadeOut()
-                    }
+            CalendarGrid(
+                currentMonth = displayedMonth.atDay(1),
+                uiState = uiState,
+                onDayClick = onDayClick,
+                modifier = Modifier.offset {
+                    IntOffset(
+                        x = draggableState
+                            .requireOffset()
+                            .roundToInt(),
+                        y = 0,
+                    )
                 }
-            ) { targetMonth ->
-                CalendarGrid(
-                    currentMonth = targetMonth.atDay(1),
-                    uiState = uiState,
-                    onDayClick = onDayClick
-                )
-            }
+            )
         }
     }
 }

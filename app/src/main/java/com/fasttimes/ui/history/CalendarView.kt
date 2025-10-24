@@ -24,6 +24,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,10 +45,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,7 +74,8 @@ fun CalendarView(
 
     val displayedMonth = uiState.displayedMonth
     val systemCalendarMonth = YearMonth.now()
-    val isNextMonthEnabled = displayedMonth < systemCalendarMonth
+    val isNextMonthEnabled = displayedMonth <= systemCalendarMonth
+    val isNextMonthEnabledIcon = displayedMonth < systemCalendarMonth
 
     Column(
         modifier = modifier.padding(16.dp)
@@ -77,31 +84,52 @@ fun CalendarView(
             monthTitle = displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
             onPreviousClick = onPreviousMonth,
             onNextClick = onNextMonth,
-            isNextEnabled = isNextMonthEnabled
+            isNextEnabled = isNextMonthEnabledIcon
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         DayOfWeekHeader(daysOfWeek = daysOfWeek)
         Spacer(modifier = Modifier.height(8.dp))
 
-        AnimatedContent(
-            targetState = uiState.displayedMonth,
-            label = "Calendar Animation",
-            transitionSpec = {
-                if (targetState.isAfter(initialState)) {
-                    slideInHorizontally { width -> width } + fadeIn() togetherWith
-                            slideOutHorizontally { width -> -width } + fadeOut()
-                } else {
-                    slideInHorizontally { width -> -width } + fadeIn() togetherWith
-                            slideOutHorizontally { width -> width } + fadeOut()
-                }
+        var totalDrag by remember { mutableStateOf(0f) }
+        Box(
+            modifier = Modifier.pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragStart = { totalDrag = 0f },
+                    onHorizontalDrag = { change, dragAmount ->
+                        change.consume()
+                        totalDrag += dragAmount
+                    },
+                    onDragEnd = {
+                        val swipeThreshold = 100
+                        if (totalDrag > swipeThreshold) {
+                            onPreviousMonth()
+                        } else if (totalDrag < -swipeThreshold && isNextMonthEnabled) {
+                            onNextMonth()
+                        }
+                    }
+                )
             }
-        ) { targetMonth ->
-            CalendarGrid(
-                currentMonth = targetMonth.atDay(1),
-                uiState = uiState,
-                onDayClick = onDayClick
-            )
+        ) {
+            AnimatedContent(
+                targetState = uiState.displayedMonth,
+                label = "Calendar Animation",
+                transitionSpec = {
+                    if (targetState.isAfter(initialState)) {
+                        slideInHorizontally { width -> width } + fadeIn() togetherWith
+                                slideOutHorizontally { width -> -width } + fadeOut()
+                    } else {
+                        slideInHorizontally { width -> -width } + fadeIn() togetherWith
+                                slideOutHorizontally { width -> width } + fadeOut()
+                    }
+                }
+            ) { targetMonth ->
+                CalendarGrid(
+                    currentMonth = targetMonth.atDay(1),
+                    uiState = uiState,
+                    onDayClick = onDayClick
+                )
+            }
         }
     }
 }

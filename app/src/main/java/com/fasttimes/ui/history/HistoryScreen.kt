@@ -1,8 +1,11 @@
 package com.fasttimes.ui.history
 
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,6 +26,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -30,41 +34,40 @@ import com.fasttimes.ui.components.StatisticTile
 import com.fasttimes.ui.formatDuration
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    onBackClick: () -> Unit,
+    onViewFastDetails: (Long) -> Unit,
+    onBackClick: (() -> Unit)? = null,
+    onSwipeBack: (() -> Unit)? = null,
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val sheetState = rememberModalBottomSheetState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "History") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+    val content = @Composable { p: PaddingValues ->
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(p)
+            .padding(16.dp)
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures { _, dragAmount ->
+                    if (dragAmount > 50) { // Threshold for swipe right
+                        onSwipeBack?.invoke()
                     }
                 }
-            )
-        }
-    ) { paddingValues ->
-        Column {
+            }
+        ) {
             CalendarView(
                 uiState = uiState,
                 onPreviousMonth = viewModel::onPreviousMonth,
                 onNextMonth = viewModel::onNextMonth,
                 onDayClick = viewModel::onDayClick,
-                modifier = Modifier.padding(paddingValues)
             )
 
-            MonthlyStats(uiState = uiState)
+            MonthlyStats(uiState = uiState, onViewFastDetails = onViewFastDetails)
         }
 
         if (uiState.selectedDay != null) {
@@ -85,13 +88,38 @@ fun HistoryScreen(
             }
         }
     }
+
+    if (onBackClick != null) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = "History") },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            content(paddingValues)
+        }
+    } else {
+        content(PaddingValues(0.dp))
+    }
 }
 
 @Composable
-private fun MonthlyStats(uiState: HistoryUiState) {
+private fun MonthlyStats(
+    uiState: HistoryUiState,
+    onViewFastDetails: (Long) -> Unit
+) {
     val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM", Locale.getDefault()) }
 
-    Card(modifier = Modifier.padding(16.dp)) {
+    Card(modifier = Modifier.padding(top = 16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = "${uiState.displayedMonth.format(monthFormatter)} Statistics",
@@ -115,7 +143,8 @@ private fun MonthlyStats(uiState: HistoryUiState) {
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.Star,
                     label = "Longest Fast",
-                    value = formatDuration(uiState.longestFastInMonth),
+                    value = uiState.longestFastInMonth?.let { formatDuration(it.duration().milliseconds) } ?: "-",
+                    onClick = { uiState.longestFastInMonth?.id?.let(onViewFastDetails) },
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                 )

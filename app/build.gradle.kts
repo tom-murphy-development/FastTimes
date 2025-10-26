@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.konfetti.compose)
     implementation(libs.navigation.compose)
+    implementation("com.google.accompanist:accompanist-navigation-animation:0.36.0")
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.lifecycle.viewmodel)

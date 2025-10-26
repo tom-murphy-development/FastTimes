@@ -35,7 +35,6 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
@@ -159,7 +158,7 @@ class HistoryViewModel @Inject constructor(
             dailyTimelineSegments = month.dailyTimelineSegments.toImmutableMap(),
             selectedDayFasts = fastsForSelectedDay,
             totalFastsInMonth = month.fastsInMonth.size,
-            longestFastInMonth = (month.fastsInMonth.map { it.duration() }.maxOrNull() ?: 0L).milliseconds
+            longestFastInMonth = month.fastsInMonth.maxByOrNull { it.duration() }
         )
     }.stateIn(
         scope = viewModelScope,

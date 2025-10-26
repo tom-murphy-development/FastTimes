@@ -33,8 +33,8 @@ import kotlin.time.Duration.Companion.milliseconds
 // Placeholder for stats data class
 data class DashboardStats(
     val totalFasts: Int = 0,
-    val longestFast: Long = 0L, // Changed to Long to match duration calculation
-    val totalFastingTime: Long = 0L // in hours
+    val longestFast: Duration = Duration.ZERO,
+    val totalFastingTime: Duration = Duration.ZERO
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -81,8 +81,8 @@ class DashboardViewModel @Inject constructor(
                 totalFasts = fasts.size,
                 longestFast = fasts.maxOfOrNull { fast ->
                     (fast.endTime ?: System.currentTimeMillis()) - fast.startTime
-                }?.let { it / (1000 * 60 * 60) } ?: 0L, // Convert to hours
-                totalFastingTime = totalTimeInMillis / (1000 * 60 * 60) // Convert to hours
+                }?.milliseconds ?: Duration.ZERO,
+                totalFastingTime = totalTimeInMillis.milliseconds
             )
         }
         .stateIn(

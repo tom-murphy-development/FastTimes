@@ -73,7 +73,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.milliseconds
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -419,8 +418,8 @@ fun DashboardScreen(
                     Text("Statistics", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(16.dp))
                     Text("Total Fasts: ${stats.totalFasts}")
-                    Text("Total Fasting Time: ${formatDuration(stats.totalFastingTime.milliseconds)}")
-                    Text("Longest Fast: ${formatDuration(stats.longestFast.milliseconds)}")
+                    Text("Total Fasting Time: ${formatDuration(stats.totalFastingTime)}")
+                    Text("Longest Fast: ${formatDuration(stats.longestFast)}")
                 }
             }
 

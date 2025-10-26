@@ -101,23 +101,23 @@ private fun MonthlyStats(uiState: HistoryUiState) {
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 StatisticTile(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.BarChart,
                     label = "Total Fasts",
                     value = uiState.totalFastsInMonth.toString(),
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                 )
                 StatisticTile(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.Star,
                     label = "Longest Fast",
                     value = formatDuration(uiState.longestFastInMonth),
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
         }

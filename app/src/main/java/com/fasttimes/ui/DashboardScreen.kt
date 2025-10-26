@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AvTimer
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.PlayArrow
@@ -76,6 +77,7 @@ import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
@@ -233,7 +235,7 @@ fun DashboardScreen(
                                 }
                             }
                             Spacer(Modifier.height(16.dp))
-                            Text("Started: ${'$'}{sdf.format(Date(state.activeFast.startTime))}")
+                            Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
                             Spacer(Modifier.height(16.dp))
                             Button(
                                 onClick = onEndFast,
@@ -296,7 +298,7 @@ fun DashboardScreen(
                                 }
                             }
                             Spacer(Modifier.height(16.dp))
-                            Text("Started: ${'$'}{sdf.format(Date(state.activeFast.startTime))}")
+                            Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
                             Spacer(Modifier.height(16.dp))
                             Button(
                                 onClick = onEndFast,
@@ -357,7 +359,7 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(16.dp))
-                                Text("Started: ${'$'}{sdf.format(Date(state.activeFast.startTime))}")
+                                Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
                                 Spacer(Modifier.height(16.dp))
                                 Button(
                                     onClick = onEndFast,
@@ -434,27 +436,27 @@ fun DashboardScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             StatisticTile(
                                 modifier = Modifier.weight(1f),
                                 icon = Icons.Default.BarChart,
                                 label = "Total Fasts",
                                 value = stats.totalFasts.toString(),
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                             StatisticTile(
                                 modifier = Modifier.weight(1f),
                                 icon = Icons.Default.Timer,
                                 label = "Total Time",
                                 value = formatDuration(stats.totalFastingTime),
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                         }
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             StatisticTile(
                                 modifier = Modifier.weight(1f),
@@ -462,16 +464,16 @@ fun DashboardScreen(
                                 label = "Longest Fast",
                                 value = stats.longestFast?.let { formatDuration(it.duration().milliseconds) } ?: "-",
                                 onClick = { stats.longestFast?.id?.let(onViewFastDetails) },
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                             StatisticTile(
                                 modifier = Modifier.weight(1f),
                                 icon = Icons.Default.AvTimer,
                                 label = "Average Fast",
                                 value = formatDuration(stats.averageFast),
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                         }
                     }
@@ -484,10 +486,19 @@ fun DashboardScreen(
                     .fillMaxWidth()
                     .clickable { onHistoryClick() }
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("History", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(16.dp))
-                    Text("View your complete fasting history.")
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "History",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Go to History"
+                    )
                 }
             }
         }

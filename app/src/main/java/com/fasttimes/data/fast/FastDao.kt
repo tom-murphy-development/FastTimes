@@ -8,13 +8,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FastDao {
-    @Query("SELECT * FROM fast_table ORDER BY startTime DESC")
+    @Query("SELECT * FROM fasts ORDER BY startTime DESC")
     fun getAllFasts(): Flow<List<Fast>>
 
-    @Query("SELECT * FROM fast_table WHERE id = :id")
+    @Query("SELECT * FROM fasts WHERE id = :id")
     suspend fun getFast(id: Long): Fast?
 
-    @Query("SELECT * FROM fast_table WHERE startTime < :dayEnd AND (endTime IS NULL OR endTime > :dayStart) ORDER BY startTime DESC")
+    @Query("SELECT * FROM fasts WHERE startTime < :dayEnd AND (endTime IS NULL OR endTime > :dayStart) ORDER BY startTime DESC")
     fun getFastsForDay(dayStart: Long, dayEnd: Long): Flow<List<Fast>>
 
     @Insert
@@ -23,6 +23,6 @@ interface FastDao {
     @Update
     suspend fun updateFast(fast: Fast)
 
-    @Query("UPDATE fast_table SET endTime = :endTime WHERE id = :id")
+    @Query("UPDATE fasts SET endTime = :endTime WHERE id = :id")
     suspend fun updateFastEndTime(id: Long, endTime: Long)
 }

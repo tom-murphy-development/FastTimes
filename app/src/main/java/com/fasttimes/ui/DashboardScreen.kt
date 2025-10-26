@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,9 +44,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,13 +63,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.FastingProfile
+import com.fasttimes.ui.components.StatisticItem
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
 import nl.dionsegijn.konfetti.compose.KonfettiView
@@ -80,6 +79,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -87,7 +87,8 @@ import java.util.concurrent.TimeUnit
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     onSettingsClick: () -> Unit,
-    onHistoryClick: () -> Unit
+    onHistoryClick: () -> Unit,
+    onViewFastDetails: (Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val profiles by viewModel.profiles.collectAsState(initial = emptyList())
@@ -434,19 +435,20 @@ fun DashboardScreen(
                         label = "Total Fasts",
                         value = stats.totalFasts.toString()
                     )
-                    Divider()
+                    HorizontalDivider()
                     StatisticItem(
                         icon = Icons.Default.Timer,
                         label = "Total Fasting Time",
                         value = formatDuration(stats.totalFastingTime)
                     )
-                    Divider()
+                    HorizontalDivider()
                     StatisticItem(
                         icon = Icons.Default.Star,
                         label = "Longest Fast",
-                        value = formatDuration(stats.longestFast)
+                        value = stats.longestFast?.let { formatDuration(it.duration().milliseconds) } ?: "-",
+                        onClick = { stats.longestFast?.id?.let(onViewFastDetails) }
                     )
-                    Divider()
+                    HorizontalDivider()
                     StatisticItem(
                         icon = Icons.Default.AvTimer,
                         label = "Average Fast",
@@ -467,36 +469,6 @@ fun DashboardScreen(
                     Text("View your complete fasting history.")
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun StatisticItem(icon: ImageVector, label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null, // decorative
-            modifier = Modifier
-                .size(40.dp)
-                .padding(end = 16.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Column {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-            )
         }
     }
 }

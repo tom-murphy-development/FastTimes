@@ -33,7 +33,7 @@ import kotlin.time.Duration.Companion.milliseconds
 // Placeholder for stats data class
 data class DashboardStats(
     val totalFasts: Int = 0,
-    val longestFast: Duration = Duration.ZERO,
+    val longestFast: Fast? = null,
     val totalFastingTime: Duration = Duration.ZERO,
     val averageFast: Duration = Duration.ZERO
 )
@@ -80,9 +80,9 @@ class DashboardViewModel @Inject constructor(
 
             DashboardStats(
                 totalFasts = fasts.size,
-                longestFast = fasts.maxOfOrNull { fast ->
+                longestFast = fasts.maxByOrNull { fast ->
                     (fast.endTime ?: System.currentTimeMillis()) - fast.startTime
-                }?.milliseconds ?: Duration.ZERO,
+                },
                 totalFastingTime = totalFastingTime,
                 averageFast = if (completedFastsCount > 0) {
                     totalFastingTime / completedFastsCount

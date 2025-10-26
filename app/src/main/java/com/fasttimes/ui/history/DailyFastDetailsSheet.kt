@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.theme.FastTimesTheme
 import java.time.Duration
@@ -197,7 +198,8 @@ private fun DailyFastDetailsSheetPreview() {
                     previewDate.plusDays(1).atTime(14, 47),
                     java.time.ZoneId.systemDefault()
                 ).toInstant().toEpochMilli(),
-                targetDuration = 16 * 3600 * 1000L
+                targetDuration = 16 * 3600 * 1000L,
+                profile = FastingProfile.SIXTEEN_EIGHT
             ),
             Fast(
                 id = 2,
@@ -209,7 +211,8 @@ private fun DailyFastDetailsSheetPreview() {
                     previewDate.atTime(10, 11),
                     java.time.ZoneId.systemDefault()
                 ).toInstant().toEpochMilli(),
-                targetDuration = 12 * 3600 * 1000L
+                targetDuration = 12 * 3600 * 1000L,
+                profile = FastingProfile.TWELVE_TWELVE
             )
         )
         val timeline = generateTimelineSegments(previewDate, previewFasts)

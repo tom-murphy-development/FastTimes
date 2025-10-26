@@ -16,6 +16,7 @@
 
 package com.fasttimes.ui.history
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasttimes.data.fast.Fast
@@ -26,20 +27,38 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    fastsRepository: FastsRepository,
+    private val fastsRepository: FastsRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _displayedMonth = MutableStateFlow(YearMonth.now())
     private val _selectedDay = MutableStateFlow<Int?>(null)
+
+    init {
+        viewModelScope.launch {
+            val fastId: Long? = savedStateHandle.get<Long>("fastId")
+            if (fastId != null && fastId != -1L) {
+                val fast = fastsRepository.getFasts().first().find { it.id == fastId }
+                if (fast != null) {
+                    val fastDate = fast.start.withZoneSameInstant(ZoneId.systemDefault())
+                    _displayedMonth.value = YearMonth.from(fastDate)
+                    _selectedDay.value = fastDate.dayOfMonth
+                }
+            }
+        }
+    }
 
     /**
      * A data class to hold all calculated data for a given month.
@@ -138,7 +157,9 @@ class HistoryViewModel @Inject constructor(
             selectedDay = selectedDay,
             dayStatusByDayOfMonth = month.dayStatusByDayOfMonth.toImmutableMap(),
             dailyTimelineSegments = month.dailyTimelineSegments.toImmutableMap(),
-            selectedDayFasts = fastsForSelectedDay
+            selectedDayFasts = fastsForSelectedDay,
+            totalFastsInMonth = month.fastsInMonth.size,
+            longestFastInMonth = (month.fastsInMonth.map { it.duration() }.maxOrNull() ?: 0L).milliseconds
         )
     }.stateIn(
         scope = viewModelScope,

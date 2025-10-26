@@ -5,6 +5,7 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import java.time.LocalDate
 import java.time.YearMonth
+import kotlin.time.Duration
 
 enum class DayStatus {
     GOAL_MET,
@@ -18,5 +19,7 @@ data class HistoryUiState(
     val fastsByDay: ImmutableMap<LocalDate, List<Fast>> = persistentMapOf(),
     val dayStatusByDayOfMonth: ImmutableMap<Int, DayStatus> = persistentMapOf(),
     val dailyTimelineSegments: ImmutableMap<Int, List<TimelineSegment>> = persistentMapOf(),
-    val selectedDayFasts: List<Fast> = emptyList()
+    val selectedDayFasts: List<Fast> = emptyList(),
+    val totalFastsInMonth: Int = 0,
+    val longestFastInMonth: Duration = Duration.ZERO,
 )

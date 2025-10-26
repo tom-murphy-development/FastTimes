@@ -1,8 +1,12 @@
 package com.fasttimes.ui.history
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -15,7 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.fasttimes.ui.components.StatisticItem
+import com.fasttimes.ui.formatDuration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,13 +48,17 @@ fun HistoryScreen(
             )
         }
     ) { paddingValues ->
-        CalendarView(
-            uiState = uiState,
-            onPreviousMonth = viewModel::onPreviousMonth,
-            onNextMonth = viewModel::onNextMonth,
-            onDayClick = viewModel::onDayClick,
-            modifier = Modifier.padding(paddingValues)
-        )
+        Column() {
+            CalendarView(
+                uiState = uiState,
+                onPreviousMonth = viewModel::onPreviousMonth,
+                onNextMonth = viewModel::onNextMonth,
+                onDayClick = viewModel::onDayClick,
+                modifier = Modifier.padding(paddingValues)
+            )
+
+            MonthlyStats(uiState = uiState)
+        }
 
         if (uiState.selectedDay != null) {
             val selectedDate = uiState.selectedDate.withDayOfMonth(uiState.selectedDay!!)
@@ -65,6 +76,24 @@ fun HistoryScreen(
                     onSwipeRight = viewModel::onPreviousDay
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun MonthlyStats(uiState: HistoryUiState) {
+    Card(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            StatisticItem(
+                icon = Icons.Default.FitnessCenter,
+                label = "Total Fasts",
+                value = uiState.totalFastsInMonth.toString()
+            )
+            StatisticItem(
+                icon = Icons.Default.Star,
+                label = "Longest Fast",
+                value = formatDuration(uiState.longestFastInMonth)
+            )
         }
     }
 }

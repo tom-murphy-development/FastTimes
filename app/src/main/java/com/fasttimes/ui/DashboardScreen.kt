@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,15 +32,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AvTimer
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -58,6 +64,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -415,11 +422,36 @@ fun DashboardScreen(
             // Statistics Section
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Statistics", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(16.dp))
-                    Text("Total Fasts: ${stats.totalFasts}")
-                    Text("Total Fasting Time: ${formatDuration(stats.totalFastingTime)}")
-                    Text("Longest Fast: ${formatDuration(stats.longestFast)}")
+                    Text(
+                        text = "Statistics",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    )
+                    StatisticItem(
+                        icon = Icons.Default.FitnessCenter,
+                        label = "Total Fasts",
+                        value = stats.totalFasts.toString()
+                    )
+                    Divider()
+                    StatisticItem(
+                        icon = Icons.Default.Timer,
+                        label = "Total Fasting Time",
+                        value = formatDuration(stats.totalFastingTime)
+                    )
+                    Divider()
+                    StatisticItem(
+                        icon = Icons.Default.Star,
+                        label = "Longest Fast",
+                        value = formatDuration(stats.longestFast)
+                    )
+                    Divider()
+                    StatisticItem(
+                        icon = Icons.Default.AvTimer,
+                        label = "Average Fast",
+                        value = formatDuration(stats.averageFast)
+                    )
                 }
             }
 
@@ -435,6 +467,36 @@ fun DashboardScreen(
                     Text("View your complete fasting history.")
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun StatisticItem(icon: ImageVector, label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null, // decorative
+            modifier = Modifier
+                .size(40.dp)
+                .padding(end = 16.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+            )
         }
     }
 }

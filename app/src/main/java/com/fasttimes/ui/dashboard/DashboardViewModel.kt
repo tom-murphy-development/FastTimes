@@ -34,7 +34,8 @@ import kotlin.time.Duration.Companion.milliseconds
 data class DashboardStats(
     val totalFasts: Int = 0,
     val longestFast: Duration = Duration.ZERO,
-    val totalFastingTime: Duration = Duration.ZERO
+    val totalFastingTime: Duration = Duration.ZERO,
+    val averageFast: Duration = Duration.ZERO
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -73,16 +74,21 @@ class DashboardViewModel @Inject constructor(
      */
     val stats: StateFlow<DashboardStats> = history
         .map { fasts ->
-            val totalTimeInMillis = fasts
-                .filter { it.endTime != null } // only completed fasts
-                .sumOf { it.endTime!! - it.startTime }
+            val completedFasts = fasts.filter { it.endTime != null }
+            val totalFastingTime = completedFasts.sumOf { it.endTime!! - it.startTime }.milliseconds
+            val completedFastsCount = completedFasts.size
 
             DashboardStats(
                 totalFasts = fasts.size,
                 longestFast = fasts.maxOfOrNull { fast ->
                     (fast.endTime ?: System.currentTimeMillis()) - fast.startTime
                 }?.milliseconds ?: Duration.ZERO,
-                totalFastingTime = totalTimeInMillis.milliseconds
+                totalFastingTime = totalFastingTime,
+                averageFast = if (completedFastsCount > 0) {
+                    totalFastingTime / completedFastsCount
+                } else {
+                    Duration.ZERO
+                }
             )
         }
         .stateIn(

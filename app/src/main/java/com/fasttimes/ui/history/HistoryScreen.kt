@@ -1,6 +1,8 @@
 package com.fasttimes.ui.history
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -10,6 +12,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -18,11 +21,15 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.fasttimes.ui.components.StatisticItem
+import com.fasttimes.ui.components.StatisticTile
 import com.fasttimes.ui.formatDuration
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +55,7 @@ fun HistoryScreen(
             )
         }
     ) { paddingValues ->
-        Column() {
+        Column {
             CalendarView(
                 uiState = uiState,
                 onPreviousMonth = viewModel::onPreviousMonth,
@@ -82,18 +89,37 @@ fun HistoryScreen(
 
 @Composable
 private fun MonthlyStats(uiState: HistoryUiState) {
+    val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM", Locale.getDefault()) }
+
     Card(modifier = Modifier.padding(16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
-            StatisticItem(
-                icon = Icons.Default.BarChart,
-                label = "Total Fasts",
-                value = uiState.totalFastsInMonth.toString()
+            Text(
+                text = "${uiState.displayedMonth.format(monthFormatter)} Statistics",
+                style = MaterialTheme.typography.titleLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
-            StatisticItem(
-                icon = Icons.Default.Star,
-                label = "Longest Fast",
-                value = formatDuration(uiState.longestFastInMonth)
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatisticTile(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.BarChart,
+                    label = "Total Fasts",
+                    value = uiState.totalFastsInMonth.toString(),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                StatisticTile(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.Star,
+                    label = "Longest Fast",
+                    value = formatDuration(uiState.longestFastInMonth),
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
         }
     }
 }

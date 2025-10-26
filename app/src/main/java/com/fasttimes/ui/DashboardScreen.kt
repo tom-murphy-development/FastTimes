@@ -440,13 +440,17 @@ fun DashboardScreen(
                                 modifier = Modifier.weight(1f),
                                 icon = Icons.Default.BarChart,
                                 label = "Total Fasts",
-                                value = stats.totalFasts.toString()
+                                value = stats.totalFasts.toString(),
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             StatisticTile(
                                 modifier = Modifier.weight(1f),
                                 icon = Icons.Default.Timer,
                                 label = "Total Time",
-                                value = formatDuration(stats.totalFastingTime)
+                                value = formatDuration(stats.totalFastingTime),
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                         Row(
@@ -457,13 +461,17 @@ fun DashboardScreen(
                                 icon = Icons.Default.Star,
                                 label = "Longest Fast",
                                 value = stats.longestFast?.let { formatDuration(it.duration().milliseconds) } ?: "-",
-                                onClick = { stats.longestFast?.id?.let(onViewFastDetails) }
+                                onClick = { stats.longestFast?.id?.let(onViewFastDetails) },
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             StatisticTile(
                                 modifier = Modifier.weight(1f),
                                 icon = Icons.Default.AvTimer,
                                 label = "Average Fast",
-                                value = formatDuration(stats.averageFast)
+                                value = formatDuration(stats.averageFast),
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }

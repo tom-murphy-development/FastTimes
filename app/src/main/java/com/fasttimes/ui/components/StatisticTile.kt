@@ -1,5 +1,6 @@
 package com.fasttimes.ui.components
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,6 +33,8 @@ import androidx.compose.ui.unit.dp
  * @param icon The [ImageVector] to display at the top of the tile.
  * @param label The text describing the statistic.
  * @param value The string representation of the statistic's value.
+ * @param containerColor The color of the card's container.
+ * @param contentColor The color of the card's content.
  * @param onClick An optional lambda to be invoked when the tile is clicked. If null, the tile will not be clickable.
  */
 @Composable
@@ -39,19 +43,24 @@ fun StatisticTile(
     icon: ImageVector,
     label: String,
     value: String,
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
     onClick: (() -> Unit)? = null
 ) {
-    val cardModifier = if (onClick != null) {
-        modifier.clickable(onClick = onClick)
-    } else {
-        modifier
+    var cardModifier = modifier
+    if (onClick != null) {
+        cardModifier = cardModifier.clickable(onClick = onClick)
     }
 
     Card(
-        modifier = cardModifier,
+        modifier = cardModifier.border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant,
+            shape = CardDefaults.shape
+        ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            containerColor = containerColor,
+            contentColor = contentColor
         )
     ) {
         Column(

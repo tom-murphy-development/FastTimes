@@ -250,7 +250,7 @@ fun DashboardScreen(
                                     CircularProgressIndicator(
                                         progress = 1f,
                                         modifier = Modifier.size(260.dp),
-                                        color = Color(0xFF4CAF50), // Vibrant success color
+                                        color = Color(0xFF3DDC84), // Vibrant success color
                                         strokeWidth = 20.dp,
                                         trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
                                         strokeCap = StrokeCap.Round
@@ -259,7 +259,7 @@ fun DashboardScreen(
                                         Text(
                                             text = "Goal Reached!",
                                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                            color = Color(0xFF4CAF50)
+                                            color = Color(0xFF3DDC84)
                                         )
                                         Spacer(Modifier.height(8.dp))
 

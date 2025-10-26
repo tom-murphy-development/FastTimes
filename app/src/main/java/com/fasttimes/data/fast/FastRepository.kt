@@ -14,5 +14,7 @@ class FastRepository(private val fastDao: FastDao) {
 
     suspend fun insertFast(fast: Fast): Long = fastDao.insertFast(fast)
 
+    suspend fun updateFast(fast: Fast) = fastDao.updateFast(fast)
+
     suspend fun endFast(id: Long, endTime: Long) = fastDao.updateFastEndTime(id, endTime)
 }

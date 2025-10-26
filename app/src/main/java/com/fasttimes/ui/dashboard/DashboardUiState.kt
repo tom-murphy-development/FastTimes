@@ -35,4 +35,15 @@ sealed class DashboardUiState {
         val activeFast: Fast,
         val totalElapsedTime: Duration
     ) : DashboardUiState()
+
+    /**
+     * The state where a manual fast is in progress.
+     *
+     * @param activeFast The currently active fast.
+     * @param elapsedTime The time elapsed since the fast started.
+     */
+    data class ManualFasting(
+        val activeFast: Fast,
+        val elapsedTime: Duration
+    ) : DashboardUiState()
 }

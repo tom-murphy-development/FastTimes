@@ -56,7 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.FastingProfile
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
@@ -145,7 +145,7 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Fasting Dashboard") },
+                title = { Text("Fast Times") },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
                         Icon(Icons.Filled.Settings, contentDescription = "Settings")
@@ -194,7 +194,7 @@ fun DashboardScreen(
                             Spacer(Modifier.height(16.dp))
                             Box(contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator(
-                                    progress = state.progress,
+                                    progress = { state.progress },
                                     modifier = Modifier.size(260.dp),
                                     color = MaterialTheme.colorScheme.primary,
                                     strokeWidth = 20.dp,
@@ -235,6 +235,53 @@ fun DashboardScreen(
                             }
                         }
                     }
+                    is DashboardUiState.ManualFasting -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Manual Fast", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
+                            Spacer(Modifier.height(16.dp))
+                            Box(contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(
+                                    progress = { 1f }, // Static progress for manual fast
+                                    modifier = Modifier.size(260.dp),
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    strokeWidth = 20.dp,
+                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
+                                    strokeCap = StrokeCap.Round
+                                )
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "Elapsed Time",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+
+                                    Text(
+                                        text = formatDuration(state.elapsedTime),
+                                        style = MaterialTheme.typography.displaySmall
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = onEndFast,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            ) {
+                                Icon(Icons.Filled.Stop, contentDescription = "End Fast")
+                                Spacer(Modifier.width(8.dp))
+                                Text("End Fast")
+                            }
+                        }
+                    }
                     is DashboardUiState.FastingGoalReached -> {
                         // Use a Box to allow stacking Composables. The confetti will be drawn on top of the Column.
                         Box(contentAlignment = Alignment.TopCenter) {
@@ -248,7 +295,7 @@ fun DashboardScreen(
                                 Spacer(Modifier.height(16.dp))
                                 Box(contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(
-                                        progress = 1f,
+                                        progress = { 1f },
                                         modifier = Modifier.size(260.dp),
                                         color = Color(0xFF3DDC84), // Vibrant success color
                                         strokeWidth = 20.dp,

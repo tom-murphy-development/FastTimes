@@ -103,21 +103,26 @@ class DashboardViewModel @Inject constructor(
                 while (true) {
                     val now = System.currentTimeMillis()
                     val startTime = activeFast.startTime
-                    val targetDuration = activeFast.targetDuration?.milliseconds ?: Duration.ZERO
-                    val targetEndTime = startTime + targetDuration.inWholeMilliseconds
 
-                    // Check if the goal has been reached
-                    if (now >= targetEndTime) {
-                        // For Manual fasts or fasts that have passed their goal
+                    if (activeFast.profile == FastingProfile.MANUAL) {
                         val elapsedTime = (now - startTime).milliseconds
-                        emit(DashboardUiState.FastingGoalReached(activeFast, elapsedTime))
+                        emit(DashboardUiState.ManualFasting(activeFast, elapsedTime))
                     } else {
-                        // For fasts still counting down
-                        val remainingTime = (targetEndTime - now).milliseconds
-                        val progress = 1f - (remainingTime.inWholeMilliseconds.toFloat() / targetDuration.inWholeMilliseconds)
-                        emit(DashboardUiState.FastingInProgress(activeFast, remainingTime, progress))
-                    }
+                        val targetDuration = activeFast.targetDuration?.milliseconds ?: Duration.ZERO
+                        val targetEndTime = startTime + targetDuration.inWholeMilliseconds
 
+                        // Check if the goal has been reached
+                        if (now >= targetEndTime) {
+                            // For fasts that have passed their goal
+                            val elapsedTime = (now - startTime).milliseconds
+                            emit(DashboardUiState.FastingGoalReached(activeFast, elapsedTime))
+                        } else {
+                            // For fasts still counting down
+                            val remainingTime = (targetEndTime - now).milliseconds
+                            val progress = 1f - (remainingTime.inWholeMilliseconds.toFloat() / targetDuration.inWholeMilliseconds)
+                            emit(DashboardUiState.FastingInProgress(activeFast, remainingTime, progress))
+                        }
+                    }
                     delay(1000)
                 }
             }
@@ -169,7 +174,7 @@ class DashboardViewModel @Inject constructor(
             val fast = Fast(
                 startTime = System.currentTimeMillis(),
                 profile = FastingProfile.MANUAL,
-                targetDuration = null, // Manual has no target
+                targetDuration = 0L, // Manual has 0 duration goal
                 endTime = null,
                 notes = null
             )
@@ -194,7 +199,7 @@ class DashboardViewModel @Inject constructor(
                     profile = profile,
                     targetDuration = durationMillis,
                     endTime = null,
-                    notes = "Started ${profile.displayName} fast"
+                    notes = "Started ${'$'}{profile.displayName} fast"
                 )
                 val fastId = fastRepository.insertFast(fast)
                 alarmScheduler.schedule(fast.copy(id = fastId))
@@ -208,16 +213,25 @@ class DashboardViewModel @Inject constructor(
      * Ends the currently active fast.
      */
     fun endCurrentFast() {
-        val fastToEnd = when (val state = uiState.value) {
-            is DashboardUiState.FastingInProgress -> state.activeFast
-            is DashboardUiState.FastingGoalReached -> state.activeFast
+        val uiValue = uiState.value
+        val fastToEnd = when (uiValue) {
+            is DashboardUiState.FastingInProgress -> uiValue.activeFast
+            is DashboardUiState.FastingGoalReached -> uiValue.activeFast
+            is DashboardUiState.ManualFasting -> uiValue.activeFast
             else -> null
         }
 
         val fast = fastToEnd ?: return
         viewModelScope.launch {
             alarmScheduler.cancel(fast)
-            fastRepository.endFast(fast.id, System.currentTimeMillis())
+
+            val endTime = System.currentTimeMillis()
+            if (fast.profile == FastingProfile.MANUAL) {
+                val elapsedTime = endTime - fast.startTime
+                fastRepository.updateFast(fast.copy(targetDuration = elapsedTime))
+            }
+
+            fastRepository.endFast(fast.id, endTime)
             stopService()
         }
     }

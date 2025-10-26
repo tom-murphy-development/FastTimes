@@ -3,6 +3,7 @@ package com.fasttimes.data.fast
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -18,6 +19,9 @@ interface FastDao {
 
     @Insert
     suspend fun insertFast(fast: Fast): Long
+
+    @Update
+    suspend fun updateFast(fast: Fast)
 
     @Query("UPDATE fast_table SET endTime = :endTime WHERE id = :id")
     suspend fun updateFastEndTime(id: Long, endTime: Long)

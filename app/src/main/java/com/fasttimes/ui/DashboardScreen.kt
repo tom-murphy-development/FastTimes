@@ -32,7 +32,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AvTimer
-import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -431,7 +431,7 @@ fun DashboardScreen(
                             .padding(bottom = 8.dp)
                     )
                     StatisticItem(
-                        icon = Icons.Default.FitnessCenter,
+                        icon = Icons.Default.BarChart,
                         label = "Total Fasts",
                         value = stats.totalFasts.toString()
                     )

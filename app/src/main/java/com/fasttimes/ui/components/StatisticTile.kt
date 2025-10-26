@@ -1,3 +1,5 @@
+package com.fasttimes.ui.components
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

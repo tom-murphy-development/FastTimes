@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,7 +47,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -69,14 +69,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.FastingProfile
-import com.fasttimes.ui.components.StatisticItem
+import com.fasttimes.ui.components.StatisticTile
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
@@ -234,7 +233,7 @@ fun DashboardScreen(
                                 }
                             }
                             Spacer(Modifier.height(16.dp))
-                            Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                            Text("Started: ${'$'}{sdf.format(Date(state.activeFast.startTime))}")
                             Spacer(Modifier.height(16.dp))
                             Button(
                                 onClick = onEndFast,
@@ -297,7 +296,7 @@ fun DashboardScreen(
                                 }
                             }
                             Spacer(Modifier.height(16.dp))
-                            Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                            Text("Started: ${'$'}{sdf.format(Date(state.activeFast.startTime))}")
                             Spacer(Modifier.height(16.dp))
                             Button(
                                 onClick = onEndFast,
@@ -358,7 +357,7 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(16.dp))
-                                Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                                Text("Started: ${'$'}{sdf.format(Date(state.activeFast.startTime))}")
                                 Spacer(Modifier.height(16.dp))
                                 Button(
                                     onClick = onEndFast,
@@ -430,30 +429,44 @@ fun DashboardScreen(
                             .fillMaxWidth()
                             .padding(bottom = 8.dp)
                     )
-                    StatisticItem(
-                        icon = Icons.Default.BarChart,
-                        label = "Total Fasts",
-                        value = stats.totalFasts.toString()
-                    )
-                    HorizontalDivider()
-                    StatisticItem(
-                        icon = Icons.Default.Timer,
-                        label = "Total Fasting Time",
-                        value = formatDuration(stats.totalFastingTime)
-                    )
-                    HorizontalDivider()
-                    StatisticItem(
-                        icon = Icons.Default.Star,
-                        label = "Longest Fast",
-                        value = stats.longestFast?.let { formatDuration(it.duration().milliseconds) } ?: "-",
-                        onClick = { stats.longestFast?.id?.let(onViewFastDetails) }
-                    )
-                    HorizontalDivider()
-                    StatisticItem(
-                        icon = Icons.Default.AvTimer,
-                        label = "Average Fast",
-                        value = formatDuration(stats.averageFast)
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            StatisticTile(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Default.BarChart,
+                                label = "Total Fasts",
+                                value = stats.totalFasts.toString()
+                            )
+                            StatisticTile(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Default.Timer,
+                                label = "Total Time",
+                                value = formatDuration(stats.totalFastingTime)
+                            )
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            StatisticTile(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Default.Star,
+                                label = "Longest Fast",
+                                value = stats.longestFast?.let { formatDuration(it.duration().milliseconds) } ?: "-",
+                                onClick = { stats.longestFast?.id?.let(onViewFastDetails) }
+                            )
+                            StatisticTile(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Default.AvTimer,
+                                label = "Average Fast",
+                                value = formatDuration(stats.averageFast)
+                            )
+                        }
+                    }
                 }
             }
 

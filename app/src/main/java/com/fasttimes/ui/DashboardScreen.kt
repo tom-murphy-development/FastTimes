@@ -62,7 +62,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.FastingProfile
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
@@ -72,6 +72,7 @@ import nl.dionsegijn.konfetti.core.emitter.Emitter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -95,7 +96,7 @@ fun DashboardScreen(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (!isGranted) Unit
-                // Handle the case where the user denies the permission
+            // Handle the case where the user denies the permission
         }
     )
 
@@ -247,7 +248,7 @@ fun DashboardScreen(
                             initialValue = 1f,
                             targetValue = 1.05f,
                             animationSpec = infiniteRepeatable(
-                                animation = tween(6500, easing = LinearEasing),
+                                animation = tween(1500, easing = LinearEasing),
                                 repeatMode = RepeatMode.Reverse
                             ),
                             label = "pulsating_scale"
@@ -305,6 +306,12 @@ fun DashboardScreen(
                         }
                     }
                     is DashboardUiState.FastingGoalReached -> {
+                        if (state.showConfetti) {
+                            LaunchedEffect(state.activeFast.id) {
+                                viewModel.onConfettiShown(state.activeFast.id)
+                            }
+                        }
+
                         // Use a Box to allow stacking Composables. The confetti will be drawn on top of the Column.
                         Box(contentAlignment = Alignment.TopCenter) {
                             Column(
@@ -359,22 +366,24 @@ fun DashboardScreen(
                                 }
                             }
 
-                            KonfettiView(
-                                modifier = Modifier.matchParentSize(),
-                                parties = remember {
-                                    listOf(
-                                        Party(
-                                            speed = 0f,
-                                            maxSpeed = 15f,
-                                            damping = 0.9f,
-                                            spread = 360,
-                                            colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
-                                            position = nl.dionsegijn.konfetti.core.Position.Relative(0.5, 0.0),
-                                            emitter = Emitter(duration = 5, java.util.concurrent.TimeUnit.SECONDS).perSecond(100)
+                            if (state.showConfetti) {
+                                KonfettiView(
+                                    modifier = Modifier.matchParentSize(),
+                                    parties = remember {
+                                        listOf(
+                                            Party(
+                                                speed = 0f,
+                                                maxSpeed = 15f,
+                                                damping = 0.9f,
+                                                spread = 360,
+                                                colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
+                                                position = nl.dionsegijn.konfetti.core.Position.Relative(0.5, 0.0),
+                                                emitter = Emitter(duration = 5, TimeUnit.SECONDS).perSecond(100)
+                                            )
                                         )
-                                    )
-                                }
-                            )
+                                    }
+                                )
+                            }
                         }
                     }
                 }

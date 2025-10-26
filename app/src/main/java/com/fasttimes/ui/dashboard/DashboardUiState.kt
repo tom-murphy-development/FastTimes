@@ -30,10 +30,12 @@ sealed class DashboardUiState {
      *
      * @param activeFast The currently active fast.
      * @param totalElapsedTime The total time elapsed since the fast started.
+     * @param showConfetti Whether to show the confetti animation.
      */
     data class FastingGoalReached(
         val activeFast: Fast,
-        val totalElapsedTime: Duration
+        val totalElapsedTime: Duration,
+        val showConfetti: Boolean
     ) : DashboardUiState()
 
     /**

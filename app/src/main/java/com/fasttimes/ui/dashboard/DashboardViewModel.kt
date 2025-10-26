@@ -49,6 +49,8 @@ class DashboardViewModel @Inject constructor(
 
     // --- STATE ---
 
+    private val _confettiShownForFast = MutableStateFlow<Long?>(null)
+
     /**
      * Exposes the list of selectable profiles (all except MANUAL).
      */
@@ -115,7 +117,8 @@ class DashboardViewModel @Inject constructor(
                         if (now >= targetEndTime) {
                             // For fasts that have passed their goal
                             val elapsedTime = (now - startTime).milliseconds
-                            emit(DashboardUiState.FastingGoalReached(activeFast, elapsedTime))
+                            val showConfetti = _confettiShownForFast.value != activeFast.id
+                            emit(DashboardUiState.FastingGoalReached(activeFast, elapsedTime, showConfetti))
                         } else {
                             // For fasts still counting down
                             val remainingTime = (targetEndTime - now).milliseconds
@@ -144,6 +147,10 @@ class DashboardViewModel @Inject constructor(
 
 
     // --- ACTIONS ---
+
+    fun onConfettiShown(fastId: Long) {
+        _confettiShownForFast.value = fastId
+    }
 
     /**
      * Shows the profile details modal for the given profile.

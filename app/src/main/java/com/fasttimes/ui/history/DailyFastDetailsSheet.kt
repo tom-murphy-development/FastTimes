@@ -174,7 +174,7 @@ private fun FastDetailItem(
             Icon(
                 imageVector = if (fast.goalMet()) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
                 contentDescription = if (fast.goalMet()) "Goal Reached" else "Goal Not Reached",
-                tint = if (fast.goalMet()) Color(0xFF388E3C) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                tint = if (fast.goalMet()) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
         }
     }

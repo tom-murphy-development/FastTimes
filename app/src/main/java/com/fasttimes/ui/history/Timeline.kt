@@ -83,7 +83,7 @@ private fun TimelinePreview() {
         Timeline(
             segments = listOf(
                 TimelineSegment(Color.Gray, 0.25f),       // 12AM - 6AM
-                TimelineSegment(Color.Green, 0.5f),      // 6AM - 6PM
+                TimelineSegment(Color(0xFF3DDC84), 0.5f),      // 6AM - 6PM
                 TimelineSegment(Color.Gray, 0.25f)       // 6PM - 12AM
             ),
             modifier = Modifier.padding(16.dp)

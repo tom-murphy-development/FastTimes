@@ -101,7 +101,7 @@ fun generateTimelineSegments(date: LocalDate, fasts: List<Fast>): List<TimelineS
         val isFasting = mergedIntervals.any { (fastStart, fastEnd) ->
             !midpoint.isBefore(fastStart) && midpoint.isBefore(fastEnd)
         }
-        val color = if (isFasting) Color.Green else Color.Gray
+        val color = if (isFasting) Color(0xFF3DDC84) else Color.Gray
 
         val duration = Duration.between(start, end).toMinutes()
         if (duration > 0) {

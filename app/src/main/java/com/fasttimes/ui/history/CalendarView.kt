@@ -311,7 +311,7 @@ private fun RowScope.DayCell(
             }
 
             val iconColor = when (status) {
-                DayStatus.GOAL_MET -> Color.Green
+                DayStatus.GOAL_MET -> Color(0xFF3DDC84)
                 DayStatus.GOAL_NOT_MET -> Color.Gray
                 null -> Color.Transparent
             }
@@ -350,10 +350,10 @@ private fun CalendarViewPreview() {
                     23 to DayStatus.GOAL_NOT_MET
                 ).toImmutableMap(),
                 dailyTimelineSegments = mapOf(
-                    1 to listOf(TimelineSegment(Color.Green, 1f)),
-                    5 to listOf(TimelineSegment(Color.Green, 0.5f), TimelineSegment(Color.Gray, 0.5f)),
-                    10 to listOf(TimelineSegment(Color.Gray, 0.2f), TimelineSegment(Color.Green, 0.8f)),
-                    23 to listOf(TimelineSegment(Color.Green, 1f)),
+                    1 to listOf(TimelineSegment(Color(0xFF3DDC84), 1f)),
+                    5 to listOf(TimelineSegment(Color(0xFF3DDC84), 0.5f), TimelineSegment(Color.Gray, 0.5f)),
+                    10 to listOf(TimelineSegment(Color.Gray, 0.2f), TimelineSegment(Color(0xFF3DDC84), 0.8f)),
+                    23 to listOf(TimelineSegment(Color(0xFF3DDC84), 1f)),
                 ).toImmutableMap()
             ),
             onPreviousMonth = {},

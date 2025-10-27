@@ -207,7 +207,6 @@ fun DashboardScreen(
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(Modifier.height(16.dp))
-                            CircularProgressIndicator()
                         }
                     }
 

@@ -95,6 +95,7 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0")
+    implementation("androidx.compose.foundation:foundation:1.9.4")
 
     // Testing
     testImplementation(libs.junit)

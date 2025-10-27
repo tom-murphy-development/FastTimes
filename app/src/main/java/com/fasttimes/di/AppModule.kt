@@ -35,12 +35,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase = 
         Room.databaseBuilder(
             context,
             AppDatabase::class.java,
             "fasttimes-db"
-        ).fallbackToDestructiveMigration().build()
+        ).fallbackToDestructiveMigration(dropAllTables = true).build()
 
     @Provides
     fun provideFastDao(db: AppDatabase): FastDao = db.fastDao()

@@ -1,8 +1,7 @@
 package com.fasttimes.ui
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.splineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -18,7 +17,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -49,14 +47,10 @@ class DraggableScreenState(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun rememberDraggableScreenState(): DraggableScreenState {
-    val density = LocalDensity.current
+    // The state constructor is now very simple.
     val state = remember {
-        AnchoredDraggableState<DragAnchors>(
-            initialValue = DragAnchors.Dashboard,
-            positionalThreshold = { totalDistance -> totalDistance * 0.5f },
-            velocityThreshold = { with(density) { 100.dp.toPx() } },
-            snapAnimationSpec = tween(),
-            decayAnimationSpec = splineBasedDecay(density)
+        AnchoredDraggableState(
+            initialValue = DragAnchors.Dashboard
         )
     }
     val scope = rememberCoroutineScope()
@@ -82,6 +76,11 @@ fun DraggableScreen(
         }
         state.state.updateAnchors(anchors)
 
+        val flingBehavior = AnchoredDraggableDefaults.flingBehavior(
+            state = state.state,
+            positionalThreshold = { totalDistance -> totalDistance * 0.5f },
+        )
+
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -97,7 +96,12 @@ fun DraggableScreen(
                             y = 0,
                         )
                     }
-                    .anchoredDraggable(state.state, orientation = Orientation.Horizontal)
+                    // The modifier now takes the state and the new flingBehavior.
+                    .anchoredDraggable(
+                        state = state.state,
+                        orientation = Orientation.Horizontal,
+                        flingBehavior = flingBehavior
+                    )
             ) {
                 dashboardContent()
             }

@@ -51,10 +51,7 @@ fun EditFastRoute(
         onStartTimeChanged = viewModel::updateStartTime,
         onEndTimeChanged = viewModel::updateEndTime,
         onRatingChanged = viewModel::updateRating,
-        onSave = {
-            viewModel.saveChanges()
-            onDismiss()
-        },
+        onSave = { viewModel.saveChanges(onDismiss) },
         onCancel = onDismiss,
         onErrorDismissed = viewModel::clearError
     )

@@ -71,31 +71,37 @@ class EditFastViewModel @AssistedInject constructor(
         }
     }
 
-    fun saveChanges() {
+    fun saveChanges(onSuccess: () -> Unit) {
         viewModelScope.launch {
             val fastToSave = _uiState.value.fast
             if (fastToSave != null) {
-                if (validateFast(fastToSave)) {
+                val validationError = validateFast(fastToSave)
+                if (validationError == null) {
                     fastsRepository.updateFast(fastToSave)
+                    onSuccess()
                 } else {
-                    // Handle validation error
                     _uiState.update {
-                        it.copy(error = "End time must be after start time and not in the future.")
+                        it.copy(error = validationError)
                     }
                 }
             }
         }
     }
 
-    private fun validateFast(fast: Fast): Boolean {
-        val endTime = fast.endTime ?: return true // In-progress fast is always valid
-        if (endTime <= fast.startTime) {
-            return false
+    private fun validateFast(fast: Fast): String? {
+        if (fast.startTime > System.currentTimeMillis()) {
+            return "Start time cannot be in the future."
         }
-        if (endTime > System.currentTimeMillis()) {
-            return false
+        val endTime = fast.endTime
+        if (endTime != null) {
+            if (endTime <= fast.startTime) {
+                return "End time must be after start time."
+            }
+            if (endTime > System.currentTimeMillis()) {
+                return "End time cannot be in the future."
+            }
         }
-        return true
+        return null
     }
 
     fun clearError() {

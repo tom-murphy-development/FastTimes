@@ -27,6 +27,9 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
+import java.time.ZonedDateTime
+import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -102,16 +105,30 @@ class DashboardViewModel @Inject constructor(
     /**
      * The core UI state for the dashboard, representing the current fasting status.
      */
-    val uiState: StateFlow<DashboardUiState> = combine(history, _isEditing) { fasts, isEditing ->
+    val uiState: StateFlow<DashboardUiState> = combine(
+        history, _isEditing
+    ) { fasts, isEditing ->
         Pair(fasts, isEditing)
     }.flatMapLatest { (fasts, isEditing) ->
-        flow<DashboardUiState> {
-            val activeFast = fasts.firstOrNull { it.endTime == null }
+        if (fasts.isEmpty()) {
+            return@flatMapLatest flowOf(DashboardUiState.Loading)
+        }
 
-            if (activeFast == null) {
-                emit(DashboardUiState.NoFast)
-            } else {
-                // The main timer flow that updates every second
+        val activeFast = fasts.firstOrNull { it.endTime == null }
+
+        if (activeFast == null) {
+            val completedFasts = fasts.filter { it.endTime != null }.take(10)
+            val now = ZonedDateTime.now()
+            val startOfWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate().atStartOfDay(now.zone)
+            val startOfLastWeek = startOfWeek.minusWeeks(1)
+
+            val thisWeekFasts = completedFasts.filter { it.start.isAfter(startOfWeek) }
+            val lastWeekFasts = completedFasts.filter { it.start.isAfter(startOfLastWeek) && it.start.isBefore(startOfWeek) }
+
+            flowOf(DashboardUiState.NoFast(thisWeekFasts, lastWeekFasts, completedFasts.firstOrNull()))
+        } else {
+            // The main timer flow that updates every second
+            flow {
                 while (true) {
                     val now = System.currentTimeMillis()
                     val startTime = activeFast.startTime
@@ -128,12 +145,26 @@ class DashboardViewModel @Inject constructor(
                             // For fasts that have passed their goal
                             val elapsedTime = (now - startTime).milliseconds
                             val showConfetti = _confettiShownForFast.value != activeFast.id
-                            emit(DashboardUiState.FastingGoalReached(activeFast, elapsedTime, showConfetti, isEditing))
+                            emit(
+                                DashboardUiState.FastingGoalReached(
+                                    activeFast,
+                                    elapsedTime,
+                                    showConfetti,
+                                    isEditing
+                                )
+                            )
                         } else {
                             // For fasts still counting down
                             val remainingTime = (targetEndTime - now).milliseconds
                             val progress = 1f - (remainingTime.inWholeMilliseconds.toFloat() / targetDuration.inWholeMilliseconds)
-                            emit(DashboardUiState.FastingInProgress(activeFast, remainingTime, progress, isEditing))
+                            emit(
+                                DashboardUiState.FastingInProgress(
+                                    activeFast,
+                                    remainingTime,
+                                    progress,
+                                    isEditing
+                                )
+                            )
                         }
                     }
                     delay(1000)

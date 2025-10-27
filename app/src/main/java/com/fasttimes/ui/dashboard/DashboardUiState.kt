@@ -14,8 +14,17 @@ sealed class DashboardUiState {
 
     /**
      * The state where there is no active fast.
+     *
+     * @param thisWeekFasts Fasts completed this week.
+     * @param lastWeekFasts Fasts completed last week.
+     * @param lastFast The most recently completed fast, for fallback.
      */
-    data object NoFast : DashboardUiState()
+    data class NoFast(
+        val thisWeekFasts: List<Fast>,
+        val lastWeekFasts: List<Fast>,
+        val lastFast: Fast? = null
+    ) : DashboardUiState()
+
 
     /**
      * The state where a fast is currently in progress and the goal has not been reached yet.

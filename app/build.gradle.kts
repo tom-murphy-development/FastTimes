@@ -8,7 +8,7 @@ plugins {
 }
 
 ksp {
-    arg("room.schemaLocation", "$projectDir/app/schemas")
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 android {
     namespace = "com.fasttimes"
@@ -17,7 +17,7 @@ android {
     defaultConfig {
         applicationId = "com.fasttimes"
         minSdk = 33
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -47,8 +47,9 @@ android {
         compose = true
     }
 
+    @Suppress("UnstableApiUsage")
     composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
+        kotlinCompilerExtensionVersion = libs.versions.composeCompilerVersion.get()
     }
 
     packaging {
@@ -71,6 +72,7 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation(libs.material)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splashscreen)
     implementation(libs.compose.ui)
@@ -81,7 +83,7 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.konfetti.compose)
     implementation(libs.navigation.compose)
-    implementation("com.google.accompanist:accompanist-navigation-animation:0.36.0")
+    implementation(libs.accompanist.navigation.animation)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.lifecycle.viewmodel)
@@ -94,8 +96,8 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0")
-    implementation("androidx.compose.foundation:foundation:1.9.4")
+    implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.compose.foundation)
 
     // Testing
     testImplementation(libs.junit)
@@ -106,7 +108,7 @@ dependencies {
     // Android Testing
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso)
-    androidTestImplementation("org.mockito.kotlin:mockito-kotlin:6.1.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom-beta:2025.10.01"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation(libs.mockito.kotlin)
+    androidTestImplementation(platform(libs.compose.bom.beta))
+    androidTestImplementation(libs.compose.ui.test.junit4)
 }

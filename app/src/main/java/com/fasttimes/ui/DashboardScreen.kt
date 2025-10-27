@@ -1,12 +1,9 @@
 package com.fasttimes.ui
 
-import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -15,6 +12,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AvTimer
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Timer
@@ -44,13 +43,19 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,6 +70,9 @@ import com.fasttimes.data.FastingProfile
 import com.fasttimes.ui.components.StatisticTile
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
+import com.fasttimes.ui.editfast.EditFastRoute
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.emitter.Emitter
@@ -73,6 +81,18 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
+
+private val confettiParty = listOf(
+    Party(
+        speed = 0f,
+        maxSpeed = 15f,
+        damping = 0.9f,
+        spread = 360,
+        colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
+        position = nl.dionsegijn.konfetti.core.Position.Relative(0.5, 0.0),
+        emitter = Emitter(duration = 5, TimeUnit.SECONDS).perSecond(100)
+    )
+)
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -88,21 +108,13 @@ fun DashboardScreen(
     val stats by viewModel.stats.collectAsState()
     val modalProfile by viewModel.modalProfile.collectAsState()
     val showAlarmPermissionRationale by viewModel.showAlarmPermissionRationale.collectAsState()
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
 
     val sdf = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
     val context = LocalContext.current
 
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (!isGranted) Unit
-            // Handle the case where the user denies the permission
-        }
-    )
-
-    LaunchedEffect(Unit) {
-        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-    }
+    var parties by remember { mutableStateOf(emptyList<Party>()) }
 
     val onStartFast: (FastingProfile) -> Unit = { profile ->
         viewModel.startProfileFast(profile)
@@ -112,6 +124,22 @@ fun DashboardScreen(
     val onShowProfile: (FastingProfile) -> Unit = { profile -> viewModel.showProfileModal(profile) }
     val onDismissProfileDetails: () -> Unit = { viewModel.dismissProfileModal() }
     val onDismissAlarmPermissionRationale: () -> Unit = { viewModel.dismissAlarmPermissionRationale() }
+
+    val isEditing = when (uiState) {
+        is DashboardUiState.FastingInProgress -> (uiState as DashboardUiState.FastingInProgress).isEditing
+        is DashboardUiState.FastingGoalReached -> (uiState as DashboardUiState.FastingGoalReached).isEditing
+        is DashboardUiState.ManualFasting -> (uiState as DashboardUiState.ManualFasting).isEditing
+        else -> false
+    }
+
+    if (isEditing) {
+        ModalBottomSheet(
+            onDismissRequest = viewModel::onEditFastDismissed,
+            sheetState = sheetState
+        ) {
+            EditFastRoute(onDismiss = viewModel::onEditFastDismissed, fastId = null)
+        }
+    }
 
     if (modalProfile != null) {
         ProfileDetailsModal(
@@ -145,151 +173,226 @@ fun DashboardScreen(
         )
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        // Current Fast Section
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            when (val state = uiState) {
-                is DashboardUiState.NoFast -> {
-                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Current Fast", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(16.dp))
-                        Text("No fast in progress.", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                    }
-                }
-                is DashboardUiState.FastingInProgress -> {
-                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Current Fast", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(16.dp))
-                        Box(contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(
-                                progress = { state.progress },
-                                modifier = Modifier.size(260.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                strokeWidth = 20.dp,
-                                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
-                                strokeCap = StrokeCap.Round
+            // Current Fast Section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                when (val state = uiState) {
+                    is DashboardUiState.Loading -> {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Current Fast",
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    state.activeFast.profile.displayName,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(16.dp))
+                            CircularProgressIndicator()
+                        }
+                    }
 
-                                Text(
-                                    text = "Remaining",
-                                    style = MaterialTheme.typography.titleSmall
-                                )
+                    is DashboardUiState.NoFast -> {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Current Fast",
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Text(
+                                "No fast in progress.",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
 
+                    is DashboardUiState.FastingInProgress -> {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    text = formatDuration(state.remainingTime),
-                                    style = MaterialTheme.typography.displaySmall
+                                    "Current Fast",
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                                 )
+                                IconButton(onClick = viewModel::onEditFast) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit Fast"
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            Box(contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(
+                                    progress = { state.progress },
+                                    modifier = Modifier.size(260.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    strokeWidth = 20.dp,
+                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                        alpha = 0.1f
+                                    ),
+                                    strokeCap = StrokeCap.Round
+                                )
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        state.activeFast.profile.displayName,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+
+                                    Text(
+                                        text = "Remaining",
+                                        style = MaterialTheme.typography.titleSmall
+                                    )
+
+                                    Text(
+                                        text = formatDuration(state.remainingTime),
+                                        style = MaterialTheme.typography.displaySmall
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = onEndFast,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            ) {
+                                Icon(Icons.Filled.Stop, contentDescription = "End Fast")
+                                Spacer(Modifier.width(8.dp))
+                                Text("End Fast")
                             }
                         }
-                        Spacer(Modifier.height(16.dp))
-                        Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
-                        Spacer(Modifier.height(16.dp))
-                        Button(
-                            onClick = onEndFast,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        ) {
-                            Icon(Icons.Filled.Stop, contentDescription = "End Fast")
-                            Spacer(Modifier.width(8.dp))
-                            Text("End Fast")
-                        }
-                    }
-                }
-                is DashboardUiState.ManualFasting -> {
-                    val infiniteTransition = rememberInfiniteTransition(label = "pulsating_ring")
-                    val scale by infiniteTransition.animateFloat(
-                        initialValue = 1f,
-                        targetValue = 1.05f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1500, easing = LinearEasing),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "pulsating_scale"
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Manual Fast", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(16.dp))
-                        Box(contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(
-                                progress = { 1f }, // Static progress for manual fast
-                                modifier = Modifier
-                                    .size(260.dp)
-                                    .graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                    },
-                                color = MaterialTheme.colorScheme.secondary,
-                                strokeWidth = 20.dp,
-                                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
-                                strokeCap = StrokeCap.Round
-                            )
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "Elapsed Time",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Spacer(Modifier.height(8.dp))
-
-                                Text(
-                                    text = formatDuration(state.elapsedTime),
-                                    style = MaterialTheme.typography.displaySmall
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(16.dp))
-                        Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
-                        Spacer(Modifier.height(16.dp))
-                        Button(
-                            onClick = onEndFast,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        ) {
-                            Icon(Icons.Filled.Stop, contentDescription = "End Fast")
-                            Spacer(Modifier.width(8.dp))
-                            Text("End Fast")
-                        }
-                    }
-                }
-                is DashboardUiState.FastingGoalReached -> {
-                    if (state.showConfetti) {
-                        LaunchedEffect(state.activeFast.id) {
-                            viewModel.onConfettiShown(state.activeFast.id)
-                        }
                     }
 
-                    // Use a Box to allow stacking Composables. The confetti will be drawn on top of the Column.
-                    Box(contentAlignment = Alignment.TopCenter) {
+                    is DashboardUiState.ManualFasting -> {
+                        val infiniteTransition = rememberInfiniteTransition(label = "pulsating_ring")
+                        val scale by infiniteTransition.animateFloat(
+                            initialValue = 1f,
+                            targetValue = 1.05f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(1500, easing = LinearEasing),
+                                repeatMode = RepeatMode.Reverse
+                            ),
+                            label = "pulsating_scale"
+                        )
+
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Current Fast", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Manual Fast",
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                                )
+                                IconButton(onClick = viewModel::onEditFast) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit Fast"
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            Box(contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(
+                                    progress = { 1f }, // Static progress for manual fast
+                                    modifier = Modifier
+                                        .size(260.dp)
+                                        .graphicsLayer {
+                                            scaleX = scale
+                                            scaleY = scale
+                                        },
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    strokeWidth = 20.dp,
+                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                        alpha = 0.1f
+                                    ),
+                                    strokeCap = StrokeCap.Round
+                                )
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "Elapsed Time",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+
+                                    Text(
+                                        text = formatDuration(state.elapsedTime),
+                                        style = MaterialTheme.typography.displaySmall
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = onEndFast,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            ) {
+                                Icon(Icons.Filled.Stop, contentDescription = "End Fast")
+                                Spacer(Modifier.width(8.dp))
+                                Text("End Fast")
+                            }
+                        }
+                    }
+
+                    is DashboardUiState.FastingGoalReached -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Current Fast",
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                                )
+                                IconButton(onClick = viewModel::onEditFast) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit Fast"
+                                    )
+                                }
+                            }
                             Spacer(Modifier.height(16.dp))
                             Box(contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator(
@@ -297,13 +400,17 @@ fun DashboardScreen(
                                     modifier = Modifier.size(260.dp),
                                     color = Color(0xFF3DDC84), // Vibrant success color
                                     strokeWidth = 20.dp,
-                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
+                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                        alpha = 0.1f
+                                    ),
                                     strokeCap = StrokeCap.Round
                                 )
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
                                         text = "Goal Reached!",
-                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                        style = MaterialTheme.typography.titleLarge.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
                                         color = Color(0xFF3DDC84)
                                     )
                                     Spacer(Modifier.height(8.dp))
@@ -334,133 +441,140 @@ fun DashboardScreen(
                                 Text("End Fast")
                             }
                         }
-
-                        if (state.showConfetti) {
-                            KonfettiView(
-                                modifier = Modifier.matchParentSize(),
-                                parties = remember {
-                                    listOf(
-                                        Party(
-                                            speed = 0f,
-                                            maxSpeed = 15f,
-                                            damping = 0.9f,
-                                            spread = 360,
-                                            colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
-                                            position = nl.dionsegijn.konfetti.core.Position.Relative(0.5, 0.0),
-                                            emitter = Emitter(duration = 5, TimeUnit.SECONDS).perSecond(100)
-                                        )
-                                    )
-                                }
-                            )
-                        }
                     }
                 }
             }
-        }
 
-        AnimatedVisibility(visible = uiState is DashboardUiState.NoFast) {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Choose a Profile", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(16.dp))
-                    if (profiles.isEmpty()) {
-                        Text("No profiles created yet. Go to Settings to create one.")
-                    } else {
-                        FlowRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            profiles.forEach { profile ->
-                                Button(onClick = { onShowProfile(profile) }) {
-                                    Text(profile.displayName)
+            AnimatedVisibility(visible = uiState is DashboardUiState.NoFast) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "Choose a Profile",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        if (profiles.isEmpty()) {
+                            Text("No profiles created yet. Go to Settings to create one.")
+                        } else {
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    8.dp,
+                                    Alignment.CenterHorizontally
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                profiles.forEach { profile ->
+                                    Button(onClick = { onShowProfile(profile) }) {
+                                        Text(profile.displayName)
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // Statistics Section
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Statistics",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+            // Statistics Section
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Statistics",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            StatisticTile(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Default.BarChart,
+                                label = "Total Fasts",
+                                value = stats.totalFasts.toString(),
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            StatisticTile(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Default.Timer,
+                                label = "Total Time",
+                                value = formatDuration(stats.totalFastingTime),
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            StatisticTile(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Default.Star,
+                                label = "Longest Fast",
+                                value = stats.longestFast?.let { formatDuration((it.endTime!! - it.startTime).milliseconds) } ?: "-",
+                                onClick = { stats.longestFast?.id?.let(onViewFastDetails) },
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            StatisticTile(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Default.AvTimer,
+                                label = "Average Fast",
+                                value = formatDuration(stats.averageFast),
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
+            // History Section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onHistoryClick() }
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        StatisticTile(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.BarChart,
-                            label = "Total Fasts",
-                            value = stats.totalFasts.toString(),
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                        StatisticTile(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.Timer,
-                            label = "Total Time",
-                            value = formatDuration(stats.totalFastingTime),
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                    }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        StatisticTile(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.Star,
-                            label = "Longest Fast",
-                            value = stats.longestFast?.let { formatDuration(it.duration().milliseconds) } ?: "-",
-                            onClick = { stats.longestFast?.id?.let(onViewFastDetails) },
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                        StatisticTile(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.AvTimer,
-                            label = "Average Fast",
-                            value = formatDuration(stats.averageFast),
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                    }
+                    Text(
+                        "History",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Go to History"
+                    )
                 }
             }
         }
 
-        // History Section
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onHistoryClick() }
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "History",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.weight(1f)
-                )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Go to History"
-                )
+        val state = uiState
+        if (state is DashboardUiState.FastingGoalReached && state.showConfetti) {
+            LaunchedEffect(state.activeFast.id) {
+                scope.launch {
+                    parties = confettiParty
+                    delay(5000L)
+                    parties = emptyList()
+                }
+                viewModel.onConfettiShown(state.activeFast.id)
             }
+        }
+
+        if (parties.isNotEmpty()) {
+            KonfettiView(
+                modifier = Modifier.fillMaxSize(),
+                parties = parties
+            )
         }
     }
 }

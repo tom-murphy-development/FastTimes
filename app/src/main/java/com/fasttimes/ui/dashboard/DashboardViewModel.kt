@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.fasttimes.alarms.AlarmScheduler
 import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
-import com.fasttimes.data.fast.FastRepository
+import com.fasttimes.data.fast.FastsRepository
 import com.fasttimes.data.settings.SettingsRepository
 import com.fasttimes.service.FastTimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -41,7 +42,7 @@ data class DashboardStats(
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val fastRepository: FastRepository,
+    private val fastsRepository: FastsRepository,
     private val settingsRepository: SettingsRepository,
     private val alarmScheduler: AlarmScheduler,
     private val alarmManager: AlarmManager,
@@ -51,6 +52,7 @@ class DashboardViewModel @Inject constructor(
     // --- STATE ---
 
     private val _confettiShownForFast = MutableStateFlow<Long?>(null)
+    private val _isEditing = MutableStateFlow(false)
 
     /**
      * Exposes the list of selectable profiles (all except MANUAL).
@@ -62,7 +64,7 @@ class DashboardViewModel @Inject constructor(
     /**
      * A flow of the user's entire fasting history, sorted from newest to oldest.
      */
-    val history: StateFlow<List<Fast>> = fastRepository.getAllFasts()
+    private val history: StateFlow<List<Fast>> = fastsRepository.getFasts()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -100,21 +102,23 @@ class DashboardViewModel @Inject constructor(
     /**
      * The core UI state for the dashboard, representing the current fasting status.
      */
-    val uiState: StateFlow<DashboardUiState> = history.flatMapLatest { fasts ->
-        val activeFast = fasts.firstOrNull { it.endTime == null }
+    val uiState: StateFlow<DashboardUiState> = combine(history, _isEditing) { fasts, isEditing ->
+        Pair(fasts, isEditing)
+    }.flatMapLatest { (fasts, isEditing) ->
+        flow<DashboardUiState> {
+            val activeFast = fasts.firstOrNull { it.endTime == null }
 
-        if (activeFast == null) {
-            flowOf<DashboardUiState>(DashboardUiState.NoFast)
-        } else {
-            // The main timer flow that updates every second
-            flow {
+            if (activeFast == null) {
+                emit(DashboardUiState.NoFast)
+            } else {
+                // The main timer flow that updates every second
                 while (true) {
                     val now = System.currentTimeMillis()
                     val startTime = activeFast.startTime
 
                     if (activeFast.profile == FastingProfile.MANUAL) {
                         val elapsedTime = (now - startTime).milliseconds
-                        emit(DashboardUiState.ManualFasting(activeFast, elapsedTime))
+                        emit(DashboardUiState.ManualFasting(activeFast, elapsedTime, isEditing))
                     } else {
                         val targetDuration = activeFast.targetDuration?.milliseconds ?: Duration.ZERO
                         val targetEndTime = startTime + targetDuration.inWholeMilliseconds
@@ -124,19 +128,19 @@ class DashboardViewModel @Inject constructor(
                             // For fasts that have passed their goal
                             val elapsedTime = (now - startTime).milliseconds
                             val showConfetti = _confettiShownForFast.value != activeFast.id
-                            emit(DashboardUiState.FastingGoalReached(activeFast, elapsedTime, showConfetti))
+                            emit(DashboardUiState.FastingGoalReached(activeFast, elapsedTime, showConfetti, isEditing))
                         } else {
                             // For fasts still counting down
                             val remainingTime = (targetEndTime - now).milliseconds
                             val progress = 1f - (remainingTime.inWholeMilliseconds.toFloat() / targetDuration.inWholeMilliseconds)
-                            emit(DashboardUiState.FastingInProgress(activeFast, remainingTime, progress))
+                            emit(DashboardUiState.FastingInProgress(activeFast, remainingTime, progress, isEditing))
                         }
                     }
                     delay(1000)
                 }
             }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.NoFast)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
 
 
     /**
@@ -179,6 +183,14 @@ class DashboardViewModel @Inject constructor(
         _showAlarmPermissionRationale.value = false
     }
 
+    fun onEditFast() {
+        _isEditing.value = true
+    }
+
+    fun onEditFastDismissed() {
+        _isEditing.value = false
+    }
+
     /**
      * Starts a new fast in Manual (count-up) mode.
      */
@@ -191,7 +203,7 @@ class DashboardViewModel @Inject constructor(
                 endTime = null,
                 notes = null
             )
-            fastRepository.insertFast(fast)
+            fastsRepository.insertFast(fast)
             startService()
         }
     }
@@ -204,21 +216,21 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
                 _showAlarmPermissionRationale.value = true
-                dismissProfileModal()
-            } else {
-                val durationMillis = profile.duration?.inWholeMilliseconds
-                val fast = Fast(
-                    startTime = System.currentTimeMillis(),
-                    profile = profile,
-                    targetDuration = durationMillis,
-                    endTime = null,
-                    notes = "Started ${'$'}{profile.displayName} fast"
-                )
-                val fastId = fastRepository.insertFast(fast)
-                alarmScheduler.schedule(fast.copy(id = fastId))
-                startService()
-                dismissProfileModal() // Close modal after starting
+                return@launch
             }
+
+            val durationMillis = profile.duration?.inWholeMilliseconds
+            val fast = Fast(
+                startTime = System.currentTimeMillis(),
+                profile = profile,
+                targetDuration = durationMillis,
+                endTime = null,
+                notes = "Started ${profile.displayName} fast"
+            )
+            val fastId = fastsRepository.insertFast(fast)
+            alarmScheduler.schedule(fast.copy(id = fastId))
+            startService()
+            dismissProfileModal() // Close modal after starting
         }
     }
 
@@ -241,10 +253,10 @@ class DashboardViewModel @Inject constructor(
             val endTime = System.currentTimeMillis()
             if (fast.profile == FastingProfile.MANUAL) {
                 val elapsedTime = endTime - fast.startTime
-                fastRepository.updateFast(fast.copy(targetDuration = elapsedTime))
+                fastsRepository.updateFast(fast.copy(targetDuration = elapsedTime))
             }
 
-            fastRepository.endFast(fast.id, endTime)
+            fastsRepository.endFast(fast.id, endTime)
             stopService()
         }
     }

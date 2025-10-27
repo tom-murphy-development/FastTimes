@@ -1,6 +1,7 @@
 package com.fasttimes.data.fast
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 
 class FastRepository(private val fastDao: FastDao) {
@@ -10,7 +11,7 @@ class FastRepository(private val fastDao: FastDao) {
         fasts.firstOrNull { it.endTime == null }
     }
 
-    suspend fun getFast(id: Long): Fast? = fastDao.getFast(id)
+    suspend fun getFast(id: Long): Fast? = fastDao.getFast(id).firstOrNull()
 
     suspend fun insertFast(fast: Fast): Long = fastDao.insertFast(fast)
 

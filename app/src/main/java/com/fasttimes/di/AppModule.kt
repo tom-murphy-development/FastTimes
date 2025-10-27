@@ -40,7 +40,7 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "fasttimes-db"
-        ).addMigrations(AppDatabase.MIGRATION_1_2).build()
+        ).fallbackToDestructiveMigration().build()
 
     @Provides
     fun provideFastDao(db: AppDatabase): FastDao = db.fastDao()

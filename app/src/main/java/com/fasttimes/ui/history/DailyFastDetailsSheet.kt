@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +47,7 @@ fun DailyFastDetailsSheet(
     timeline: List<TimelineSegment>,
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit,
+    onEditClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = DateTimeFormatter.ofPattern("MMMM d")
@@ -87,7 +90,7 @@ fun DailyFastDetailsSheet(
                     )
                 } else {
                     targetFasts.forEachIndexed { index, fast ->
-                        FastDetailItem(fast = fast)
+                        FastDetailItem(fast = fast, onEditClick = { onEditClick(fast.id) })
                         if (index < targetFasts.size - 1) {
                             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
                         }
@@ -101,6 +104,7 @@ fun DailyFastDetailsSheet(
 @Composable
 private fun FastDetailItem(
     fast: Fast,
+    onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
@@ -177,6 +181,12 @@ private fun FastDetailItem(
                 contentDescription = if (fast.goalMet()) "Goal Reached" else "Goal Not Reached",
                 tint = if (fast.goalMet()) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
+            IconButton(onClick = onEditClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Fast"
+                )
+            }
         }
     }
 }
@@ -222,6 +232,7 @@ private fun DailyFastDetailsSheetPreview() {
             timeline = timeline,
             onSwipeLeft = {},
             onSwipeRight = {},
+            onEditClick = {}
         )
     }
 }

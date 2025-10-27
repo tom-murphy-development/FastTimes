@@ -8,6 +8,11 @@ import kotlin.time.Duration
  */
 sealed class DashboardUiState {
     /**
+     * The state where the UI is still loading.
+     */
+    data object Loading : DashboardUiState()
+
+    /**
      * The state where there is no active fast.
      */
     data object NoFast : DashboardUiState()
@@ -18,11 +23,13 @@ sealed class DashboardUiState {
      * @param activeFast The currently active fast.
      * @param remainingTime The time remaining until the fast goal is reached.
      * @param progress The progress of the fast, from 0.0f to 1.0f.
+     * @param isEditing Whether the user is currently editing the fast.
      */
     data class FastingInProgress(
         val activeFast: Fast,
         val remainingTime: Duration,
-        val progress: Float
+        val progress: Float,
+        val isEditing: Boolean = false
     ) : DashboardUiState()
 
     /**
@@ -31,11 +38,13 @@ sealed class DashboardUiState {
      * @param activeFast The currently active fast.
      * @param totalElapsedTime The total time elapsed since the fast started.
      * @param showConfetti Whether to show the confetti animation.
+     * @param isEditing Whether the user is currently editing the fast.
      */
     data class FastingGoalReached(
         val activeFast: Fast,
         val totalElapsedTime: Duration,
-        val showConfetti: Boolean
+        val showConfetti: Boolean,
+        val isEditing: Boolean = false
     ) : DashboardUiState()
 
     /**
@@ -43,9 +52,11 @@ sealed class DashboardUiState {
      *
      * @param activeFast The currently active fast.
      * @param elapsedTime The time elapsed since the fast started.
+     * @param isEditing Whether the user is currently editing the fast.
      */
     data class ManualFasting(
         val activeFast: Fast,
-        val elapsedTime: Duration
+        val elapsedTime: Duration,
+        val isEditing: Boolean = false
     ) : DashboardUiState()
 }

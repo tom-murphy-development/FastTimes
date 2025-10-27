@@ -7,6 +7,9 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/app/schemas")
+}
 android {
     namespace = "com.fasttimes"
     compileSdk = 36
@@ -19,6 +22,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+
+
     }
 
     buildTypes {

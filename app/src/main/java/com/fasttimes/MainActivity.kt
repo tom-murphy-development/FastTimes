@@ -19,6 +19,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.fasttimes.data.AppTheme
 import com.fasttimes.ui.FastTimesNavHost
+import com.fasttimes.ui.dashboard.DashboardUiState
+import com.fasttimes.ui.dashboard.DashboardViewModel
 import com.fasttimes.ui.settings.SettingsUiState
 import com.fasttimes.ui.settings.SettingsViewModel
 import com.fasttimes.ui.theme.FastTimesTheme
@@ -30,32 +32,41 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: SettingsViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
+    private val dashboardViewModel: DashboardViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        var uiState: SettingsUiState by mutableStateOf(SettingsUiState())
+        var settingsUiState: SettingsUiState by mutableStateOf(SettingsUiState())
+        var dashboardUiState: DashboardUiState by mutableStateOf(DashboardUiState.Loading)
 
         // Keep the splash screen on-screen until the UI state is loaded.
         splashScreen.setKeepOnScreenCondition {
-            // Basic check, you might want a more robust loading state
-            uiState == SettingsUiState()
+            dashboardUiState is DashboardUiState.Loading
         }
 
         // Start collecting the theme settings
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState
-                    .onEach { uiState = it }
+                settingsViewModel.uiState
+                    .onEach { settingsUiState = it }
+                    .collect()
+            }
+        }
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                dashboardViewModel.uiState
+                    .onEach { dashboardUiState = it }
                     .collect()
             }
         }
 
         setContent {
-            val useDarkTheme = when (uiState.theme) {
+            val useDarkTheme = when (settingsUiState.theme) {
                 AppTheme.LIGHT -> false
                 AppTheme.DARK -> true
                 AppTheme.SYSTEM -> isSystemInDarkTheme()

@@ -44,6 +44,8 @@ class HistoryViewModel @Inject constructor(
 
     private val _displayedMonth = MutableStateFlow(YearMonth.now())
     private val _selectedDay = MutableStateFlow<Int?>(null)
+    private val _editingFastId = MutableStateFlow<Long?>(null)
+
 
     init {
         viewModelScope.launch {
@@ -143,7 +145,8 @@ class HistoryViewModel @Inject constructor(
         historyMonth,
         _displayedMonth,
         _selectedDay,
-    ) { month, displayedMonth, selectedDay ->
+        _editingFastId
+    ) { month, displayedMonth, selectedDay, editingFastId ->
         val fastsForSelectedDay = if (selectedDay != null) {
             month.fastsByDay[selectedDay] ?: emptyList()
         } else {
@@ -158,7 +161,8 @@ class HistoryViewModel @Inject constructor(
             dailyTimelineSegments = month.dailyTimelineSegments.toImmutableMap(),
             selectedDayFasts = fastsForSelectedDay,
             totalFastsInMonth = month.fastsInMonth.size,
-            longestFastInMonth = month.fastsInMonth.maxByOrNull { it.duration() }
+            longestFastInMonth = month.fastsInMonth.maxByOrNull { it.duration() },
+            editingFastId = editingFastId
         )
     }.stateIn(
         scope = viewModelScope,
@@ -221,5 +225,13 @@ class HistoryViewModel @Inject constructor(
 
     fun onDismissDetails() {
         _selectedDay.value = null
+    }
+
+    fun onEditFast(fastId: Long) {
+        _editingFastId.value = fastId
+    }
+
+    fun onEditFastDismissed() {
+        _editingFastId.value = null
     }
 }

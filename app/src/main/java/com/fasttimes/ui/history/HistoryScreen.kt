@@ -29,8 +29,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.fasttimes.ui.components.StatisticTile
+import com.fasttimes.ui.editfast.EditFastRoute
 import com.fasttimes.ui.formatDuration
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -47,18 +49,28 @@ fun HistoryScreen(
     val uiState by viewModel.uiState.collectAsState()
     val sheetState = rememberModalBottomSheetState()
 
+    if (uiState.editingFastId != null) {
+        Dialog(onDismissRequest = viewModel::onEditFastDismissed) {
+            EditFastRoute(
+                onDismiss = viewModel::onEditFastDismissed, 
+                fastId = uiState.editingFastId
+            )
+        }
+    }
+
     val content = @Composable { p: PaddingValues ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(p)
-            .padding(16.dp)
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures { _, dragAmount ->
-                    if (dragAmount > 50) { // Threshold for swipe right
-                        onSwipeBack?.invoke()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(p)
+                .padding(16.dp)
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures { _, dragAmount ->
+                        if (dragAmount > 50) { // Threshold for swipe right
+                            onSwipeBack?.invoke()
+                        }
                     }
                 }
-            }
         ) {
             CalendarView(
                 uiState = uiState,
@@ -83,7 +95,8 @@ fun HistoryScreen(
                     fasts = uiState.selectedDayFasts,
                     timeline = timelineSegments,
                     onSwipeLeft = viewModel::onNextDay,
-                    onSwipeRight = viewModel::onPreviousDay
+                    onSwipeRight = viewModel::onPreviousDay,
+                    onEditClick = viewModel::onEditFast
                 )
             }
         }

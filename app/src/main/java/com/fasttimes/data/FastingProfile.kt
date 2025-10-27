@@ -41,19 +41,25 @@ enum class FastingProfile(
         displayName = "18/6",
         description = "Fast for 18 hours and eat within a 6-hour window. A more advanced method for experienced fasters."
     ),
-    TWENTY_FOUR (
+    TWENTY_FOUR(
         duration = 24.hours,
         displayName = "24-Hour Fast",
         description = "A full day fast, typically done once or twice a week. Involves fasting for 24 hours straight."
     ),
-    TEST_TIMER (
+    TEST_TIMER(
         duration = 10.seconds,
         displayName = "Test Timer",
         description = "A short-duration fast for testing purposes."
     ),
-    ONE_HOUR_TIMER (
-    duration = 1.hours,
-    displayName = "Test 1 Hour",
-    description = "A short-duration fast for testing purposes."
-    )
+    ONE_HOUR_TIMER(
+        duration = 1.hours,
+        displayName = "Test 1 Hour",
+        description = "A short-duration fast for testing purposes."
+    );
+
+    companion object {
+        fun getById(id: String): FastingProfile? {
+            return entries.find { it.displayName == id }
+        }
+    }
 }

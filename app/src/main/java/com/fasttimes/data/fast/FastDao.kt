@@ -12,7 +12,10 @@ interface FastDao {
     fun getAllFasts(): Flow<List<Fast>>
 
     @Query("SELECT * FROM fasts WHERE id = :id")
-    suspend fun getFast(id: Long): Fast?
+    fun getFast(id: Long): Flow<Fast?>
+
+    @Query("SELECT * FROM fasts WHERE endTime IS NULL")
+    fun getActiveFast(): Flow<Fast?>
 
     @Query("SELECT * FROM fasts WHERE startTime < :dayEnd AND (endTime IS NULL OR endTime > :dayStart) ORDER BY startTime DESC")
     fun getFastsForDay(dayStart: Long, dayEnd: Long): Flow<List<Fast>>

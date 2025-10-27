@@ -14,7 +14,8 @@ data class Fast(
     val endTime: Long?,
     val targetDuration: Long?,
     val profile: FastingProfile,
-    val notes: String? = null
+    val notes: String? = null,
+    val rating: Int? = null
 ) {
     val start: ZonedDateTime
         get() = ZonedDateTime.ofInstant(

@@ -9,4 +9,7 @@ interface SettingsRepository {
 
     val theme: Flow<AppTheme>
     suspend fun setTheme(theme: AppTheme)
+
+    val confettiShownForFastId: Flow<Long?>
+    suspend fun setConfettiShownForFastId(fastId: Long)
 }

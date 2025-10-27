@@ -102,7 +102,8 @@ private val confettiParty = listOf(
         spread = 360,
         colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
         position = nl.dionsegijn.konfetti.core.Position.Relative(0.5, 0.0),
-        emitter = Emitter(duration = 5, TimeUnit.SECONDS).perSecond(100)
+        emitter = Emitter(duration = 5, TimeUnit.SECONDS).perSecond(100),
+        fadeOutEnabled = true,
     )
 )
 
@@ -630,7 +631,7 @@ fun DashboardScreen(
             LaunchedEffect(state.activeFast.id) {
                 scope.launch {
                     parties = confettiParty
-                    delay(5000L)
+                    delay(10000L)
                     parties = emptyList()
                 }
                 viewModel.onConfettiShown(state.activeFast.id)

@@ -54,7 +54,6 @@ class DashboardViewModel @Inject constructor(
 
     // --- STATE ---
 
-    private val _confettiShownForFast = MutableStateFlow<Long?>(null)
     private val _isEditing = MutableStateFlow(false)
 
     /**
@@ -106,10 +105,10 @@ class DashboardViewModel @Inject constructor(
      * The core UI state for the dashboard, representing the current fasting status.
      */
     val uiState: StateFlow<DashboardUiState> = combine(
-        history, _isEditing
-    ) { fasts, isEditing ->
-        Pair(fasts, isEditing)
-    }.flatMapLatest { (fasts, isEditing) ->
+        history, _isEditing, settingsRepository.confettiShownForFastId
+    ) { fasts, isEditing, confettiShownForFastId ->
+        Triple(fasts, isEditing, confettiShownForFastId)
+    }.flatMapLatest { (fasts, isEditing, confettiShownForFastId) ->
         if (fasts.isEmpty()) {
             return@flatMapLatest flowOf(DashboardUiState.Loading)
         }
@@ -144,7 +143,7 @@ class DashboardViewModel @Inject constructor(
                         if (now >= targetEndTime) {
                             // For fasts that have passed their goal
                             val elapsedTime = (now - startTime).milliseconds
-                            val showConfetti = _confettiShownForFast.value != activeFast.id
+                            val showConfetti = confettiShownForFastId != activeFast.id
                             emit(
                                 DashboardUiState.FastingGoalReached(
                                     activeFast,
@@ -190,7 +189,9 @@ class DashboardViewModel @Inject constructor(
     // --- ACTIONS ---
 
     fun onConfettiShown(fastId: Long) {
-        _confettiShownForFast.value = fastId
+        viewModelScope.launch {
+            settingsRepository.setConfettiShownForFastId(fastId)
+        }
     }
 
     /**

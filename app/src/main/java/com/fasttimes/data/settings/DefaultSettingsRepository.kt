@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.fasttimes.data.AppTheme
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +17,7 @@ class DefaultSettingsRepository @Inject constructor(
 
     private val showLiveProgressKey = booleanPreferencesKey("show_live_progress")
     private val themeKey = stringPreferencesKey("theme")
+    private val confettiShownForFastIdKey = longPreferencesKey("confetti_shown_for_fast_id")
 
     override val showLiveProgress: Flow<Boolean> =
         dataStore.data.map { it[showLiveProgressKey] ?: false }
@@ -29,5 +31,12 @@ class DefaultSettingsRepository @Inject constructor(
 
     override suspend fun setTheme(theme: AppTheme) {
         dataStore.edit { it[themeKey] = theme.name }
+    }
+
+    override val confettiShownForFastId: Flow<Long?> =
+        dataStore.data.map { it[confettiShownForFastIdKey] }
+
+    override suspend fun setConfettiShownForFastId(fastId: Long) {
+        dataStore.edit { it[confettiShownForFastIdKey] = fastId }
     }
 }

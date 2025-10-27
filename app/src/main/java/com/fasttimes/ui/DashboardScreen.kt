@@ -1,9 +1,12 @@
 package com.fasttimes.ui
 
+import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -129,6 +132,18 @@ fun DashboardScreen(
         viewModel.startProfileFast(profile)
     }
 
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                }
+                context.startActivity(intent)
+            }
+        }
+    )
+
     val onEndFast: () -> Unit = { viewModel.endCurrentFast() }
     val onShowProfile: (FastingProfile) -> Unit = { profile -> viewModel.showProfileModal(profile) }
     val onDismissProfileDetails: () -> Unit = { viewModel.dismissProfileModal() }
@@ -162,13 +177,12 @@ fun DashboardScreen(
         AlertDialog(
             onDismissRequest = onDismissAlarmPermissionRationale,
             title = { Text("Permission Required") },
-            text = { Text("To ensure you're notified when your fast is complete, the app needs permission to schedule exact alarms. This is only used to show a notification when the timer ends.") },
+            text = { Text("To ensure you're notified when your fast is complete, the app needs permission to post notifications and schedule exact alarms. This is only used to show a notification when the timer ends.") },
             confirmButton = {
                 Button(onClick = {
-                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
-                    context.startActivity(intent)
                     onDismissAlarmPermissionRationale()
                 }) {
                     Text("Go to Settings")

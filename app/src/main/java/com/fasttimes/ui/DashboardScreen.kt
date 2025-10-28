@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -654,18 +655,31 @@ fun DashboardScreen(
 }
 
 @Composable
+private fun RatingBar(rating: Int, modifier: Modifier = Modifier) {
+    Row(modifier = modifier) {
+        repeat(5) { index ->
+            val icon = if (index < rating) Icons.Filled.Star else Icons.Outlined.StarBorder
+            Icon(
+                imageVector = icon,
+                contentDescription = null, // decorative
+                tint = if (index < rating) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
 private fun LastFastItem(
     fast: Fast,
     modifier: Modifier = Modifier
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
-    val multiDayFormatter = DateTimeFormatter.ofPattern("EEE d/MM")
-
-    val startTime = fast.start
-    val endTime = fast.end ?: ZonedDateTime.now()
+    val dateFormatter = DateTimeFormatter.ofPattern("EEE, MMM d")
+    val today = ZonedDateTime.now().toLocalDate()
 
     val durationString = if (fast.end != null) {
-        val duration = Duration.between(startTime, endTime)
+        val duration = Duration.between(fast.start, fast.end)
         val hours = duration.toHours()
         val minutes = duration.toMinutes() % 60
         "${hours}h ${minutes}m"
@@ -673,65 +687,77 @@ private fun LastFastItem(
         "In progress"
     }
 
-    val timeRangeString = if (fast.end != null) {
-        val startFormatted = startTime.format(timeFormatter)
-        val endFormatted = endTime.format(timeFormatter)
-        val dayDiff = endTime.dayOfYear - startTime.dayOfYear
-
-        if (dayDiff > 0) {
-            val startDateFormatted = startTime.format(multiDayFormatter)
-            val endDateFormatted = endTime.format(multiDayFormatter)
-            "$startDateFormatted $startFormatted - $endDateFormatted $endFormatted"
-        } else {
-            "$startFormatted - $endFormatted"
-        }
-    } else {
-        "${startTime.format(timeFormatter)} - Present"
-    }
-
-    val goalString = if (fast.targetDuration != null) {
-        val duration = Duration.ofMillis(fast.targetDuration)
-        val hours = duration.toHours()
-        val minutes = (duration.toMinutes() % 60)
-        if (hours > 0) {
-            if (minutes > 0) "${hours}h ${minutes}m" else "${hours}h"
-        } else {
-            "${minutes}m"
-        }
-    } else {
-        "No goal set"
-    }
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
             Text(
                 text = durationString,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = timeRangeString,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+
+            if (fast.targetDuration != null && fast.targetDuration > 0) {
+                Icon(
+                    imageVector = if (fast.goalMet()) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                    contentDescription = if (fast.goalMet()) "Goal Reached" else "Goal Not Reached",
+                    tint = if (fast.goalMet()) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                        alpha = 0.5f
+                    )
+                )
+            }
         }
-        Spacer(modifier = Modifier.width(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = goalString,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = if (fast.goalMet()) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                contentDescription = if (fast.goalMet()) "Goal Reached" else "Goal Not Reached",
-                tint = if (fast.goalMet()) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row {
+                Text(
+                    text = "Start:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.width(50.dp)
+                )
+                Text(
+                    text = if (fast.start.toLocalDate() == today) {
+                        fast.start.format(timeFormatter)
+                    } else {
+                        "${fast.start.format(timeFormatter)} - ${fast.start.format(dateFormatter)}"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row {
+                    Text(
+                        text = "End:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(50.dp)
+                    )
+                    Text(
+                        text = fast.end?.let {
+                            if (it.toLocalDate() == today) {
+                                it.format(timeFormatter)
+                            } else {
+                                "${it.format(timeFormatter)} on ${it.format(dateFormatter)}"
+                            }
+                        } ?: "In progress",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (fast.rating != null) {
+                    RatingBar(rating = fast.rating!!)
+                }
+            }
         }
     }
 }

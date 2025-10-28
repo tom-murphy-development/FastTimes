@@ -7,8 +7,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,7 +58,8 @@ fun EditFastRoute(
         onRatingChanged = viewModel::updateRating,
         onSave = { viewModel.saveChanges(onDismiss) },
         onCancel = onDismiss,
-        onErrorDismissed = viewModel::clearError
+        onErrorDismissed = viewModel::clearError,
+        onDelete = { viewModel.deleteFast(onDismiss) }
     )
 }
 
@@ -70,9 +76,11 @@ fun EditFastScreen(
     onSave: () -> Unit,
     onCancel: () -> Unit,
     onErrorDismissed: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showPicker by remember { mutableStateOf(PickerType.None) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     if (showPicker != PickerType.None && uiState.fast != null) {
         when (showPicker) {
@@ -102,6 +110,29 @@ fun EditFastScreen(
             )
             else -> {}
         }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Fast") },
+            text = { Text("Are you sure you want to delete this fast? This action cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete()
+                        showDeleteConfirmation = false
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Surface(
@@ -154,13 +185,23 @@ fun EditFastScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onCancel) {
-                        Text("Cancel")
+                    IconButton(onClick = { showDeleteConfirmation = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Fast",
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
-                    Button(onClick = onSave) {
-                        Text("Save")
+                    Row {
+                        TextButton(onClick = onCancel) {
+                            Text("Cancel")
+                        }
+                        Button(onClick = onSave) {
+                            Text("Save")
+                        }
                     }
                 }
             } else {
@@ -214,7 +255,8 @@ private fun EditFastScreenInProgressPreview() {
             onRatingChanged = {},
             onSave = {},
             onCancel = {},
-            onErrorDismissed = {}
+            onErrorDismissed = {},
+            onDelete = {}
         )
     }
 }
@@ -241,7 +283,8 @@ private fun EditFastScreenFinishedPreview() {
             onRatingChanged = {},
             onSave = {},
             onCancel = {},
-            onErrorDismissed = {}
+            onErrorDismissed = {},
+            onDelete = {}
         )
     }
 }
@@ -268,7 +311,8 @@ private fun EditFastScreenWithErrorPreview() {
             onRatingChanged = {},
             onSave = {},
             onCancel = {},
-            onErrorDismissed = {}
+            onErrorDismissed = {},
+            onDelete = {}
         )
     }
 }

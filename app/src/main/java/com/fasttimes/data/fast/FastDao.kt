@@ -31,4 +31,7 @@ interface FastDao {
 
     @Query("UPDATE fasts SET rating = :rating WHERE id = :fastId")
     suspend fun updateRating(fastId: Long, rating: Int)
+
+    @Query("DELETE FROM fasts WHERE id = :fastId")
+    suspend fun deleteFast(fastId: Long)
 }

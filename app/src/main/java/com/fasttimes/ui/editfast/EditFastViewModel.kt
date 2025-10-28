@@ -88,6 +88,16 @@ class EditFastViewModel @AssistedInject constructor(
         }
     }
 
+    fun deleteFast(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val fastToDelete = _uiState.value.fast
+            if (fastToDelete != null) {
+                fastsRepository.deleteFast(fastToDelete.id)
+                onSuccess()
+            }
+        }
+    }
+
     private fun validateFast(fast: Fast): String? {
         if (fast.startTime > System.currentTimeMillis()) {
             return "Start time cannot be in the future."

@@ -16,4 +16,6 @@ interface FastsRepository {
     suspend fun endFast(id: Long, endTime: Long)
 
     suspend fun updateRating(fastId: Long, rating: Int)
+
+    suspend fun deleteFast(fastId: Long)
 }

@@ -23,4 +23,8 @@ class FastsRepositoryImpl @Inject constructor(
     override suspend fun updateRating(fastId: Long, rating: Int) {
         fastDao.updateRating(fastId, rating)
     }
+
+    override suspend fun deleteFast(fastId: Long) {
+        fastDao.deleteFast(fastId)
+    }
 }

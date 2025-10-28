@@ -11,9 +11,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
 
 data class EditFastUiState(
     val isLoading: Boolean = true,
@@ -43,12 +43,13 @@ class EditFastViewModel @AssistedInject constructor(
                 fastsRepository.getActiveFast()
             }
 
-            val fast = fastFlow.first()
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    fast = fast
-                )
+            fastFlow.collect { fast ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        fast = fast
+                    )
+                }
             }
         }
     }

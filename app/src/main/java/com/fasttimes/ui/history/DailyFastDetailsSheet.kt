@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
@@ -73,23 +75,29 @@ fun DailyFastDetailsSheet(
                 }
             }
         ) { (targetDate, targetFasts, targetTimeline) ->
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Details for ${targetDate.format(dateFormatter)}",
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                item {
+                    Text(
+                        text = "Details for ${targetDate.format(dateFormatter)}",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
-                Timeline(segments = targetTimeline, modifier = Modifier.padding(bottom = 16.dp))
+                item {
+                    Timeline(segments = targetTimeline, modifier = Modifier.padding(bottom = 16.dp))
+                }
 
                 if (targetFasts.isEmpty()) {
-                    Text(
-                        text = "No fasts recorded for this day.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    item {
+                        Text(
+                            text = "No fasts recorded for this day.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 } else {
-                    targetFasts.forEachIndexed { index, fast ->
+                    itemsIndexed(targetFasts) { index, fast ->
                         FastDetailItem(fast = fast, onEditClick = { onEditClick(fast.id) })
                         if (index < targetFasts.size - 1) {
                             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))

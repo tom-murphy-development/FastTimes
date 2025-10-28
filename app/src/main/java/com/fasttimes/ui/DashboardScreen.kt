@@ -80,6 +80,7 @@ import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.components.StatisticTile
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
+import com.fasttimes.ui.dashboard.FastingSummaryModal
 import com.fasttimes.ui.editfast.EditFastRoute
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -122,6 +123,7 @@ fun DashboardScreen(
     val stats by viewModel.stats.collectAsState()
     val modalProfile by viewModel.modalProfile.collectAsState()
     val showAlarmPermissionRationale by viewModel.showAlarmPermissionRationale.collectAsState()
+    val completedFast by viewModel.completedFast.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
 
@@ -195,6 +197,14 @@ fun DashboardScreen(
                     Text("Cancel")
                 }
             }
+        )
+    }
+
+    completedFast?.let {
+        FastingSummaryModal(
+            fast = it,
+            onDismiss = viewModel::onFastingSummaryDismissed,
+            onSaveRating = { rating -> viewModel.saveFastRating(it.id, rating) }
         )
     }
 

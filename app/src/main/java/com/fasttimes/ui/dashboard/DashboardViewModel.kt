@@ -55,6 +55,8 @@ class DashboardViewModel @Inject constructor(
     // --- STATE ---
 
     private val _isEditing = MutableStateFlow(false)
+    private val _completedFast = MutableStateFlow<Fast?>(null)
+    val completedFast: StateFlow<Fast?> = _completedFast.asStateFlow()
 
     /**
      * Exposes the list of selectable profiles (all except MANUAL).
@@ -289,7 +291,18 @@ class DashboardViewModel @Inject constructor(
             }
 
             fastsRepository.endFast(fast.id, endTime)
+            _completedFast.value = fast.copy(endTime = endTime)
             stopService()
+        }
+    }
+
+    fun onFastingSummaryDismissed() {
+        _completedFast.value = null
+    }
+
+    fun saveFastRating(fastId: Long, rating: Int) {
+        viewModelScope.launch {
+            fastsRepository.updateRating(fastId, rating)
         }
     }
 

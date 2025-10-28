@@ -28,4 +28,7 @@ interface FastDao {
 
     @Query("UPDATE fasts SET endTime = :endTime WHERE id = :id")
     suspend fun updateFastEndTime(id: Long, endTime: Long)
+
+    @Query("UPDATE fasts SET rating = :rating WHERE id = :fastId")
+    suspend fun updateRating(fastId: Long, rating: Int)
 }

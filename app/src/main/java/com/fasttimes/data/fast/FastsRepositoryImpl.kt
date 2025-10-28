@@ -19,4 +19,8 @@ class FastsRepositoryImpl @Inject constructor(
     override suspend fun endFast(id: Long, endTime: Long) {
         fastDao.updateFastEndTime(id, endTime)
     }
+
+    override suspend fun updateRating(fastId: Long, rating: Int) {
+        fastDao.updateRating(fastId, rating)
+    }
 }

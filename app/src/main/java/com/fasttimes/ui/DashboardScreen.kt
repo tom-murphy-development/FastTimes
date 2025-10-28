@@ -569,51 +569,57 @@ fun DashboardScreen(
 
                             val state = uiState
                             if (state is DashboardUiState.NoFast) {
-                                Column(
-                                    modifier = Modifier
-                                        .verticalScroll(rememberScrollState())
-                                        .padding(horizontal = 16.dp)
-                                        .padding(bottom = 16.dp)
-                                ) {
-                                    if (state.thisWeekFasts.isNotEmpty()) {
+                                if (state.thisWeekFasts.isEmpty() && state.lastWeekFasts.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
                                         Text(
-                                            "This Week",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            modifier = Modifier.padding(bottom = 8.dp)
+                                            text = "No recent fasts to show.",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
-                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            state.thisWeekFasts.forEachIndexed { index, fast ->
-                                                LastFastItem(fast = fast, modifier = Modifier.clickable { onViewFastDetails(fast.id) })
-                                                if (index < state.thisWeekFasts.lastIndex) {
-                                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        Text("No fasts this week.")
-                                        if (state.lastFast != null) {
-                                            Spacer(Modifier.height(16.dp))
+                                    }
+                                } else {
+                                    Column(
+                                        modifier = Modifier
+                                            .verticalScroll(rememberScrollState())
+                                            .padding(horizontal = 16.dp)
+                                            .padding(bottom = 16.dp)
+                                    ) {
+                                        if (state.thisWeekFasts.isNotEmpty()) {
                                             Text(
-                                                "Last Fast",
+                                                "This Week",
                                                 style = MaterialTheme.typography.labelLarge,
                                                 modifier = Modifier.padding(bottom = 8.dp)
                                             )
-                                            LastFastItem(fast = state.lastFast, modifier = Modifier.clickable { onViewFastDetails(state.lastFast.id) })
+                                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                state.thisWeekFasts.forEachIndexed { index, fast ->
+                                                    LastFastItem(fast = fast, modifier = Modifier.clickable { onViewFastDetails(fast.id) })
+                                                    if (index < state.thisWeekFasts.lastIndex) {
+                                                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                                    }
+                                                }
+                                            }
                                         }
-                                    }
 
-                                    if (state.lastWeekFasts.isNotEmpty()) {
-                                        Spacer(Modifier.height(16.dp))
-                                        Text(
-                                            "Last Week",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            modifier = Modifier.padding(bottom = 8.dp)
-                                        )
-                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            state.lastWeekFasts.forEachIndexed { index, fast ->
-                                                LastFastItem(fast = fast, modifier = Modifier.clickable { onViewFastDetails(fast.id) })
-                                                if (index < state.lastWeekFasts.lastIndex) {
-                                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                        if (state.lastWeekFasts.isNotEmpty()) {
+                                            if (state.thisWeekFasts.isNotEmpty()) {
+                                                Spacer(Modifier.height(16.dp))
+                                            }
+                                            Text(
+                                                "Last Week",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                state.lastWeekFasts.forEachIndexed { index, fast ->
+                                                    LastFastItem(fast = fast, modifier = Modifier.clickable { onViewFastDetails(fast.id) })
+                                                    if (index < state.lastWeekFasts.lastIndex) {
+                                                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                                    }
                                                 }
                                             }
                                         }

@@ -12,11 +12,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class SettingsUiState(
-    val showLiveProgress: Boolean = false,
-    val theme: AppTheme = AppTheme.SYSTEM
-)
-
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository
@@ -24,9 +19,10 @@ class SettingsViewModel @Inject constructor(
 
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.showLiveProgress,
+        settingsRepository.showGoalReachedNotification,
         settingsRepository.theme
-    ) { showLiveProgress, theme ->
-        SettingsUiState(showLiveProgress, theme)
+    ) { showLiveProgress, showGoalReachedNotification, theme ->
+        SettingsUiState(showLiveProgress, showGoalReachedNotification, theme)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -36,6 +32,12 @@ class SettingsViewModel @Inject constructor(
     fun onShowLiveProgressChanged(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setShowLiveProgress(enabled)
+        }
+    }
+
+    fun onShowGoalReachedNotificationChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setShowGoalReachedNotification(enabled)
         }
     }
 

@@ -311,8 +311,7 @@ class DashboardViewModel @Inject constructor(
             Intent(application, FastTimerService::class.java).also {
                 it.action = FastTimerService.ACTION_START
                 application.startService(it)
-            }
-        }
+        }}
     }
 
     private fun stopService() {

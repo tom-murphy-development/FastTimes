@@ -16,6 +16,7 @@ class DefaultSettingsRepository @Inject constructor(
 ) : SettingsRepository {
 
     private val showLiveProgressKey = booleanPreferencesKey("show_live_progress")
+    private val showGoalReachedNotificationKey = booleanPreferencesKey("show_goal_reached_notification")
     private val themeKey = stringPreferencesKey("theme")
     private val confettiShownForFastIdKey = longPreferencesKey("confetti_shown_for_fast_id")
 
@@ -24,6 +25,13 @@ class DefaultSettingsRepository @Inject constructor(
 
     override suspend fun setShowLiveProgress(show: Boolean) {
         dataStore.edit { it[showLiveProgressKey] = show }
+    }
+
+    override val showGoalReachedNotification: Flow<Boolean> =
+        dataStore.data.map { it[showGoalReachedNotificationKey] ?: true }
+
+    override suspend fun setShowGoalReachedNotification(show: Boolean) {
+        dataStore.edit { it[showGoalReachedNotificationKey] = show }
     }
 
     override val theme: Flow<AppTheme> =

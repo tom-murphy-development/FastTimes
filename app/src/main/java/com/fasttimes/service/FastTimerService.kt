@@ -14,10 +14,12 @@ import com.fasttimes.MainActivity
 import com.fasttimes.alarms.AlarmScheduler
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastRepository
+import com.fasttimes.data.settings.SettingsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -30,6 +32,9 @@ class FastTimerService : LifecycleService() {
 
     @Inject
     lateinit var fastRepository: FastRepository
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     @Inject
     lateinit var alarmScheduler: AlarmScheduler
@@ -54,32 +59,43 @@ class FastTimerService : LifecycleService() {
     }
 
     private fun startService() {
+        // Prevent multiple service jobs from running
         if (serviceJob?.isActive == true) return
 
         serviceJob = lifecycleScope.launch {
-            // Use collectLatest to ensure only one timer loop runs at a time.
-            // When the active fast changes, the previous block is automatically cancelled.
-            fastRepository.getAllFasts().map { fasts ->
+            val activeFastFlow = fastRepository.getAllFasts().map { fasts ->
                 fasts.firstOrNull { it.endTime == null }
-            }.collectLatest { activeFast ->
-                if (activeFast == null) {
-                    stopService()
-                    return@collectLatest
-                }
+            }
 
-                startForeground(NOTIFICATION_ID, buildNotification(activeFast))
+            // Combine the active fast with the user's setting.
+            // The service will now reactively show/hide the notification.
+            combine(
+                activeFastFlow,
+                settingsRepository.showLiveProgress
+            ) { activeFast, showProgress ->
+                Pair(activeFast, showProgress)
+            }.collectLatest { (activeFast, showProgress) ->
+                if (activeFast != null && showProgress) {
+                    // If state is valid, start foreground and run the update loop
+                    startForeground(NOTIFICATION_ID, buildNotification(activeFast))
 
-                while (isActive) {
-                    // When the fast is complete, the alarm will fire and show the final notification.
-                    // This service can just stop itself.
-                    val remainingTime = activeFast.targetDuration?.let { (activeFast.startTime + it) - System.currentTimeMillis() }
-                    if (remainingTime != null && remainingTime <= 0) {
-                        stopService()
-                        return@collectLatest
+                    // This loop will be automatically cancelled by collectLatest when the state changes
+                    while (isActive) {
+                        val remainingTime = activeFast.targetDuration?.let { (activeFast.startTime + it) - System.currentTimeMillis() }
+                        if (remainingTime != null && remainingTime <= 0) {
+                            // Goal reached. The goal-reached alarm will handle the final notification.
+                            // We can just stop the live progress notification here.
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                            break // Exit loop; collector will wait for the next state change
+                        }
+                        
+                        delay(1000) // Update every second
+                        notificationManager.notify(NOTIFICATION_ID, buildNotification(activeFast))
                     }
-
-                    delay(1000) // Update every second
-                    notificationManager.notify(NOTIFICATION_ID, buildNotification(activeFast))
+                } else {
+                    // If the fast is null or the setting is off, just remove the notification.
+                    // The service itself continues running, waiting for a valid state.
+                    stopForeground(STOP_FOREGROUND_REMOVE)
                 }
             }
         }
@@ -92,12 +108,14 @@ class FastTimerService : LifecycleService() {
                 alarmScheduler.cancel(activeFast)
                 fastRepository.endFast(activeFast.id, System.currentTimeMillis())
             }
+            // After ending the fast, the service should fully stop.
             stopService()
         }
     }
 
     private fun stopService() {
         serviceJob?.cancel()
+        serviceJob = null
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }

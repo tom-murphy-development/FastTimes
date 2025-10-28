@@ -14,6 +14,7 @@ interface FastDao {
     @Query("SELECT * FROM fasts WHERE id = :id")
     fun getFast(id: Long): Flow<Fast?>
 
+
     @Query("SELECT * FROM fasts WHERE endTime IS NULL")
     fun getActiveFast(): Flow<Fast?>
 

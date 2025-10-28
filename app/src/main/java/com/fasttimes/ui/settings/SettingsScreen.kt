@@ -50,12 +50,14 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showNotificationPermissionRationale by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    var permissionAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (isGranted) {
-                viewModel.onShowLiveProgressChanged(true)
+                permissionAction?.invoke()
+                permissionAction = null
             }
         }
     )
@@ -64,7 +66,7 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showNotificationPermissionRationale = false },
             title = { Text("Permission Required") },
-            text = { Text("To show live progress, the app needs permission to post notifications.") },
+            text = { Text("To show notifications, the app needs permission to post notifications.") },
             confirmButton = {
                 Button(onClick = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -123,22 +125,53 @@ fun SettingsScreen(
                     onCheckedChange = { show ->
                         if (show) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                when (PackageManager.PERMISSION_GRANTED) {
-                                    ContextCompat.checkSelfPermission(
+                                if (ContextCompat.checkSelfPermission(
                                         context,
                                         Manifest.permission.POST_NOTIFICATIONS
-                                    ) -> {
-                                        viewModel.onShowLiveProgressChanged(true)
-                                    }
-                                    else -> {
-                                        showNotificationPermissionRationale = true
-                                    }
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    viewModel.onShowLiveProgressChanged(true)
+                                } else {
+                                    permissionAction = { viewModel.onShowLiveProgressChanged(true) }
+                                    showNotificationPermissionRationale = true
                                 }
                             } else {
                                 viewModel.onShowLiveProgressChanged(true)
                             }
                         } else {
                             viewModel.onShowLiveProgressChanged(false)
+                        }
+                    }
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Goal reached notification", style = MaterialTheme.typography.bodyLarge)
+                Switch(
+                    checked = uiState.showGoalReachedNotification,
+                    onCheckedChange = { show ->
+                        if (show) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                if (ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    viewModel.onShowGoalReachedNotificationChanged(true)
+                                } else {
+                                    permissionAction = { viewModel.onShowGoalReachedNotificationChanged(true) }
+                                    showNotificationPermissionRationale = true
+                                }
+                            } else {
+                                viewModel.onShowGoalReachedNotificationChanged(true)
+                            }
+                        } else {
+                            viewModel.onShowGoalReachedNotificationChanged(false)
                         }
                     }
                 )

@@ -13,9 +13,11 @@ import androidx.core.app.NotificationCompat
 import com.fasttimes.MainActivity
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastRepository
+import com.fasttimes.data.settings.SettingsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,6 +26,9 @@ class FastCompletionReceiver : BroadcastReceiver() {
 
     @Inject
     lateinit var fastRepository: FastRepository
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     companion object {
         const val CHANNEL_ID = "fast_completion_channel"
@@ -40,6 +45,11 @@ class FastCompletionReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val showNotification = settingsRepository.showGoalReachedNotification.first()
+                if (!showNotification) {
+                    return@launch // Setting is off, do nothing.
+                }
+
                 val fast = fastRepository.getFast(fastId)
                 fast?.let {
                     // Ensure notification is not shown for manually ended fasts
@@ -56,8 +66,6 @@ class FastCompletionReceiver : BroadcastReceiver() {
     private fun sendNotification(context: Context, fast: Fast) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Create notification channel for Android O and above.
-        // It's safe to call this repeatedly.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,

@@ -18,11 +18,13 @@ sealed class DashboardUiState {
      * @param thisWeekFasts Fasts completed this week.
      * @param lastWeekFasts Fasts completed last week.
      * @param lastFast The most recently completed fast, for fallback.
+     * @param showFab Whether to show the Floating Action Button.
      */
     data class NoFast(
         val thisWeekFasts: List<Fast>,
         val lastWeekFasts: List<Fast>,
-        val lastFast: Fast? = null
+        val lastFast: Fast? = null,
+        val showFab: Boolean = true
     ) : DashboardUiState()
 
 

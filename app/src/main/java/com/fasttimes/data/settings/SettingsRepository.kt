@@ -7,6 +7,9 @@ interface SettingsRepository {
     val showLiveProgress: Flow<Boolean>
     suspend fun setShowLiveProgress(show: Boolean)
 
+    val showDashboardFab: Flow<Boolean>
+    suspend fun setShowDashboardFab(show: Boolean)
+
     val showGoalReachedNotification: Flow<Boolean>
     suspend fun setShowGoalReachedNotification(show: Boolean)
 

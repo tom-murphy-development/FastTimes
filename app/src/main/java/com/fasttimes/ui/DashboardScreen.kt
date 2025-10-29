@@ -35,10 +35,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AvTimer
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Timer
@@ -51,6 +53,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,6 +75,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -107,6 +112,12 @@ private val confettiParty = listOf(
         emitter = Emitter(duration = 5, TimeUnit.SECONDS).perSecond(100),
         fadeOutEnabled = true,
     )
+)
+
+private data class FabButtonItem(
+    val icon: ImageVector,
+    val label: String,
+    val action: () -> Unit
 )
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -661,8 +672,74 @@ fun DashboardScreen(
                 parties = parties
             )
         }
+
+        if (uiState is DashboardUiState.NoFast && (uiState as DashboardUiState.NoFast).showFab) {
+            MultiFab(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+                items = listOf(
+                    FabButtonItem(
+                        icon = Icons.Default.Timer,
+                        label = "Start Manual Fast",
+                        action = viewModel::startManualFast
+                    ),
+                    FabButtonItem(
+                        icon = Icons.Default.Star,
+                        label = "Start Favourite Fast",
+                        action = {
+                            // TODO: Implement favourite fast functionality
+                        }
+                    ),
+                    FabButtonItem(
+                        icon = Icons.Default.History,
+                        label = "View History",
+                        action = onHistoryClick
+                    )
+                )
+            )
+        }
     }
 }
+
+@Composable
+private fun MultiFab(
+    items: List<FabButtonItem>,
+    modifier: Modifier = Modifier
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        if (isExpanded) {
+            items.forEach { item ->
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        item.action()
+                        isExpanded = false
+                    },
+                    icon = { Icon(item.icon, contentDescription = item.label) },
+                    text = { Text(item.label) }
+                )
+            }
+        }
+
+        FloatingActionButton(
+            onClick = { isExpanded = !isExpanded },
+            modifier = Modifier.align(Alignment.End),
+            containerColor = Color(0xFF3DDC84)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add Fast"
+            )
+        }
+    }
+}
+
 
 @Composable
 private fun RatingBar(rating: Int, modifier: Modifier = Modifier) {

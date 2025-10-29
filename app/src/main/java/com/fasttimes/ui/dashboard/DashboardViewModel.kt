@@ -110,23 +110,37 @@ class DashboardViewModel @Inject constructor(
         history, _isEditing, settingsRepository.confettiShownForFastId
     ) { fasts, isEditing, confettiShownForFastId ->
         Triple(fasts, isEditing, confettiShownForFastId)
-    }.flatMapLatest { (fasts, isEditing, confettiShownForFastId) ->
-        if (fasts.isEmpty()) {
-            return@flatMapLatest flowOf(DashboardUiState.Loading)
-        }
-
+    }.combine(settingsRepository.showDashboardFab) { triple, showFab ->
+        triple to showFab
+    }.flatMapLatest { (triple, showFab) ->
+        val (fasts, isEditing, confettiShownForFastId) = triple
         val activeFast = fasts.firstOrNull { it.endTime == null }
 
         if (activeFast == null) {
-            val completedFasts = fasts.filter { it.endTime != null }.take(10)
-            val now = ZonedDateTime.now()
-            val startOfWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate().atStartOfDay(now.zone)
-            val startOfLastWeek = startOfWeek.minusWeeks(1)
+            flow {
+                val completedFasts = fasts.filter { it.endTime != null }.take(10)
+                val now = ZonedDateTime.now()
+                val startOfWeek =
+                    now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate()
+                        .atStartOfDay(now.zone)
+                val startOfLastWeek = startOfWeek.minusWeeks(1)
 
-            val thisWeekFasts = completedFasts.filter { it.start.isAfter(startOfWeek) }
-            val lastWeekFasts = completedFasts.filter { it.start.isAfter(startOfLastWeek) && it.start.isBefore(startOfWeek) }
+                val thisWeekFasts = completedFasts.filter { it.start.isAfter(startOfWeek) }
+                val lastWeekFasts = completedFasts.filter {
+                    it.start.isAfter(startOfLastWeek) && it.start.isBefore(
+                        startOfWeek
+                    )
+                }
 
-            flowOf(DashboardUiState.NoFast(thisWeekFasts, lastWeekFasts, completedFasts.firstOrNull()))
+                emit(
+                    DashboardUiState.NoFast(
+                        thisWeekFasts,
+                        lastWeekFasts,
+                        completedFasts.firstOrNull(),
+                        showFab
+                    )
+                )
+            }
         } else {
             // The main timer flow that updates every second
             flow {
@@ -187,8 +201,26 @@ class DashboardViewModel @Inject constructor(
     private val _showAlarmPermissionRationale = MutableStateFlow(false)
     val showAlarmPermissionRationale: StateFlow<Boolean> = _showAlarmPermissionRationale.asStateFlow()
 
+    /**
+     * Signals the UI to navigate to the history screen.
+     */
+    private val _navigateToHistory = MutableStateFlow(false)
+    val navigateToHistory: StateFlow<Boolean> = _navigateToHistory.asStateFlow()
+
 
     // --- ACTIONS ---
+
+    fun onNavigateToHistoryHandled() {
+        _navigateToHistory.value = false
+    }
+
+    fun onStartFavoriteFastClicked() {
+        // TODO: Implement starting a favorite fast
+    }
+
+    fun onViewHistoryClicked() {
+        _navigateToHistory.value = true
+    }
 
     fun onConfettiShown(fastId: Long) {
         viewModelScope.launch {

@@ -672,7 +672,7 @@ private fun RatingBar(rating: Int, modifier: Modifier = Modifier) {
             Icon(
                 imageVector = icon,
                 contentDescription = null, // decorative
-                tint = if (index < rating) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (index < rating) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }

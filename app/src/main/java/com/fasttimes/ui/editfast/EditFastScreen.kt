@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -153,24 +156,31 @@ fun EditFastScreen(
 
                 EditableFastDetailRow(
                     label = "Start Time",
-                    value = formatTimestamp(fast.startTime),
                     onClick = { showPicker = PickerType.Start }
-                )
+                ) {
+                    Text(formatTimestamp(fast.startTime))
+                }
 
                 if (fast.endTime != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     EditableFastDetailRow(
                         label = "End Time",
-                        value = formatTimestamp(fast.endTime),
                         onClick = { showPicker = PickerType.End }
-                    )
+                    ) {
+                        Text(formatTimestamp(fast.endTime))
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
                     EditableFastDetailRow(
                         label = "Rating",
-                        value = fast.rating?.toString() ?: "Not set",
                         onClick = { showPicker = PickerType.Rating }
-                    )
+                    ) {
+                        if (fast.rating != null) {
+                            StarRatingDisplay(rating = fast.rating!!)
+                        } else {
+                            Text("Not set")
+                        }
+                    }
                 }
 
                 if (uiState.error != null) {
@@ -212,10 +222,24 @@ fun EditFastScreen(
 }
 
 @Composable
+private fun StarRatingDisplay(rating: Int) {
+    Row {
+        repeat(5) { index ->
+            val imageVector = if (index < rating) Icons.Filled.Star else Icons.Filled.StarBorder
+            Icon(
+                imageVector = imageVector,
+                contentDescription = null, // decorative
+                tint = if (index < rating) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
 private fun EditableFastDetailRow(
     label: String,
-    value: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    value: @Composable () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -224,7 +248,7 @@ private fun EditableFastDetailRow(
     ) {
         Text(label, style = MaterialTheme.typography.bodyLarge)
         TextButton(onClick = onClick) {
-            Text(value)
+            value()
         }
     }
 }

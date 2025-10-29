@@ -55,7 +55,7 @@ fun RatingDialog(
                             Icon(
                                 imageVector = if (rating <= selectedRating) Icons.Filled.Star else Icons.Outlined.StarOutline,
                                 contentDescription = "$rating star",
-                                tint = if (rating <= selectedRating) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurface
+                                tint = if (rating <= selectedRating) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }

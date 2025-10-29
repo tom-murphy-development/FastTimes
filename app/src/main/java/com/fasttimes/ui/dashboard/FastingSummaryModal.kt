@@ -126,7 +126,7 @@ fun FastingSummaryModal(
                         Icon(
                             imageVector = if (star <= rating) Icons.Filled.Star else Icons.Outlined.StarBorder,
                             contentDescription = null,
-                            tint = if (star <= rating) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (star <= rating) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
                                 .size(48.dp)
                                 .clickable { rating = star }

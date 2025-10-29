@@ -34,9 +34,10 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.showLiveProgress,
         settingsRepository.showGoalReachedNotification,
         settingsRepository.theme,
-        settingsRepository.firstDayOfWeek
-    ) { showLiveProgress, showGoalReachedNotification, theme, firstDayOfWeek ->
-        SettingsUiState(showLiveProgress, showGoalReachedNotification, theme, firstDayOfWeek)
+        settingsRepository.firstDayOfWeek,
+        settingsRepository.showFab
+    ) { showLiveProgress, showGoalReachedNotification, theme, firstDayOfWeek, showFab ->
+        SettingsUiState(showLiveProgress, showGoalReachedNotification, theme, firstDayOfWeek, showFab)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -64,6 +65,12 @@ class SettingsViewModel @Inject constructor(
     fun onFirstDayOfWeekChanged(day: String) {
         viewModelScope.launch {
             settingsRepository.setFirstDayOfWeek(day)
+        }
+    }
+
+    fun onShowFabChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setShowFab(enabled)
         }
     }
 

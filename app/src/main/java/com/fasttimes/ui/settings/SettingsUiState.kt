@@ -6,5 +6,6 @@ data class SettingsUiState(
     val showLiveProgress: Boolean = false,
     val showGoalReachedNotification: Boolean = true,
     val theme: AppTheme = AppTheme.SYSTEM,
-    val firstDayOfWeek: String = "Sunday"
+    val firstDayOfWeek: String = "Sunday",
+    val showFab: Boolean = true
 )

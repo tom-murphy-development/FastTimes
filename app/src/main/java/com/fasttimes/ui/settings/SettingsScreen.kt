@@ -163,6 +163,19 @@ fun SettingsScreen(
                 selectedFirstDayOfWeek = uiState.firstDayOfWeek,
                 onFirstDayOfWeekChanged = viewModel::onFirstDayOfWeekChanged
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Show FAB", style = MaterialTheme.typography.bodyLarge)
+                Switch(
+                    checked = uiState.showFab,
+                    onCheckedChange = viewModel::onShowFabChanged
+                )
+            }
 
             HorizontalDivider()
 

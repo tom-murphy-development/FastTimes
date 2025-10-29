@@ -21,4 +21,7 @@ interface SettingsRepository {
 
     val firstDayOfWeek: Flow<String>
     suspend fun setFirstDayOfWeek(day: String)
+
+    val showFab: Flow<Boolean>
+    suspend fun setShowFab(show: Boolean)
 }

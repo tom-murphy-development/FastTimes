@@ -27,5 +27,6 @@ data class AppSettings(
     val goalMetNotificationEnabled: Boolean = true,
     val milestoneNotificationsEnabled: Boolean = true,
     val firstDayOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
-    val timeFormat: TimeFormat = TimeFormat.TWENTY_FOUR_HOUR
+    val timeFormat: TimeFormat = TimeFormat.TWENTY_FOUR_HOUR,
+    val showFab: Boolean = true
 )

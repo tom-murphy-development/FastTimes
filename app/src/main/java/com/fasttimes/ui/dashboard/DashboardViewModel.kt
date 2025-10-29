@@ -107,18 +107,24 @@ class DashboardViewModel @Inject constructor(
      * The core UI state for the dashboard, representing the current fasting status.
      */
     val uiState: StateFlow<DashboardUiState> = combine(
-        history, _isEditing, settingsRepository.confettiShownForFastId
-    ) { fasts, isEditing, confettiShownForFastId ->
-        Triple(fasts, isEditing, confettiShownForFastId)
-    }.combine(settingsRepository.showDashboardFab) { triple, showFab ->
-        triple to showFab
-    }.flatMapLatest { (triple, showFab) ->
-        val (fasts, isEditing, confettiShownForFastId) = triple
-        val activeFast = fasts.firstOrNull { it.endTime == null }
+        history, 
+        _isEditing, 
+        settingsRepository.confettiShownForFastId, 
+        settingsRepository.showFab
+    ) { fasts, isEditing, confettiShownForFastId, showFab ->
+        // Create a data class or tuple to hold the combined values
+        object {
+            val fasts = fasts
+            val isEditing = isEditing
+            val confettiShownForFastId = confettiShownForFastId
+            val showFab = showFab
+        }
+    }.flatMapLatest { data ->
+        val activeFast = data.fasts.firstOrNull { it.endTime == null }
 
         if (activeFast == null) {
             flow {
-                val completedFasts = fasts.filter { it.endTime != null }.take(10)
+                val completedFasts = data.fasts.filter { it.endTime != null }.take(10)
                 val now = ZonedDateTime.now()
                 val startOfWeek =
                     now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate()
@@ -137,7 +143,7 @@ class DashboardViewModel @Inject constructor(
                         thisWeekFasts,
                         lastWeekFasts,
                         completedFasts.firstOrNull(),
-                        showFab
+                        data.showFab
                     )
                 )
             }
@@ -150,7 +156,7 @@ class DashboardViewModel @Inject constructor(
 
                     if (activeFast.profile == FastingProfile.MANUAL) {
                         val elapsedTime = (now - startTime).milliseconds
-                        emit(DashboardUiState.ManualFasting(activeFast, elapsedTime, isEditing))
+                        emit(DashboardUiState.ManualFasting(activeFast, elapsedTime, data.isEditing))
                     } else {
                         val targetDuration = activeFast.targetDuration?.milliseconds ?: Duration.ZERO
                         val targetEndTime = startTime + targetDuration.inWholeMilliseconds
@@ -159,13 +165,13 @@ class DashboardViewModel @Inject constructor(
                         if (now >= targetEndTime) {
                             // For fasts that have passed their goal
                             val elapsedTime = (now - startTime).milliseconds
-                            val showConfetti = confettiShownForFastId != activeFast.id
+                            val showConfetti = data.confettiShownForFastId != activeFast.id
                             emit(
                                 DashboardUiState.FastingGoalReached(
                                     activeFast,
                                     elapsedTime,
                                     showConfetti,
-                                    isEditing
+                                    data.isEditing
                                 )
                             )
                         } else {
@@ -177,7 +183,7 @@ class DashboardViewModel @Inject constructor(
                                     activeFast,
                                     remainingTime,
                                     progress,
-                                    isEditing
+                                    data.isEditing
                                 )
                             )
                         }

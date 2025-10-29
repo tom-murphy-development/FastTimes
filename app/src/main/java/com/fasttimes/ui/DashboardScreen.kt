@@ -1,5 +1,6 @@
 package com.fasttimes.ui
 
+//import android.R
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
@@ -35,7 +36,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AvTimer
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CheckCircle
@@ -77,9 +77,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.fasttimes.R
 import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.components.StatisticTile
@@ -100,6 +102,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
+
 
 private val confettiParty = listOf(
     Party(
@@ -733,8 +736,11 @@ private fun MultiFab(
             containerColor = Color(0xFF3DDC84)
         ) {
             Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add Fast"
+                //imageVector = Icons.Default.Add,
+                painter = painterResource(id = R.drawable.ic_timer),
+                contentDescription = "Add Fast",
+                modifier = Modifier.size(24.dp),
+                tint = Color.Black
             )
         }
     }

@@ -3,9 +3,12 @@ package com.fasttimes.data.fast
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.fasttimes.data.FastingProfile
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.time.Instant
 import java.time.ZonedDateTime
 
+@Serializable
 @Entity(tableName = "fasts")
 data class Fast(
     @PrimaryKey(autoGenerate = true)
@@ -17,12 +20,14 @@ data class Fast(
     val notes: String? = null,
     val rating: Int? = null
 ) {
+    @Transient
     val start: ZonedDateTime
         get() = ZonedDateTime.ofInstant(
             Instant.ofEpochMilli(startTime),
             java.time.ZoneId.systemDefault()
         )
 
+    @Transient
     val end: ZonedDateTime?
         get() = endTime?.let {
             ZonedDateTime.ofInstant(

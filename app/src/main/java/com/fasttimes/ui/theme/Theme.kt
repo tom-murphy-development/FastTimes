@@ -1,6 +1,7 @@
 package com.fasttimes.ui.theme
 
 import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -44,7 +45,7 @@ fun FastTimesTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor -> {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
@@ -57,9 +58,7 @@ fun FastTimesTheme(
         SideEffect {
             val window = (view.context as Activity).window
             // Set the status and navigation bar colors to the theme's surface color.
-            @Suppress("DEPRECATION")
             window.statusBarColor = colorScheme.surface.toArgb()
-            @Suppress("DEPRECATION")
             window.navigationBarColor = colorScheme.surface.toArgb()
             // Ensure the content is displayed edge-to-edge.
             WindowCompat.setDecorFitsSystemWindows(window, false)

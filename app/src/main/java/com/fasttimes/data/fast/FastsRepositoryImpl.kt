@@ -27,4 +27,8 @@ class FastsRepositoryImpl @Inject constructor(
     override suspend fun deleteFast(fastId: Long) {
         fastDao.deleteFast(fastId)
     }
+
+    override suspend fun replaceAll(fasts: List<Fast>) {
+        fastDao.replaceAll(fasts)
+    }
 }

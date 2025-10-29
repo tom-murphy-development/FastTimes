@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 ksp {
@@ -98,6 +99,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.compose.foundation)
+    implementation(libs.kotlinx.serialization.json)
 
     // Testing
     testImplementation(libs.junit)

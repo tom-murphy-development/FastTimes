@@ -1,5 +1,6 @@
 package com.fasttimes.data
 
+import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
@@ -11,6 +12,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param displayName A user-friendly name for the profile.
  * @param description A detailed explanation of the fasting profile.
  */
+@Serializable
 enum class FastingProfile(
     val duration: Duration?,
     val displayName: String,

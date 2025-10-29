@@ -2,6 +2,7 @@ package com.fasttimes.ui.settings
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,10 +25,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +55,9 @@ fun SettingsScreen(
     var showNotificationPermissionRationale by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var permissionAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var showImportConfirmation by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    var uriForImport by remember { mutableStateOf<Uri?>(null) }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -61,6 +68,50 @@ fun SettingsScreen(
             }
         }
     )
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+        onResult = { uri -> uri?.let { viewModel.onExportData(it) } }
+    )
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri ->
+            if (uri != null) {
+                uriForImport = uri
+                showImportConfirmation = true
+            }
+        }
+    )
+
+    LaunchedEffect(viewModel.effects) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is SettingsScreenEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
+    if (showImportConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showImportConfirmation = false },
+            title = { Text("Import Data") },
+            text = { Text("This will replace all your existing data. Are you sure?") },
+            confirmButton = {
+                Button(onClick = {
+                    uriForImport?.let { viewModel.onImportData(it) }
+                    showImportConfirmation = false
+                }) {
+                    Text("Import")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showImportConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     if (showNotificationPermissionRationale) {
         AlertDialog(
@@ -86,6 +137,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(text = "Settings") },
@@ -175,6 +227,31 @@ fun SettingsScreen(
                         }
                     }
                 )
+            }
+
+            HorizontalDivider()
+
+            // Data Management Section
+            SettingsHeader(title = "Data Management")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { exportLauncher.launch("fasts.json") }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Export Data", style = MaterialTheme.typography.bodyLarge)
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { importLauncher.launch(arrayOf("application/json")) }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Import Data", style = MaterialTheme.typography.bodyLarge)
             }
         }
     }

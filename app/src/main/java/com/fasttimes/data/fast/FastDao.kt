@@ -2,7 +2,9 @@ package com.fasttimes.data.fast
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -24,6 +26,9 @@ interface FastDao {
     @Insert
     suspend fun insertFast(fast: Fast): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(fasts: List<Fast>)
+
     @Update
     suspend fun updateFast(fast: Fast)
 
@@ -35,4 +40,13 @@ interface FastDao {
 
     @Query("DELETE FROM fasts WHERE id = :fastId")
     suspend fun deleteFast(fastId: Long)
+
+    @Query("DELETE FROM fasts")
+    suspend fun deleteAll()
+
+    @Transaction
+    suspend fun replaceAll(fasts: List<Fast>) {
+        deleteAll()
+        insertAll(fasts)
+    }
 }

@@ -18,4 +18,6 @@ interface FastsRepository {
     suspend fun updateRating(fastId: Long, rating: Int)
 
     suspend fun deleteFast(fastId: Long)
+
+    suspend fun replaceAll(fasts: List<Fast>)
 }

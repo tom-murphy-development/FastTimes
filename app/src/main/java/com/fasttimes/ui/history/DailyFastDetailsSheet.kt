@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -171,7 +170,7 @@ private fun FastDetailItem(
                     Icon(
                         imageVector = if (fast.goalMet()) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
                         contentDescription = if (fast.goalMet()) "Goal Reached" else "Goal Not Reached",
-                        tint = if (fast.goalMet()) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                        tint = if (fast.goalMet()) FastTimesTheme.accentColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(
                             alpha = 0.5f
                         )
                     )
@@ -246,7 +245,7 @@ private fun RatingBar(rating: Int, modifier: Modifier = Modifier) {
             Icon(
                 imageVector = icon,
                 contentDescription = null, // decorative
-                tint = if (index < rating) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (index < rating) FastTimesTheme.accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }

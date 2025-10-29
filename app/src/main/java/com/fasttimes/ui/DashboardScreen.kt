@@ -72,7 +72,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -89,6 +88,8 @@ import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
 import com.fasttimes.ui.dashboard.FastingSummaryModal
 import com.fasttimes.ui.editfast.EditFastRoute
+import com.fasttimes.ui.theme.FastTimesTheme
+import com.fasttimes.ui.theme.contentColorFor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.compose.KonfettiView
@@ -255,7 +256,7 @@ fun DashboardScreen(
                             Text(
                                 "Choose a Profile",
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Spacer(Modifier.height(16.dp))
                             if (profiles.isEmpty()) {
@@ -266,12 +267,16 @@ fun DashboardScreen(
                                     horizontalArrangement = Arrangement.spacedBy(
                                         8.dp,
                                         Alignment.CenterHorizontally
+
                                     ),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     profiles.forEach { profile ->
-                                        Button(onClick = { onShowProfile(profile) }) {
-                                            Text(profile.displayName)
+                                        Button(onClick = { onShowProfile(profile) },
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.primary,
+                                            )) {
+                                            Text(profile.displayName, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                         }
                                     }
                                 }
@@ -456,7 +461,7 @@ fun DashboardScreen(
                                 CircularProgressIndicator(
                                     progress = { 1f },
                                     modifier = Modifier.size(260.dp),
-                                    color = Color(0xFF3DDC84), // Vibrant success color
+                                    color = FastTimesTheme.accentColor, // Vibrant success color
                                     strokeWidth = 20.dp,
                                     trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
                                         alpha = 0.1f
@@ -469,7 +474,7 @@ fun DashboardScreen(
                                         style = MaterialTheme.typography.titleLarge.copy(
                                             fontWeight = FontWeight.Bold
                                         ),
-                                        color = Color(0xFF3DDC84)
+                                        color = FastTimesTheme.accentColor
                                     )
                                     Spacer(Modifier.height(8.dp))
 
@@ -733,14 +738,14 @@ private fun MultiFab(
         FloatingActionButton(
             onClick = { isExpanded = !isExpanded },
             modifier = Modifier.align(Alignment.End),
-            containerColor = Color(0xFF3DDC84)
+            containerColor = FastTimesTheme.accentColor
         ) {
             Icon(
                 //imageVector = Icons.Default.Add,
                 painter = painterResource(id = R.drawable.ic_timer),
                 contentDescription = "Add Fast",
                 modifier = Modifier.size(24.dp),
-                tint = Color.Black
+                tint = contentColorFor(backgroundColor = FastTimesTheme.accentColor)
             )
         }
     }
@@ -755,7 +760,7 @@ private fun RatingBar(rating: Int, modifier: Modifier = Modifier) {
             Icon(
                 imageVector = icon,
                 contentDescription = null, // decorative
-                tint = if (index < rating) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (index < rating) FastTimesTheme.accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -796,7 +801,7 @@ private fun LastFastItem(
                 Icon(
                     imageVector = if (fast.goalMet()) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
                     contentDescription = if (fast.goalMet()) "Goal Reached" else "Goal Not Reached",
-                    tint = if (fast.goalMet()) Color(0xFF3DDC84) else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                    tint = if (fast.goalMet()) FastTimesTheme.accentColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(
                         alpha = 0.5f
                     )
                 )

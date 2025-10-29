@@ -1,19 +1,3 @@
-/*
- * Copyright 2024 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.fasttimes.ui.history
 
 import androidx.compose.foundation.background
@@ -35,12 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.fasttimes.ui.theme.FastTimesTheme
 
-/**
- * A composable that displays a horizontal timeline composed of colored segments and time labels.
- *
- * @param segments The list of [TimelineSegment] to display.
- * @param modifier The modifier to be applied to the timeline.
- */
 @Composable
 fun Timeline(
     segments: List<TimelineSegment>,
@@ -54,11 +32,15 @@ fun Timeline(
                 .clip(MaterialTheme.shapes.small)
         ) {
             segments.forEach { segment ->
+                val color = when (segment.type) {
+                    TimelineSegmentType.Fasting -> FastTimesTheme.accentColor
+                    TimelineSegmentType.NonFasting -> Color.Gray
+                }
                 Box(
                     modifier = Modifier
                         .weight(segment.weight)
                         .fillMaxHeight()
-                        .background(segment.color)
+                        .background(color)
                 )
             }
         }
@@ -82,9 +64,9 @@ private fun TimelinePreview() {
     FastTimesTheme {
         Timeline(
             segments = listOf(
-                TimelineSegment(Color.Gray, 0.25f),       // 12AM - 6AM
-                TimelineSegment(Color(0xFF3DDC84), 0.5f),      // 6AM - 6PM
-                TimelineSegment(Color.Gray, 0.25f)       // 6PM - 12AM
+                TimelineSegment(TimelineSegmentType.NonFasting, 0.25f),       // 12AM - 6AM
+                TimelineSegment(TimelineSegmentType.Fasting, 0.5f),      // 6AM - 6PM
+                TimelineSegment(TimelineSegmentType.NonFasting, 0.25f)       // 6PM - 12AM
             ),
             modifier = Modifier.padding(16.dp)
         )

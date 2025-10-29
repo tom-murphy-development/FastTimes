@@ -20,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.fasttimes.ui.history.HistoryScreen
+import com.fasttimes.ui.settings.AccentColorScreen
 import com.fasttimes.ui.settings.SettingsScreen
 import kotlinx.coroutines.launch
 
@@ -90,8 +91,12 @@ fun FastTimesNavHost() {
         }
         composable("settings") {
             SettingsScreen(
-                onBackClick = { navController.navigateUp() }
+                onBackClick = { navController.navigateUp() },
+                onAccentColorClick = { navController.navigate("settings/accent-color") }
             )
+        }
+        composable("settings/accent-color") {
+            AccentColorScreen(onNavigateUp = { navController.navigateUp() })
         }
         composable(
             route = "history/{fastId}",

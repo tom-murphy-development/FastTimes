@@ -1,19 +1,3 @@
-/*
- * Copyright 2024 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.fasttimes.ui.history
 
 import androidx.lifecycle.SavedStateHandle
@@ -63,17 +47,10 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    /**
-     * A data class to hold all calculated data for a given month.
-     * This avoids re-calculating data multiple times downstream.
-     */
     private data class HistoryMonth(
         val yearMonth: YearMonth,
         val fastsInMonth: List<Fast>,
     ) {
-        /**
-         * A map of day-of-month to a list of fasts that occurred on that day.
-         */
         val fastsByDay: Map<Int, List<Fast>> = run {
             val dailyFasts = mutableMapOf<Int, MutableList<Fast>>()
             val selectedDate = yearMonth.atDay(1)
@@ -98,16 +75,10 @@ class HistoryViewModel @Inject constructor(
             dailyFasts
         }
 
-        /**
-         * A map of day-of-month to its [DayStatus] (goal met or not).
-         */
         val dayStatusByDayOfMonth: Map<Int, DayStatus> = fastsByDay.mapValues { (_, fastsOnDay) ->
             if (fastsOnDay.any { it.goalMet() }) DayStatus.GOAL_MET else DayStatus.GOAL_NOT_MET
         }
 
-        /**
-         * A map of day-of-month to its [TimelineSegment] list for the calendar view.
-         */
         val dailyTimelineSegments: Map<Int, List<TimelineSegment>> = run {
             val date = yearMonth.atDay(1)
             (1..date.lengthOfMonth()).associateWith { dayOfMonth ->
@@ -117,10 +88,6 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    /**
-     * A flow that emits a [HistoryMonth] object whenever the selected month or the underlying
-     * fasts data changes. This is the single source of truth for all monthly calendar data.
-     */
     private val historyMonth: StateFlow<HistoryMonth> = combine(
         _displayedMonth,
         fastsRepository.getFasts()
@@ -140,9 +107,6 @@ class HistoryViewModel @Inject constructor(
         initialValue = HistoryMonth(YearMonth.now(), emptyList())
     )
 
-    /**
-     * The UI state for the History screen, derived from combining all data sources.
-     */
     val uiState: StateFlow<HistoryUiState> = combine(
         historyMonth,
         _displayedMonth,

@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -44,11 +47,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.AppTheme
+import com.fasttimes.ui.theme.FastTimesTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
+    onAccentColorClick: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -159,6 +164,21 @@ fun SettingsScreen(
                 selectedTheme = uiState.theme,
                 onThemeChanged = viewModel::onThemeChanged,
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onAccentColorClick() }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Accent Color", style = MaterialTheme.typography.bodyLarge)
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(color = FastTimesTheme.accentColor, shape = CircleShape)
+                )
+            }
             FirstDayOfWeekSetting(
                 selectedFirstDayOfWeek = uiState.firstDayOfWeek,
                 onFirstDayOfWeekChanged = viewModel::onFirstDayOfWeekChanged

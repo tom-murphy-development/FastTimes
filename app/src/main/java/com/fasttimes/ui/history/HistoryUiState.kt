@@ -21,5 +21,6 @@ data class HistoryUiState(
     val selectedDayFasts: List<Fast> = emptyList(),
     val totalFastsInMonth: Int = 0,
     val longestFastInMonth: Fast? = null,
-    val editingFastId: Long? = null
+    val editingFastId: Long? = null,
+    val firstDayOfWeek: String = "Sunday"
 )

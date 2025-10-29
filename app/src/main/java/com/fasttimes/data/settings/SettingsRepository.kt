@@ -15,4 +15,7 @@ interface SettingsRepository {
 
     val confettiShownForFastId: Flow<Long?>
     suspend fun setConfettiShownForFastId(fastId: Long)
+
+    val firstDayOfWeek: Flow<String>
+    suspend fun setFirstDayOfWeek(day: String)
 }

@@ -33,9 +33,10 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.showLiveProgress,
         settingsRepository.showGoalReachedNotification,
-        settingsRepository.theme
-    ) { showLiveProgress, showGoalReachedNotification, theme ->
-        SettingsUiState(showLiveProgress, showGoalReachedNotification, theme)
+        settingsRepository.theme,
+        settingsRepository.firstDayOfWeek
+    ) { showLiveProgress, showGoalReachedNotification, theme, firstDayOfWeek ->
+        SettingsUiState(showLiveProgress, showGoalReachedNotification, theme, firstDayOfWeek)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -57,6 +58,12 @@ class SettingsViewModel @Inject constructor(
     fun onThemeChanged(theme: AppTheme) {
         viewModelScope.launch {
             settingsRepository.setTheme(theme)
+        }
+    }
+
+    fun onFirstDayOfWeekChanged(day: String) {
+        viewModelScope.launch {
+            settingsRepository.setFirstDayOfWeek(day)
         }
     }
 

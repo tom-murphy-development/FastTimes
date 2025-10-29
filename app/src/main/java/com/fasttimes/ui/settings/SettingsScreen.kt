@@ -159,6 +159,10 @@ fun SettingsScreen(
                 selectedTheme = uiState.theme,
                 onThemeChanged = viewModel::onThemeChanged,
             )
+            FirstDayOfWeekSetting(
+                selectedFirstDayOfWeek = uiState.firstDayOfWeek,
+                onFirstDayOfWeekChanged = viewModel::onFirstDayOfWeekChanged
+            )
 
             HorizontalDivider()
 
@@ -301,6 +305,49 @@ private fun ThemeSetting(
                     text = { Text(text = theme.name.lowercase().replaceFirstChar { it.uppercase() }) },
                     onClick = {
                         onThemeChanged(theme)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FirstDayOfWeekSetting(
+    selectedFirstDayOfWeek: String,
+    onFirstDayOfWeekChanged: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val days = listOf("Sunday", "Monday")
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = { expanded = true })
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("First Day of Week", style = MaterialTheme.typography.bodyLarge)
+            Text(selectedFirstDayOfWeek)
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            days.forEach { day ->
+                DropdownMenuItem(
+                    text = { Text(text = day) },
+                    onClick = {
+                        onFirstDayOfWeekChanged(day)
                         expanded = false
                     }
                 )

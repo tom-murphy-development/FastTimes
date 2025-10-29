@@ -65,6 +65,8 @@ import kotlinx.collections.immutable.toImmutableMap
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 import kotlin.math.roundToInt
 
 private enum class DragAnchors {
@@ -82,7 +84,19 @@ fun CalendarView(
     onDayClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val daysOfWeek = listOf("M", "T", "W", "T", "F", "S", "S")
+    val daysOfWeek = remember(uiState.firstDayOfWeek) {
+        val days = java.time.DayOfWeek.values()
+        val locale = Locale.getDefault()
+        if (uiState.firstDayOfWeek == "Sunday") {
+            (days.takeLast(1) + days.take(6)).map {
+                it.getDisplayName(TextStyle.NARROW, locale)
+            }
+        } else {
+            days.map {
+                it.getDisplayName(TextStyle.NARROW, locale)
+            }
+        }
+    }
 
     val displayedMonth = uiState.displayedMonth
     val systemCalendarMonth = YearMonth.now()
@@ -135,8 +149,8 @@ fun CalendarView(
     ) {
         CalendarHeader(
             monthTitle = displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
-            onPreviousClick = onPreviousMonth,
-            onNextClick = onNextMonth,
+            onPreviousMonth = onPreviousMonth,
+            onNextMonth = onNextMonth,
             isNextEnabled = isNextMonthEnabled
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -172,8 +186,8 @@ fun CalendarView(
 @Composable
 private fun CalendarHeader(
     monthTitle: String,
-    onPreviousClick: () -> Unit,
-    onNextClick: () -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
     isNextEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -182,7 +196,7 @@ private fun CalendarHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onPreviousClick) {
+        IconButton(onClick = onPreviousMonth) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                 contentDescription = "Previous Month"
@@ -192,7 +206,7 @@ private fun CalendarHeader(
             text = monthTitle,
             style = MaterialTheme.typography.titleLarge,
         )
-        IconButton(onClick = onNextClick, enabled = isNextEnabled) {
+        IconButton(onClick = onNextMonth, enabled = isNextEnabled) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Next Month"
@@ -226,7 +240,11 @@ private fun CalendarGrid(
     modifier: Modifier = Modifier
 ) {
     val firstDayOfMonth = currentMonth.withDayOfMonth(1)
-    val firstDayOfWeekIndex = (firstDayOfMonth.dayOfWeek.value - 1)
+    val firstDayOfWeekIndex = if (uiState.firstDayOfWeek == "Sunday") {
+        firstDayOfMonth.dayOfWeek.value % 7
+    } else {
+        firstDayOfMonth.dayOfWeek.value - 1
+    }
     val daysInMonth = currentMonth.lengthOfMonth()
 
     val dayCells = (1..daysInMonth).toList()

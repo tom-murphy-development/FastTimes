@@ -19,6 +19,7 @@ class DefaultSettingsRepository @Inject constructor(
     private val showGoalReachedNotificationKey = booleanPreferencesKey("show_goal_reached_notification")
     private val themeKey = stringPreferencesKey("theme")
     private val confettiShownForFastIdKey = longPreferencesKey("confetti_shown_for_fast_id")
+    private val firstDayOfWeekKey = stringPreferencesKey("first_day_of_week")
 
     override val showLiveProgress: Flow<Boolean> =
         dataStore.data.map { it[showLiveProgressKey] ?: false }
@@ -46,5 +47,12 @@ class DefaultSettingsRepository @Inject constructor(
 
     override suspend fun setConfettiShownForFastId(fastId: Long) {
         dataStore.edit { it[confettiShownForFastIdKey] = fastId }
+    }
+
+    override val firstDayOfWeek: Flow<String> =
+        dataStore.data.map { it[firstDayOfWeekKey] ?: "Sunday" }
+
+    override suspend fun setFirstDayOfWeek(day: String) {
+        dataStore.edit { it[firstDayOfWeekKey] = day }
     }
 }

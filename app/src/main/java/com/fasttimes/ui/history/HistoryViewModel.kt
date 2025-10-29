@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastsRepository
+import com.fasttimes.data.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +40,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val fastsRepository: FastsRepository,
+    private val settingsRepository: SettingsRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -145,8 +147,9 @@ class HistoryViewModel @Inject constructor(
         historyMonth,
         _displayedMonth,
         _selectedDay,
-        _editingFastId
-    ) { month, displayedMonth, selectedDay, editingFastId ->
+        _editingFastId,
+        settingsRepository.firstDayOfWeek
+    ) { month, displayedMonth, selectedDay, editingFastId, firstDayOfWeek ->
         val fastsForSelectedDay = if (selectedDay != null) {
             month.fastsByDay[selectedDay] ?: emptyList()
         } else {
@@ -162,7 +165,8 @@ class HistoryViewModel @Inject constructor(
             selectedDayFasts = fastsForSelectedDay,
             totalFastsInMonth = month.fastsInMonth.size,
             longestFastInMonth = month.fastsInMonth.maxByOrNull { it.duration() },
-            editingFastId = editingFastId
+            editingFastId = editingFastId,
+            firstDayOfWeek = firstDayOfWeek
         )
     }.stateIn(
         scope = viewModelScope,

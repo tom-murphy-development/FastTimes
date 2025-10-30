@@ -37,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.theme.FastTimesTheme
 import java.time.Duration
@@ -150,14 +149,14 @@ private fun FastDetailItem(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
-                if (fast.profile != FastingProfile.MANUAL) {
+                if (fast.profileName != "Manual") {
                     Spacer(modifier = Modifier.height(8.dp))
                     Surface(
                         shape = MaterialTheme.shapes.small,
                         color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text(
-                            text = fast.profile.displayName,
+                            text = fast.profileName,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
@@ -270,7 +269,7 @@ private fun DailyFastDetailsSheetPreview() {
                     java.time.ZoneId.systemDefault()
                 ).toInstant().toEpochMilli(),
                 targetDuration = 16 * 3600 * 1000L,
-                profile = FastingProfile.SIXTEEN_EIGHT,
+                profileName = "16:8",
                 rating = 4
             ),
             Fast(
@@ -284,7 +283,7 @@ private fun DailyFastDetailsSheetPreview() {
                     java.time.ZoneId.systemDefault()
                 ).toInstant().toEpochMilli(),
                 targetDuration = 12 * 3600 * 1000L,
-                profile = FastingProfile.TWELVE_TWELVE,
+                profileName = "12:12",
                 rating = 5
             ),
             Fast(
@@ -295,7 +294,7 @@ private fun DailyFastDetailsSheetPreview() {
                 ).toInstant().toEpochMilli(),
                 endTime = null,
                 targetDuration = 18 * 3600 * 1000L,
-                profile = FastingProfile.EIGHTEEN_SIX
+                profileName = "18:6"
             )
         )
         val timeline = generateTimelineSegments(previewDate, previewFasts)

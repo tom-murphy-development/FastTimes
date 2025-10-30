@@ -7,9 +7,10 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasttimes.alarms.AlarmScheduler
-import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastsRepository
+import com.fasttimes.data.profile.FastingProfile
+import com.fasttimes.data.profile.FastingProfileRepository
 import com.fasttimes.data.settings.SettingsRepository
 import com.fasttimes.service.FastTimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -32,6 +32,7 @@ import java.time.ZonedDateTime
 import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
 // Placeholder for stats data class
@@ -47,6 +48,7 @@ data class DashboardStats(
 class DashboardViewModel @Inject constructor(
     private val fastsRepository: FastsRepository,
     private val settingsRepository: SettingsRepository,
+    private val fastingProfileRepository: FastingProfileRepository,
     private val alarmScheduler: AlarmScheduler,
     private val alarmManager: AlarmManager,
     private val application: Application
@@ -58,16 +60,13 @@ class DashboardViewModel @Inject constructor(
     private val _completedFast = MutableStateFlow<Fast?>(null)
     val completedFast: StateFlow<Fast?> = _completedFast.asStateFlow()
 
-    /**
-     * Exposes the list of selectable profiles (all except MANUAL).
-     */
-    val profiles: StateFlow<List<FastingProfile>> = flowOf(
-        FastingProfile.entries.filter { it != FastingProfile.MANUAL }
-    ).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val profiles: StateFlow<List<FastingProfile>> = fastingProfileRepository.getProfiles()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    /**
-     * A flow of the user's entire fasting history, sorted from newest to oldest.
-     */
+    val defaultProfile: StateFlow<FastingProfile?> = profiles
+        .map { profiles -> profiles.firstOrNull { it.isDefault } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     private val history: StateFlow<List<Fast>> = fastsRepository.getFasts()
         .stateIn(
             scope = viewModelScope,
@@ -75,9 +74,6 @@ class DashboardViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    /**
-     * A flow of calculated statistics based on the user's fasting history.
-     */
     val stats: StateFlow<DashboardStats> = history
         .map { fasts ->
             val completedFasts = fasts.filter { it.endTime != null }
@@ -103,16 +99,12 @@ class DashboardViewModel @Inject constructor(
             initialValue = DashboardStats()
         )
 
-    /**
-     * The core UI state for the dashboard, representing the current fasting status.
-     */
     val uiState: StateFlow<DashboardUiState> = combine(
-        history, 
-        _isEditing, 
-        settingsRepository.confettiShownForFastId, 
+        history,
+        _isEditing,
+        settingsRepository.confettiShownForFastId,
         settingsRepository.showFab
     ) { fasts, isEditing, confettiShownForFastId, showFab ->
-        // Create a data class or tuple to hold the combined values
         object {
             val fasts = fasts
             val isEditing = isEditing
@@ -148,22 +140,19 @@ class DashboardViewModel @Inject constructor(
                 )
             }
         } else {
-            // The main timer flow that updates every second
             flow {
                 while (true) {
                     val now = System.currentTimeMillis()
                     val startTime = activeFast.startTime
 
-                    if (activeFast.profile == FastingProfile.MANUAL) {
+                    if (activeFast.profileName == "Manual") {
                         val elapsedTime = (now - startTime).milliseconds
                         emit(DashboardUiState.ManualFasting(activeFast, elapsedTime, data.isEditing))
                     } else {
                         val targetDuration = activeFast.targetDuration?.milliseconds ?: Duration.ZERO
                         val targetEndTime = startTime + targetDuration.inWholeMilliseconds
 
-                        // Check if the goal has been reached
                         if (now >= targetEndTime) {
-                            // For fasts that have passed their goal
                             val elapsedTime = (now - startTime).milliseconds
                             val showConfetti = data.confettiShownForFastId != activeFast.id
                             emit(
@@ -175,7 +164,6 @@ class DashboardViewModel @Inject constructor(
                                 )
                             )
                         } else {
-                            // For fasts still counting down
                             val remainingTime = (targetEndTime - now).milliseconds
                             val progress = 1f - (remainingTime.inWholeMilliseconds.toFloat() / targetDuration.inWholeMilliseconds)
                             emit(
@@ -194,34 +182,26 @@ class DashboardViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
 
-
-    /**
-     * State for the Profile Details Modal, holding the profile being viewed.
-     */
     private val _modalProfile = MutableStateFlow<FastingProfile?>(null)
     val modalProfile: StateFlow<FastingProfile?> = _modalProfile.asStateFlow()
 
-    /**
-     * Signals the UI to show a rationale for the exact alarm permission.
-     */
     private val _showAlarmPermissionRationale = MutableStateFlow(false)
     val showAlarmPermissionRationale: StateFlow<Boolean> = _showAlarmPermissionRationale.asStateFlow()
 
-    /**
-     * Signals the UI to navigate to the history screen.
-     */
     private val _navigateToHistory = MutableStateFlow(false)
     val navigateToHistory: StateFlow<Boolean> = _navigateToHistory.asStateFlow()
-
-
-    // --- ACTIONS ---
 
     fun onNavigateToHistoryHandled() {
         _navigateToHistory.value = false
     }
 
-    fun onStartFavoriteFastClicked() {
-        // TODO: Implement starting a favorite fast
+    fun startDefaultProfileFast() {
+        viewModelScope.launch {
+            val profile = defaultProfile.first()
+            if (profile != null) {
+                startProfileFast(profile)
+            }
+        }
     }
 
     fun onViewHistoryClicked() {
@@ -234,23 +214,14 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Shows the profile details modal for the given profile.
-     */
     fun showProfileModal(profile: FastingProfile) {
         _modalProfile.value = profile
     }
 
-    /**
-     * Dismisses the profile details modal.
-     */
     fun dismissProfileModal() {
         _modalProfile.value = null
     }
 
-    /**
-     * Dismisses the alarm permission rationale dialog.
-     */
     fun dismissAlarmPermissionRationale() {
         _showAlarmPermissionRationale.value = false
     }
@@ -263,15 +234,12 @@ class DashboardViewModel @Inject constructor(
         _isEditing.value = false
     }
 
-    /**
-     * Starts a new fast in Manual (count-up) mode.
-     */
     fun startManualFast() {
         viewModelScope.launch {
             val fast = Fast(
                 startTime = System.currentTimeMillis(),
-                profile = FastingProfile.MANUAL,
-                targetDuration = 0L, // Manual has 0 duration goal
+                profileName = "Manual",
+                targetDuration = 0L,
                 endTime = null,
                 notes = null
             )
@@ -280,10 +248,6 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Starts a new fast in Profile (count-down) mode.
-     * Checks for exact alarm permissions before scheduling a notification.
-     */
     fun startProfileFast(profile: FastingProfile) {
         viewModelScope.launch {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
@@ -291,24 +255,21 @@ class DashboardViewModel @Inject constructor(
                 return@launch
             }
 
-            val durationMillis = profile.duration?.inWholeMilliseconds
+            val durationMillis = profile.durationHours.hours.inWholeMilliseconds
             val fast = Fast(
                 startTime = System.currentTimeMillis(),
-                profile = profile,
+                profileName = profile.name,
                 targetDuration = durationMillis,
                 endTime = null,
-                notes = "Started ${profile.displayName} fast"
+                notes = "Started ${profile.name} fast"
             )
             val fastId = fastsRepository.insertFast(fast)
             alarmScheduler.schedule(fast.copy(id = fastId))
             startService()
-            dismissProfileModal() // Close modal after starting
+            dismissProfileModal()
         }
     }
 
-    /**
-     * Ends the currently active fast.
-     */
     fun endCurrentFast() {
         val uiValue = uiState.value
         val fastToEnd = when (uiValue) {
@@ -323,7 +284,7 @@ class DashboardViewModel @Inject constructor(
             alarmScheduler.cancel(fast)
 
             val endTime = System.currentTimeMillis()
-            if (fast.profile == FastingProfile.MANUAL) {
+            if (fast.profileName == "Manual") {
                 val elapsedTime = endTime - fast.startTime
                 fastsRepository.updateFast(fast.copy(targetDuration = elapsedTime))
             }
@@ -349,7 +310,8 @@ class DashboardViewModel @Inject constructor(
             Intent(application, FastTimerService::class.java).also {
                 it.action = FastTimerService.ACTION_START
                 application.startService(it)
-        }}
+            }
+        }
     }
 
     private fun stopService() {

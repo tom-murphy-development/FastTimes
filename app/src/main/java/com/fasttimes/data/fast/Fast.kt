@@ -2,7 +2,6 @@ package com.fasttimes.data.fast
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.fasttimes.data.FastingProfile
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import java.time.Instant
@@ -16,7 +15,7 @@ data class Fast(
     val startTime: Long,
     val endTime: Long?,
     val targetDuration: Long?,
-    val profile: FastingProfile,
+    val profileName: String,
     val notes: String? = null,
     val rating: Int? = null
 ) {

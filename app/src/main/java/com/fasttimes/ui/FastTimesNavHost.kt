@@ -20,6 +20,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.fasttimes.ui.history.HistoryScreen
+import com.fasttimes.ui.profile.navigateToProfileManagement
+import com.fasttimes.ui.profile.profileManagementScreen
 import com.fasttimes.ui.settings.AccentColorScreen
 import com.fasttimes.ui.settings.SettingsScreen
 import kotlinx.coroutines.launch
@@ -75,7 +77,8 @@ fun FastTimesNavHost() {
                             onHistoryClick = { scope.launch { draggableState.openHistory() } },
                             onViewFastDetails = { fastId ->
                                 navController.navigate("history/$fastId")
-                            }
+                            },
+                            onManageProfilesClick = { navController.navigateToProfileManagement() }
                         )
                     },
                     historyContent = {
@@ -89,6 +92,7 @@ fun FastTimesNavHost() {
                 )
             }
         }
+        profileManagementScreen(onBackClick = { navController.navigateUp() })
         composable("settings") {
             SettingsScreen(
                 onBackClick = { navController.navigateUp() },

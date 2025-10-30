@@ -14,4 +14,5 @@ abstract class DataModule {
 
     @Binds
     abstract fun bindFastsRepository(impl: FastsRepositoryImpl): FastsRepository
+    
 }

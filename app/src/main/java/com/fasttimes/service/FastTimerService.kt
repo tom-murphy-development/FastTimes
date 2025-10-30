@@ -13,7 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import com.fasttimes.MainActivity
 import com.fasttimes.alarms.AlarmScheduler
 import com.fasttimes.data.fast.Fast
-import com.fasttimes.data.fast.FastRepository
+import com.fasttimes.data.fast.FastsRepository
 import com.fasttimes.data.settings.SettingsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
@@ -31,7 +31,7 @@ import javax.inject.Inject
 class FastTimerService : LifecycleService() {
 
     @Inject
-    lateinit var fastRepository: FastRepository
+    lateinit var fastsRepository: FastsRepository
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -63,7 +63,7 @@ class FastTimerService : LifecycleService() {
         if (serviceJob?.isActive == true) return
 
         serviceJob = lifecycleScope.launch {
-            val activeFastFlow = fastRepository.getAllFasts().map { fasts ->
+            val activeFastFlow = fastsRepository.getFasts().map { fasts ->
                 fasts.firstOrNull { it.endTime == null }
             }
 
@@ -103,10 +103,10 @@ class FastTimerService : LifecycleService() {
 
     private fun endFast() {
         lifecycleScope.launch {
-            val activeFast = fastRepository.getAllFasts().firstOrNull()?.firstOrNull { it.endTime == null }
+            val activeFast = fastsRepository.getFasts().firstOrNull()?.firstOrNull { it.endTime == null }
             if (activeFast != null) {
                 alarmScheduler.cancel(activeFast)
-                fastRepository.endFast(activeFast.id, System.currentTimeMillis())
+                fastsRepository.endFast(activeFast.id, System.currentTimeMillis())
             }
             // After ending the fast, the service should fully stop.
             stopService()
@@ -146,7 +146,7 @@ class FastTimerService : LifecycleService() {
 
         val now = System.currentTimeMillis()
         val elapsedTime = now - fast.startTime
-        val title = "${fast.profile.displayName} in Progress"
+        val title = "${fast.profileName} in Progress"
 
         val progress: Int
         val contentText: String

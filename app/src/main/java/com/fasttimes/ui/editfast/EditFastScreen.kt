@@ -31,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.components.DateTimeDialog
 import com.fasttimes.ui.components.RatingDialog
@@ -271,7 +270,7 @@ private fun EditFastScreenInProgressPreview() {
                     startTime = System.currentTimeMillis() - 1000 * 60 * 60 * 4,
                     endTime = null,
                     targetDuration = 16 * 60 * 60 * 1000,
-                    profile = FastingProfile.getById("16/8")!!
+                    profileName = "16:8"
                 )
             ),
             onStartTimeChanged = {},
@@ -298,7 +297,7 @@ private fun EditFastScreenFinishedPreview() {
                     startTime = System.currentTimeMillis() - 1000 * 60 * 60 * 20,
                     endTime = System.currentTimeMillis() - 1000 * 60 * 60 * 2,
                     targetDuration = 16 * 60 * 60 * 1000,
-                    profile = FastingProfile.getById("16/8")!!,
+                    profileName = "16:8",
                     rating = 4
                 )
             ),
@@ -326,7 +325,7 @@ private fun EditFastScreenWithErrorPreview() {
                     startTime = System.currentTimeMillis() - 1000 * 60 * 60 * 20,
                     endTime = System.currentTimeMillis() - 1000 * 60 * 60 * 2,
                     targetDuration = 16 * 60 * 60 * 1000,
-                    profile = FastingProfile.getById("16/8")!!,
+                    profileName = "16:8",
                     rating = 4
                 )
             ),

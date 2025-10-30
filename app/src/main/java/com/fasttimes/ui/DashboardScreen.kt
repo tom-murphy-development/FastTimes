@@ -1,6 +1,5 @@
 package com.fasttimes.ui
 
-//import android.R
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
@@ -35,6 +34,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AvTimer
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CheckCircle
@@ -80,8 +80,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.R
-import com.fasttimes.data.FastingProfile
 import com.fasttimes.data.fast.Fast
+import com.fasttimes.data.profile.FastingProfile
 import com.fasttimes.ui.components.StatisticTile
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
@@ -130,12 +130,13 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     onHistoryClick: () -> Unit,
     onViewFastDetails: (Long) -> Unit,
+    onManageProfilesClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val profiles by viewModel.profiles.collectAsState(initial = emptyList())
+    val profiles by viewModel.profiles.collectAsState()
+    val defaultProfile by viewModel.defaultProfile.collectAsState()
     val stats by viewModel.stats.collectAsState()
-    val modalProfile by viewModel.modalProfile.collectAsState()
     val showAlarmPermissionRationale by viewModel.showAlarmPermissionRationale.collectAsState()
     val completedFast by viewModel.completedFast.collectAsState()
     val sheetState = rememberModalBottomSheetState()
@@ -146,8 +147,8 @@ fun DashboardScreen(
 
     var parties by remember { mutableStateOf(emptyList<Party>()) }
 
-    val onStartFast: (FastingProfile) -> Unit = { profile ->
-        viewModel.startProfileFast(profile)
+    val onStartFast: (FastingProfile) -> Unit = {
+        viewModel.startProfileFast(it)
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -163,8 +164,6 @@ fun DashboardScreen(
     )
 
     val onEndFast: () -> Unit = { viewModel.endCurrentFast() }
-    val onShowProfile: (FastingProfile) -> Unit = { profile -> viewModel.showProfileModal(profile) }
-    val onDismissProfileDetails: () -> Unit = { viewModel.dismissProfileModal() }
     val onDismissAlarmPermissionRationale: () -> Unit = { viewModel.dismissAlarmPermissionRationale() }
 
     val isEditing = when (uiState) {
@@ -181,14 +180,6 @@ fun DashboardScreen(
         ) {
             EditFastRoute(onDismiss = viewModel::onEditFastDismissed, fastId = null)
         }
-    }
-
-    modalProfile?.let { profile ->
-        ProfileDetailsModal(
-            profile = profile,
-            onDismiss = onDismissProfileDetails,
-            onConfirm = { onStartFast(profile) }
-        )
     }
 
     if (showAlarmPermissionRationale) {
@@ -252,30 +243,59 @@ fun DashboardScreen(
 
                     is DashboardUiState.NoFast -> {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                "Choose a Profile",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Choose a Profile",
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                IconButton(onClick = onManageProfilesClick) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Manage Profiles"
+                                    )
+                                }
+                            }
                             Spacer(Modifier.height(16.dp))
                             if (profiles.isEmpty()) {
                                 Text("No profiles created yet. Go to Settings to create one.")
                             } else {
-                                FlowRow(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(
-                                        8.dp,
-                                        Alignment.CenterHorizontally
+                                val default = defaultProfile
+                                if (default != null) {
+                                    Button(
+                                        onClick = { onStartFast(default) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            contentColor = MaterialTheme.colorScheme.primary
+                                        )
+                                    ) {
+                                        Text(default.name, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primaryContainer)
+                                    }
+                                } else {
+                                    FlowRow(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(
+                                            8.dp,
+                                            Alignment.CenterHorizontally
 
-                                    ),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    profiles.forEach { profile ->
-                                        Button(onClick = { onShowProfile(profile) },
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                contentColor = MaterialTheme.colorScheme.primary
-                                            )) {
-                                            Text(profile.displayName, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primaryContainer)
+                                        ),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        profiles.forEach { profile ->
+                                            Button(
+                                                onClick = { onStartFast(profile) },
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    contentColor = MaterialTheme.colorScheme.primary
+                                                )
+                                            ) {
+                                                Text(profile.name, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primaryContainer)
+                                            }
                                         }
                                     }
                                 }
@@ -297,11 +317,19 @@ fun DashboardScreen(
                                     "Current Fast",
                                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                                 )
-                                IconButton(onClick = viewModel::onEditFast) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit Fast"
-                                    )
+                                Row {
+                                    IconButton(onClick = viewModel::onEditFast) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Edit Fast"
+                                        )
+                                    }
+                                    IconButton(onClick = onManageProfilesClick) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Manage Profiles"
+                                        )
+                                    }
                                 }
                             }
                             Spacer(Modifier.height(16.dp))
@@ -318,7 +346,7 @@ fun DashboardScreen(
                                 )
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
-                                        state.activeFast.profile.displayName,
+                                        state.activeFast.profileName,
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                     Spacer(Modifier.height(8.dp))
@@ -332,7 +360,7 @@ fun DashboardScreen(
                                         text = formatDuration(state.remainingTime),
                                         style = MaterialTheme.typography.displaySmall
                                     )
-                                 }
+                                }
                             }
                             Spacer(Modifier.height(16.dp))
                             Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
@@ -378,11 +406,19 @@ fun DashboardScreen(
                                     "Manual Fast",
                                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                                 )
-                                IconButton(onClick = viewModel::onEditFast) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit Fast"
-                                    )
+                                Row {
+                                    IconButton(onClick = viewModel::onEditFast) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Edit Fast"
+                                        )
+                                    }
+                                    IconButton(onClick = onManageProfilesClick) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Manage Profiles"
+                                        )
+                                    }
                                 }
                             }
                             Spacer(Modifier.height(16.dp))
@@ -448,11 +484,19 @@ fun DashboardScreen(
                                     "Current Fast",
                                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                                 )
-                                IconButton(onClick = viewModel::onEditFast) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit Fast"
-                                    )
+                                Row {
+                                    IconButton(onClick = viewModel::onEditFast) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Edit Fast"
+                                        )
+                                    }
+                                    IconButton(onClick = onManageProfilesClick) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Manage Profiles"
+                                        )
+                                    }
                                 }
                             }
                             Spacer(Modifier.height(16.dp))
@@ -473,7 +517,7 @@ fun DashboardScreen(
                                         style = MaterialTheme.typography.titleLarge.copy(
                                             fontWeight = FontWeight.Bold
                                         ),
-                                        color = FastTimesTheme.accentColor
+                                        color = contentColorFor(backgroundColor = MaterialTheme.colorScheme.primaryContainer)
                                     )
                                     Spacer(Modifier.height(8.dp))
 
@@ -855,7 +899,7 @@ private fun LastFastItem(
                     )
                 }
                 if (fast.rating != null) {
-                    RatingBar(rating = fast.rating)
+                    RatingBar(rating = fast.rating!!)
                 }
             }
         }

@@ -1,3 +1,4 @@
+
 package com.fasttimes.ui.theme
 
 import android.app.Activity
@@ -54,7 +55,7 @@ fun FastTimesTheme(
         Theme.DARK -> true
         Theme.SYSTEM -> isSystemInDarkTheme()
     }
-    val accentColor = Color(themeState.accentColor)
+    val accentColor = Color(themeState.accentColor?.toInt() ?: 0xFF3DDC84.toInt())
 
     val colorScheme = when {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {

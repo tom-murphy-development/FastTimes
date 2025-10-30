@@ -1,6 +1,5 @@
 package com.fasttimes.ui.theme
 
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasttimes.data.UserPreferencesRepository
@@ -20,15 +19,26 @@ class ThemeViewModel @Inject constructor(private val userPreferencesRepository: 
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = ThemeState()
+        initialValue = ThemeState.DEFAULT
     )
 
     suspend fun setAccentColor(color: Long) {
         userPreferencesRepository.setAccentColor(color)
     }
+
+    suspend fun clearAccentColor() {
+        userPreferencesRepository.clearAccentColor()
+    }
 }
 
 data class ThemeState(
-    val theme: com.fasttimes.data.Theme = com.fasttimes.data.Theme.SYSTEM,
-    val accentColor: Long = Color(0xFF3DDC84).value.toLong()
-)
+    val theme: com.fasttimes.data.Theme,
+    val accentColor: Long?
+) {
+    companion object {
+        val DEFAULT = ThemeState(
+            theme = com.fasttimes.data.Theme.SYSTEM,
+            accentColor = null
+        )
+    }
+}

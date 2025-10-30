@@ -1,6 +1,5 @@
 package com.fasttimes.data
 
-import androidx.compose.ui.graphics.Color
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -22,7 +21,7 @@ enum class Theme {
 data class UserData(
     val fastingGoal: Duration,
     val theme: Theme,
-    val accentColor: Long,
+    val accentColor: Long? // Changed to nullable
 )
 
 @Singleton
@@ -33,8 +32,6 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
         val FASTING_GOAL_KEY = longPreferencesKey("fasting_goal")
         val ACCENT_COLOR_KEY = longPreferencesKey("accent_color")
     }
-
-    private val defaultAccentColor = Color(0xFF3DDC84).value.toLong()
 
     val userData: Flow<UserData> = dataStore.data
         .catch { exception ->
@@ -49,7 +46,8 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
             val theme = Theme.valueOf(themeName)
             val fastingGoalInSeconds = preferences[PreferencesKeys.FASTING_GOAL_KEY] ?: (16 * 60 * 60)
             val fastingGoal = Duration.ofSeconds(fastingGoalInSeconds)
-            val accentColor = preferences[PreferencesKeys.ACCENT_COLOR_KEY] ?: defaultAccentColor
+            // Accent color is now read as nullable, no default here
+            val accentColor = preferences[PreferencesKeys.ACCENT_COLOR_KEY]
             UserData(fastingGoal, theme, accentColor)
         }
 
@@ -68,6 +66,13 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
     suspend fun setAccentColor(color: Long) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.ACCENT_COLOR_KEY] = color
+        }
+    }
+
+    // New function to clear the user's choice
+    suspend fun clearAccentColor() {
+        dataStore.edit { preferences ->
+            preferences.remove(PreferencesKeys.ACCENT_COLOR_KEY)
         }
     }
 }

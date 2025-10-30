@@ -184,11 +184,11 @@ fun DashboardScreen(
         }
     }
 
-    if (modalProfile != null) {
+    modalProfile?.let { profile ->
         ProfileDetailsModal(
-            profile = modalProfile!!,
+            profile = profile,
             onDismiss = onDismissProfileDetails,
-            onConfirm = { onStartFast(modalProfile!!) }
+            onConfirm = { onStartFast(profile) }
         )
     }
 
@@ -273,8 +273,8 @@ fun DashboardScreen(
                                 ) {
                                     profiles.forEach { profile ->
                                         Button(onClick = { onShowProfile(profile) },
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary,
-                                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.primary
                                             )) {
                                             Text(profile.displayName, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primaryContainer)
                                         }
@@ -333,7 +333,7 @@ fun DashboardScreen(
                                         text = formatDuration(state.remainingTime),
                                         style = MaterialTheme.typography.displaySmall
                                     )
-                                }
+                                 }
                             }
                             Spacer(Modifier.height(16.dp))
                             Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
@@ -551,8 +551,11 @@ fun DashboardScreen(
                                         modifier = Modifier.weight(1f),
                                         icon = Icons.Default.Star,
                                         label = "Longest Fast",
-                                        value = stats.longestFast?.let { formatDuration((it.endTime!! - it.startTime).milliseconds) }
-                                            ?: "-",
+                                        value = stats.longestFast?.let { fast ->
+                                            fast.endTime?.let { endTime ->
+                                                formatDuration((endTime - fast.startTime).milliseconds)
+                                            }
+                                        } ?: "-",
                                         onClick = { stats.longestFast?.id?.let(onViewFastDetails) },
                                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -853,7 +856,7 @@ private fun LastFastItem(
                     )
                 }
                 if (fast.rating != null) {
-                    RatingBar(rating = fast.rating!!)
+                    RatingBar(rating = fast.rating)
                 }
             }
         }

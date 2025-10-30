@@ -273,10 +273,10 @@ fun DashboardScreen(
                                 ) {
                                     profiles.forEach { profile ->
                                         Button(onClick = { onShowProfile(profile) },
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                contentColor = MaterialTheme.colorScheme.primary,
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary,
+                                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                                             )) {
-                                            Text(profile.displayName, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                            Text(profile.displayName, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primaryContainer)
                                         }
                                     }
                                 }
@@ -532,16 +532,16 @@ fun DashboardScreen(
                                         icon = Icons.Default.BarChart,
                                         label = "Total Fasts",
                                         value = stats.totalFasts.toString(),
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
                                     StatisticTile(
                                         modifier = Modifier.weight(1f),
                                         icon = Icons.Default.Timer,
                                         label = "Total Time",
                                         value = formatDuration(stats.totalFastingTime),
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
                                 }
                                 Row(
@@ -554,16 +554,16 @@ fun DashboardScreen(
                                         value = stats.longestFast?.let { formatDuration((it.endTime!! - it.startTime).milliseconds) }
                                             ?: "-",
                                         onClick = { stats.longestFast?.id?.let(onViewFastDetails) },
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
                                     StatisticTile(
                                         modifier = Modifier.weight(1f),
                                         icon = Icons.Default.AvTimer,
                                         label = "Average Fast",
                                         value = formatDuration(stats.averageFast),
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
                                 }
                             }

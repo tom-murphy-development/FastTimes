@@ -149,8 +149,8 @@ private fun MonthlyStats(
                     icon = Icons.Default.BarChart,
                     label = "Total Fasts",
                     value = uiState.totalFastsInMonth.toString(),
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 StatisticTile(
                     modifier = Modifier.weight(1f),
@@ -158,8 +158,8 @@ private fun MonthlyStats(
                     label = "Longest Fast",
                     value = uiState.longestFastInMonth?.let { formatDuration(it.duration().milliseconds) } ?: "-",
                     onClick = { uiState.longestFastInMonth?.id?.let(onViewFastDetails) },
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         }

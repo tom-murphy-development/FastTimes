@@ -55,10 +55,10 @@ fun AccentColorScreen(
     val themeState by themeViewModel.themeState.collectAsState()
     val scope = rememberCoroutineScope()
 
-    val tertiaryContainerColor = MaterialTheme.colorScheme.tertiaryContainer
+    val primaryContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
 
-    val accentColors = remember(tertiaryContainerColor) {
-        staticAccentColors + tertiaryContainerColor
+    val accentColors = remember(primaryContainerColor) {
+        staticAccentColors + primaryContainerColor
     }
 
     Scaffold(

@@ -12,6 +12,7 @@ import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
 import com.fasttimes.ui.theme.FastTimesTheme
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,26 +25,39 @@ class DashboardScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    @Test
-    fun fab_is_visible_when_no_fast_in_progress() {
-        val mockViewModel = mock<DashboardViewModel>()
-        whenever(mockViewModel.uiState).thenReturn(MutableStateFlow(DashboardUiState.NoFast))
+    private lateinit var mockViewModel: DashboardViewModel
+
+    @Before
+    fun setUp() {
+        mockViewModel = mock()
         whenever(mockViewModel.stats).thenReturn(MutableStateFlow(DashboardStats()))
-        whenever(mockViewModel.history).thenReturn(MutableStateFlow(emptyList()))
         whenever(mockViewModel.profiles).thenReturn(MutableStateFlow(emptyList()))
+        whenever(mockViewModel.favoriteProfile).thenReturn(MutableStateFlow(null))
         whenever(mockViewModel.modalProfile).thenReturn(MutableStateFlow(null))
         whenever(mockViewModel.showAlarmPermissionRationale).thenReturn(MutableStateFlow(false))
+        whenever(mockViewModel.completedFast).thenReturn(MutableStateFlow(null))
+    }
+
+    @Test
+    fun fab_is_visible_when_no_fast_in_progress() {
+        whenever(mockViewModel.uiState).thenReturn(MutableStateFlow(DashboardUiState.NoFast(
+            thisWeekFasts = emptyList(),
+            lastWeekFasts = emptyList(),
+            lastFast = null,
+            showFab = true
+        )))
 
         composeTestRule.setContent {
             FastTimesTheme {
                 DashboardScreen(
                     viewModel = mockViewModel,
-                    onSettingsClick = {},
-                    onHistoryClick = {}
+                    onHistoryClick = {},
+                    onViewFastDetails = {},
+                    onManageProfilesClick = {}
                 )
             }
         }
-        composeTestRule.onNodeWithContentDescription("Start Manual Fast").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Add Fast").assertIsDisplayed()
     }
 
     @Test
@@ -56,20 +70,24 @@ class DashboardScreenTest {
             targetDuration = 1000,
             notes = null
         )
-        val mockViewModel = mock<DashboardViewModel>()
-        whenever(mockViewModel.uiState).thenReturn(MutableStateFlow(DashboardUiState.FastingGoalReached(fast, 0L.milliseconds)))
-        whenever(mockViewModel.stats).thenReturn(MutableStateFlow(DashboardStats()))
-        whenever(mockViewModel.history).thenReturn(MutableStateFlow(listOf(fast)))
-        whenever(mockViewModel.profiles).thenReturn(MutableStateFlow(emptyList()))
-        whenever(mockViewModel.modalProfile).thenReturn(MutableStateFlow(null))
-        whenever(mockViewModel.showAlarmPermissionRationale).thenReturn(MutableStateFlow(false))
+        whenever(mockViewModel.uiState).thenReturn(
+            MutableStateFlow(
+                DashboardUiState.FastingGoalReached(
+                    activeFast = fast,
+                    totalElapsedTime = 0L.milliseconds,
+                    showConfetti = false,
+                    isEditing = false
+                )
+            )
+        )
 
         composeTestRule.setContent {
             FastTimesTheme {
                 DashboardScreen(
                     viewModel = mockViewModel,
-                    onSettingsClick = {},
-                    onHistoryClick = {}
+                    onHistoryClick = {},
+                    onViewFastDetails = {},
+                    onManageProfilesClick = {}
                 )
             }
         }

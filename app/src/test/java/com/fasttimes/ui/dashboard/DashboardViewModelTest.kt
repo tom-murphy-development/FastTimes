@@ -6,7 +6,8 @@ import app.cash.turbine.test
 import com.fasttimes.alarms.AlarmScheduler
 import com.fasttimes.data.DefaultFastingProfile
 import com.fasttimes.data.fast.Fast
-import com.fasttimes.data.fast.FastRepository
+import com.fasttimes.data.fast.FastsRepository
+import com.fasttimes.data.profile.FastingProfileRepository
 import com.fasttimes.data.settings.SettingsRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -21,6 +22,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import kotlin.time.Duration.Companion.hours
 
 @ExperimentalCoroutinesApi
 class DashboardViewModelTest {
@@ -28,8 +30,9 @@ class DashboardViewModelTest {
     @get:Rule
     val mainCoroutineRule = MainCoroutineRule()
 
-    private lateinit var repository: FastRepository
+    private lateinit var fastsRepository: FastsRepository
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var fastingProfileRepository: FastingProfileRepository
     private lateinit var viewModel: DashboardViewModel
     private lateinit var alarmScheduler: AlarmScheduler
     private lateinit var alarmManager: AlarmManager
@@ -37,24 +40,36 @@ class DashboardViewModelTest {
 
     @Before
     fun setup() {
-        repository = mockk(relaxed = true)
+        fastsRepository = mockk(relaxed = true)
         settingsRepository = mockk(relaxed = true)
+        fastingProfileRepository = mockk(relaxed = true)
         alarmScheduler = mockk(relaxed = true)
         alarmManager = mockk(relaxed = true)
         application = mockk(relaxed = true)
 
-        every { repository.getAllFasts() } returns flowOf(emptyList())
-        coEvery { repository.insertFast(any()) } returns 1L
+        every { fastsRepository.getFasts() } returns flowOf(emptyList())
+        coEvery { fastsRepository.insertFast(any()) } returns 1L
         every { settingsRepository.showLiveProgress } returns flowOf(true)
+        every { settingsRepository.confettiShownForFastId } returns flowOf(0)
+        every { settingsRepository.showFab } returns flowOf(true)
+        every { fastingProfileRepository.getProfiles() } returns flowOf(emptyList())
 
-        viewModel = DashboardViewModel(repository, settingsRepository, alarmScheduler, alarmManager, application)
+
+        viewModel = DashboardViewModel(
+            fastsRepository,
+            settingsRepository,
+            fastingProfileRepository,
+            alarmScheduler,
+            alarmManager,
+            application
+        )
     }
 
     @Test
     fun `startManualFast inserts new fast`() = runTest {
         viewModel.startManualFast()
         advanceUntilIdle()
-        coVerify { repository.insertFast(any()) }
+        coVerify { fastsRepository.insertFast(any()) }
     }
 
     @Test
@@ -67,9 +82,16 @@ class DashboardViewModelTest {
             targetDuration = 1000L,
             notes = null
         )
-        every { repository.getAllFasts() } returns flowOf(listOf(fast))
+        every { fastsRepository.getFasts() } returns flowOf(listOf(fast))
 
-        viewModel = DashboardViewModel(repository, settingsRepository, alarmScheduler, alarmManager, application)
+        viewModel = DashboardViewModel(
+            fastsRepository,
+            settingsRepository,
+            fastingProfileRepository,
+            alarmScheduler,
+            alarmManager,
+            application
+        )
 
         runCurrent()
 
@@ -77,7 +99,7 @@ class DashboardViewModelTest {
 
         runCurrent()
 
-        coVerify { repository.endFast(fast.id, any()) }
+        coVerify { fastsRepository.endFast(fast.id, any()) }
         coVerify { alarmScheduler.cancel(fast) }
     }
 
@@ -90,15 +112,23 @@ class DashboardViewModelTest {
             Fast(id = 2, startTime = now - (10 * hour), endTime = now - (6 * hour), profileName = DefaultFastingProfile.MANUAL.displayName, targetDuration = 2000L, notes = null)
         )
 
-        every { repository.getAllFasts() } returns flowOf(fasts)
-        viewModel = DashboardViewModel(repository, settingsRepository, alarmScheduler, alarmManager, application)
+        every { fastsRepository.getFasts() } returns flowOf(fasts)
+        viewModel = DashboardViewModel(
+            fastsRepository,
+            settingsRepository,
+            fastingProfileRepository,
+            alarmScheduler,
+            alarmManager,
+            application
+        )
 
         advanceUntilIdle()
 
         viewModel.stats.test {
             val stats = awaitItem()
             assertEquals(2, stats.totalFasts)
-            assertEquals(4, stats.longestFast)
+            assertEquals(6.hours, stats.totalFastingTime)
+            assertEquals(fasts[1], stats.longestFast)
             cancelAndIgnoreRemainingEvents()
         }
     }

@@ -12,23 +12,25 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.fasttimes.MainActivity
 import com.fasttimes.data.fast.Fast
-import com.fasttimes.data.fast.FastRepository
+import com.fasttimes.data.fast.FastsRepository
 import com.fasttimes.data.settings.SettingsRepository
-import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@AndroidEntryPoint
 class FastCompletionReceiver : BroadcastReceiver() {
 
-    @Inject
-    lateinit var fastRepository: FastRepository
-
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
+    @EntryPoint
+    @InstallIn(SingletonComponent::class)
+    interface FastCompletionReceiverEntryPoint {
+        fun fastsRepository(): FastsRepository
+        fun settingsRepository(): SettingsRepository
+    }
 
     companion object {
         const val CHANNEL_ID = "fast_completion_channel"
@@ -36,6 +38,13 @@ class FastCompletionReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
+        val hiltEntryPoint = EntryPointAccessors.fromApplication(
+            context,
+            FastCompletionReceiverEntryPoint::class.java
+        )
+        val fastsRepository = hiltEntryPoint.fastsRepository()
+        val settingsRepository = hiltEntryPoint.settingsRepository()
+
         val pendingResult = goAsync()
         val fastId = intent.getLongExtra(EXTRA_FAST_ID, -1)
         if (fastId == -1L) {
@@ -50,7 +59,7 @@ class FastCompletionReceiver : BroadcastReceiver() {
                     return@launch // Setting is off, do nothing.
                 }
 
-                val fast = fastRepository.getFast(fastId)
+                val fast = fastsRepository.getFast(fastId).first()
                 fast?.let {
                     // Ensure notification is not shown for manually ended fasts
                     if (it.endTime == null) {

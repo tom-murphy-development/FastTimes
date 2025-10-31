@@ -6,15 +6,15 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.fasttimes.data.AppDatabase
+import com.fasttimes.data.AppDatabaseCallback
 import com.fasttimes.data.fast.FastDao
-import com.fasttimes.data.fast.FastRepository
-import com.fasttimes.data.settings.DefaultSettingsRepository
-import com.fasttimes.data.settings.SettingsRepository
+import com.fasttimes.data.profile.FastingProfileDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -31,21 +31,22 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSettingsRepository(dataStore: DataStore<Preferences>): SettingsRepository = DefaultSettingsRepository(dataStore)
-
-    @Provides
-    @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase = 
-        Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "fasttimes-db"
-        ).fallbackToDestructiveMigration(dropAllTables = true).build()
+    fun provideDatabase(
+        @ApplicationContext context: Context,
+        callback: AppDatabaseCallback
+    ): AppDatabase = Room.databaseBuilder(
+        context,
+        AppDatabase::class.java,
+        "fasttimes-db"
+    ).addCallback(callback).fallbackToDestructiveMigration(dropAllTables = true).build()
 
     @Provides
     fun provideFastDao(db: AppDatabase): FastDao = db.fastDao()
 
     @Provides
+    fun provideFastingProfileDao(db: AppDatabase): FastingProfileDao = db.fastingProfileDao()
+
+    @Provides
     @Singleton
-    fun provideFastRepository(fastDao: FastDao): FastRepository = FastRepository(fastDao)
+    fun provideAppDatabaseCallback(fastingProfileDao: Provider<FastingProfileDao>): AppDatabaseCallback = AppDatabaseCallback(fastingProfileDao)
 }

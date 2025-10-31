@@ -4,7 +4,7 @@ import android.app.AlarmManager
 import android.app.Application
 import app.cash.turbine.test
 import com.fasttimes.alarms.AlarmScheduler
-import com.fasttimes.data.FastingProfile
+import com.fasttimes.data.DefaultFastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastRepository
 import com.fasttimes.data.settings.SettingsRepository
@@ -63,7 +63,7 @@ class DashboardViewModelTest {
             id = 1,
             startTime = System.currentTimeMillis() - 1000L,
             endTime = null,
-            profile = FastingProfile.MANUAL,
+            profileName = DefaultFastingProfile.MANUAL.displayName,
             targetDuration = 1000L,
             notes = null
         )
@@ -86,8 +86,8 @@ class DashboardViewModelTest {
         val now = System.currentTimeMillis()
         val hour = 3_600_000L
         val fasts = listOf(
-            Fast(id = 1, startTime = now - (4 * hour), endTime = now - (2 * hour), profile = FastingProfile.MANUAL, targetDuration = 1000L, notes = null),
-            Fast(id = 2, startTime = now - (10 * hour), endTime = now - (6 * hour), profile = FastingProfile.MANUAL, targetDuration = 2000L, notes = null)
+            Fast(id = 1, startTime = now - (4 * hour), endTime = now - (2 * hour), profileName = DefaultFastingProfile.MANUAL.displayName, targetDuration = 1000L, notes = null),
+            Fast(id = 2, startTime = now - (10 * hour), endTime = now - (6 * hour), profileName = DefaultFastingProfile.MANUAL.displayName, targetDuration = 2000L, notes = null)
         )
 
         every { repository.getAllFasts() } returns flowOf(fasts)

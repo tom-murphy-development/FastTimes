@@ -78,7 +78,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.fasttimes.R
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.profile.FastingProfile
@@ -135,7 +135,6 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val profiles by viewModel.profiles.collectAsState()
-    val defaultProfile by viewModel.defaultProfile.collectAsState()
     val stats by viewModel.stats.collectAsState()
     val showAlarmPermissionRationale by viewModel.showAlarmPermissionRationale.collectAsState()
     val completedFast by viewModel.completedFast.collectAsState()
@@ -264,38 +263,23 @@ fun DashboardScreen(
                             if (profiles.isEmpty()) {
                                 Text("No profiles created yet. Go to Settings to create one.")
                             } else {
-                                val default = defaultProfile
-                                if (default != null) {
-                                    Button(
-                                        onClick = { onStartFast(default) },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            contentColor = MaterialTheme.colorScheme.primary
-                                        )
-                                    ) {
-                                        Text(default.name, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primaryContainer)
-                                    }
-                                } else {
-                                    FlowRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(
-                                            8.dp,
-                                            Alignment.CenterHorizontally
-
-                                        ),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        profiles.forEach { profile ->
-                                            Button(
-                                                onClick = { onStartFast(profile) },
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                    contentColor = MaterialTheme.colorScheme.primary
-                                                )
-                                            ) {
-                                                Text(profile.name, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primaryContainer)
-                                            }
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    profiles.forEach { profile ->
+                                        Button(
+                                            onClick = { onStartFast(profile) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.secondary,
+                                                contentColor = MaterialTheme.colorScheme.onSecondary
+                                            )
+                                        ) {
+                                            Text(
+                                                profile.name,
+                                                style = MaterialTheme.typography.labelLarge
+                                            )
                                         }
                                     }
                                 }

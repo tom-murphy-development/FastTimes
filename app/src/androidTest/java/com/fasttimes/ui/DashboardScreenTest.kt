@@ -5,7 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.fasttimes.data.FastingProfile
+import com.fasttimes.data.DefaultFastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.dashboard.DashboardStats
 import com.fasttimes.ui.dashboard.DashboardUiState
@@ -52,7 +52,7 @@ class DashboardScreenTest {
             id = 1,
             startTime = System.currentTimeMillis(),
             endTime = null,
-            profile = FastingProfile.MANUAL,
+            profileName = DefaultFastingProfile.MANUAL.displayName,
             targetDuration = 1000,
             notes = null
         )

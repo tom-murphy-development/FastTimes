@@ -20,8 +20,4 @@ class DefaultFastingProfileRepository @Inject constructor(
     override suspend fun deleteProfile(profile: FastingProfile) {
         fastingProfileDao.delete(profile)
     }
-
-    override suspend fun setDefaultProfile(profile: FastingProfile) {
-        fastingProfileDao.setDefault(profile)
-    }
 }

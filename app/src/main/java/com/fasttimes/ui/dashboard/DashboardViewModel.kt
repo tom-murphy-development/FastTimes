@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasttimes.alarms.AlarmScheduler
+import com.fasttimes.data.DefaultFastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastsRepository
 import com.fasttimes.data.profile.FastingProfile
@@ -32,7 +33,6 @@ import java.time.ZonedDateTime
 import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
 // Placeholder for stats data class
@@ -64,7 +64,7 @@ class DashboardViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val defaultProfile: StateFlow<FastingProfile?> = profiles
-        .map { profiles -> profiles.firstOrNull { it.isDefault } }
+        .map { profiles -> profiles.firstOrNull { it.name == "Manual" } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val history: StateFlow<List<Fast>> = fastsRepository.getFasts()
@@ -238,8 +238,8 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val fast = Fast(
                 startTime = System.currentTimeMillis(),
-                profileName = "Manual",
-                targetDuration = 0L,
+                profileName = DefaultFastingProfile.MANUAL.displayName,
+                targetDuration = null,
                 endTime = null,
                 notes = null
             )
@@ -255,11 +255,10 @@ class DashboardViewModel @Inject constructor(
                 return@launch
             }
 
-            val durationMillis = profile.durationHours.hours.inWholeMilliseconds
             val fast = Fast(
                 startTime = System.currentTimeMillis(),
                 profileName = profile.name,
-                targetDuration = durationMillis,
+                targetDuration = profile.duration,
                 endTime = null,
                 notes = "Started ${profile.name} fast"
             )

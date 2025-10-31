@@ -14,7 +14,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fasttimes.data.profile.FastingProfile
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun ProfileManagementRoute(
@@ -44,7 +44,6 @@ fun ProfileManagementRoute(
         onAddProfile = { name, duration -> viewModel.addProfile(name, duration) },
         onUpdateProfile = { viewModel.updateProfile(it) },
         onDeleteProfile = { viewModel.deleteProfile(it) },
-        onSetDefaultProfile = { viewModel.setDefaultProfile(it) },
         onBackClick = onBackClick
     )
 }
@@ -53,22 +52,21 @@ fun ProfileManagementRoute(
 @Composable
 fun ProfileManagementScreen(
     profiles: List<FastingProfile>,
-    onAddProfile: (name: String, duration: Int) -> Unit,
+    onAddProfile: (name: String, duration: Long?) -> Unit,
     onUpdateProfile: (FastingProfile) -> Unit,
     onDeleteProfile: (FastingProfile) -> Unit,
-    onSetDefaultProfile: (FastingProfile) -> Unit,
     onBackClick: () -> Unit
 ) {
     var showAddEditDialog by remember { mutableStateOf<FastingProfile?>(null) }
     var showDeleteDialog by remember { mutableStateOf<FastingProfile?>(null) }
 
-    if (showAddEditDialog != null) {
+    showAddEditDialog?.let { profile ->
         AddEditProfileDialog(
-            profile = showAddEditDialog,
+            profile = profile,
             onDismiss = { showAddEditDialog = null },
             onSave = { name, duration ->
-                if (showAddEditDialog?.id != null && showAddEditDialog?.id != -1L) {
-                    onUpdateProfile(showAddEditDialog!!.copy(name = name, durationHours = duration))
+                if (profile.id != 0L) {
+                    onUpdateProfile(profile.copy(name = name, duration = duration))
                 } else {
                     onAddProfile(name, duration)
                 }
@@ -98,7 +96,7 @@ fun ProfileManagementScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showAddEditDialog = FastingProfile(id = -1L, name = "", durationHours = 0) }) {
+                    IconButton(onClick = { showAddEditDialog = FastingProfile(id = 0L, name = "", duration = null, description = "") }) {
                         Icon(Icons.Filled.Add, "Add Profile")
                     }
                 }
@@ -116,7 +114,6 @@ fun ProfileManagementScreen(
                     isDeleteEnabled = profiles.size > 1,
                     onUpdate = { showAddEditDialog = it },
                     onDelete = { showDeleteDialog = it },
-                    onSetDefault = onSetDefaultProfile
                 )
             }
         }
@@ -129,24 +126,34 @@ fun ProfileListItem(
     isDeleteEnabled: Boolean,
     onUpdate: (FastingProfile) -> Unit,
     onDelete: (FastingProfile) -> Unit,
-    onSetDefault: (FastingProfile) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSetDefault(profile) }
+            .clickable { onUpdate(profile) }
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
             Text(text = profile.name)
-            Text(text = "${profile.durationHours} hours")
+            val duration = profile.duration
+            if (duration != null && duration > 0) {
+                val hours = TimeUnit.MILLISECONDS.toHours(duration)
+                val minutes = TimeUnit.MILLISECONDS.toMinutes(duration) % 60
+                val seconds = TimeUnit.MILLISECONDS.toSeconds(duration) % 60
+
+                val durationText = when {
+                    hours > 0 -> "$hours hr, $minutes min"
+                    minutes > 0 -> "$minutes min, $seconds sec"
+                    else -> "$seconds sec"
+                }
+                Text(text = durationText)
+            } else {
+                Text(text = "Manual")
+            }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (profile.isDefault) {
-                Icon(Icons.Filled.Star, contentDescription = "Default Profile", modifier = Modifier.padding(end = 8.dp))
-            }
             IconButton(onClick = { onUpdate(profile) }) {
                 Icon(Icons.Filled.Edit, contentDescription = "Edit Profile")
             }

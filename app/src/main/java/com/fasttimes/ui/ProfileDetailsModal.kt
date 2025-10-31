@@ -8,7 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.fasttimes.data.FastingProfile
+import com.fasttimes.data.profile.FastingProfile
 
 /**
  * A modal dialog that displays details about a [FastingProfile] and asks for confirmation
@@ -30,10 +30,10 @@ fun ProfileDetailsModal(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Filled.Info, contentDescription = "Profile Details") },
         title = {
-            Text(text = profile.displayName)
+            Text(text = profile.name)
         },
         text = {
-            Text("Do you want to start this ${profile.displayName} fast?")
+            Text("Do you want to start this ${profile.name} fast?")
         },
         confirmButton = {
             TextButton(
@@ -55,10 +55,12 @@ fun ProfileDetailsModal(
 @Preview(showBackground = true)
 @Composable
 private fun ProfileDetailsModalPreview() {
-    // Note: This preview will only work if FastingProfile.MANUAL is a static object
-    // with a valid displayName, which is inferred from the DashboardScreen code.
     ProfileDetailsModal(
-        profile = FastingProfile.MANUAL,
+        profile = FastingProfile(
+            name = "Manual",
+            duration = null,
+            description = "A manually controlled fast."
+        ),
         onDismiss = {},
         onConfirm = {}
     )

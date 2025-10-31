@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 4,
-    "identityHash": "e900485bc86bcb54f4bc750140eeac2d",
+    "identityHash": "96953156448846a6ecbc4fbdd4909bc5",
     "entities": [
       {
         "tableName": "fasts",
@@ -56,7 +56,7 @@
       },
       {
         "tableName": "fasting_profiles",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `durationHours` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `duration` INTEGER, `description` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -71,15 +71,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "durationHours",
-            "columnName": "durationHours",
-            "affinity": "INTEGER",
-            "notNull": true
+            "fieldPath": "duration",
+            "columnName": "duration",
+            "affinity": "INTEGER"
           },
           {
-            "fieldPath": "isDefault",
-            "columnName": "isDefault",
-            "affinity": "INTEGER",
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -93,7 +92,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e900485bc86bcb54f4bc750140eeac2d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '96953156448846a6ecbc4fbdd4909bc5')"
     ]
   }
 }

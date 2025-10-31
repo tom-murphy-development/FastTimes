@@ -8,6 +8,6 @@ data class FastingProfile(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val name: String,
-    val durationHours: Int,
-    val isDefault: Boolean = false
+    val duration: Long?,
+    val description: String,
 )

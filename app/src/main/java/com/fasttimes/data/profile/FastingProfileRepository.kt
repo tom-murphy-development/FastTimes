@@ -7,5 +7,4 @@ interface FastingProfileRepository {
     suspend fun addProfile(profile: FastingProfile)
     suspend fun updateProfile(profile: FastingProfile)
     suspend fun deleteProfile(profile: FastingProfile)
-    suspend fun setDefaultProfile(profile: FastingProfile)
 }

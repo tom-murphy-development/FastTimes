@@ -14,15 +14,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import com.fasttimes.data.profile.FastingProfile
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun AddEditProfileDialog(
     profile: FastingProfile?,
     onDismiss: () -> Unit,
-    onSave: (name: String, durationHours: Int) -> Unit
+    onSave: (name: String, duration: Long?) -> Unit
 ) {
     var name by remember(profile) { mutableStateOf(profile?.name ?: "") }
-    var duration by remember(profile) { mutableStateOf(profile?.durationHours?.toString() ?: "") }
+    var hours by remember(profile) {
+        mutableStateOf(profile?.duration?.let { TimeUnit.MILLISECONDS.toHours(it) }?.toString() ?: "")
+    }
+    var minutes by remember(profile) {
+        mutableStateOf(
+            profile?.duration?.let { (TimeUnit.MILLISECONDS.toMinutes(it) % 60) }?.toString() ?: ""
+        )
+    }
     val isEditing = profile != null
 
     AlertDialog(
@@ -36,9 +44,15 @@ fun AddEditProfileDialog(
                     label = { Text("Profile Name") }
                 )
                 TextField(
-                    value = duration,
-                    onValueChange = { duration = it },
-                    label = { Text("Duration (hours)") },
+                    value = hours,
+                    onValueChange = { hours = it },
+                    label = { Text("Hours") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                TextField(
+                    value = minutes,
+                    onValueChange = { minutes = it },
+                    label = { Text("Minutes") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             }
@@ -46,12 +60,12 @@ fun AddEditProfileDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val durationInt = duration.toIntOrNull()
-                    if (name.isNotBlank() && durationInt != null) {
-                        onSave(name, durationInt)
-                    }
+                    val hoursLong = hours.toLongOrNull() ?: 0L
+                    val minutesLong = minutes.toLongOrNull() ?: 0L
+                    val totalMillis = TimeUnit.HOURS.toMillis(hoursLong) + TimeUnit.MINUTES.toMillis(minutesLong)
+                    onSave(name, totalMillis.takeIf { it > 0 })
                 },
-                enabled = name.isNotBlank() && duration.toIntOrNull() != null
+                enabled = name.isNotBlank()
             ) {
                 Text("Save")
             }

@@ -1,6 +1,6 @@
 package com.fasttimes.ui.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 /**
@@ -32,9 +34,11 @@ import androidx.compose.ui.unit.dp
  * @param icon The [ImageVector] to display at the top of the tile.
  * @param label The text describing the statistic.
  * @param value The string representation of the statistic's value.
+ * @param description An optional description to display at the bottom of the tile.
  * @param containerColor The color of the card's container.
  * @param contentColor The color of the card's content.
  * @param onClick An optional lambda to be invoked when the tile is clicked. If null, the tile will not be clickable.
+ * @param onLongClick An optional lambda to be invoked when the tile is long-clicked.
  */
 @Composable
 fun StatisticTile(
@@ -42,13 +46,17 @@ fun StatisticTile(
     icon: ImageVector,
     label: String,
     value: String,
+    description: String? = null,
     containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null
 ) {
-    var cardModifier = modifier
-    if (onClick != null) {
-        cardModifier = cardModifier.clickable(onClick = onClick)
+    val cardModifier = modifier.pointerInput(Unit) {
+        detectTapGestures(
+            onLongPress = { onLongClick?.invoke() },
+            onTap = { onClick?.invoke() }
+        )
     }
 
     Card(
@@ -81,6 +89,15 @@ fun StatisticTile(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
             )
+            if (description != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

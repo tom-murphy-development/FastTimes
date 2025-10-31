@@ -10,4 +10,5 @@ data class FastingProfile(
     val name: String,
     val duration: Long?,
     val description: String,
+    val isFavorite: Boolean = false,
 )

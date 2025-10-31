@@ -20,9 +20,10 @@ import java.util.concurrent.TimeUnit
 fun AddEditProfileDialog(
     profile: FastingProfile?,
     onDismiss: () -> Unit,
-    onSave: (name: String, duration: Long?) -> Unit
+    onSave: (name: String, duration: Long?, description: String) -> Unit
 ) {
     var name by remember(profile) { mutableStateOf(profile?.name ?: "") }
+    var description by remember(profile) { mutableStateOf(profile?.description ?: "") }
     var hours by remember(profile) {
         mutableStateOf(profile?.duration?.let { TimeUnit.MILLISECONDS.toHours(it) }?.toString() ?: "")
     }
@@ -44,6 +45,11 @@ fun AddEditProfileDialog(
                     label = { Text("Profile Name") }
                 )
                 TextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") }
+                )
+                TextField(
                     value = hours,
                     onValueChange = { hours = it },
                     label = { Text("Hours") },
@@ -63,7 +69,7 @@ fun AddEditProfileDialog(
                     val hoursLong = hours.toLongOrNull() ?: 0L
                     val minutesLong = minutes.toLongOrNull() ?: 0L
                     val totalMillis = TimeUnit.HOURS.toMillis(hoursLong) + TimeUnit.MINUTES.toMillis(minutesLong)
-                    onSave(name, totalMillis.takeIf { it > 0 })
+                    onSave(name, totalMillis.takeIf { it > 0 }, description)
                 },
                 enabled = name.isNotBlank()
             ) {

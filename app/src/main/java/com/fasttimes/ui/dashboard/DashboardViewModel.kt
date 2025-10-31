@@ -63,6 +63,10 @@ class DashboardViewModel @Inject constructor(
     val profiles: StateFlow<List<FastingProfile>> = fastingProfileRepository.getProfiles()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    val favoriteProfile: StateFlow<FastingProfile?> = profiles
+        .map { it.firstOrNull { profile -> profile.isFavorite } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     val defaultProfile: StateFlow<FastingProfile?> = profiles
         .map { profiles -> profiles.firstOrNull { it.name == "Manual" } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)

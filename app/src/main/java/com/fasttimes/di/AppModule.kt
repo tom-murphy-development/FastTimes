@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.fasttimes.data.AppDatabase
+import com.fasttimes.data.AppDatabase.Companion.MIGRATION_4_5
 import com.fasttimes.data.AppDatabaseCallback
 import com.fasttimes.data.fast.FastDao
 import com.fasttimes.data.profile.FastingProfileDao
@@ -38,7 +39,7 @@ object AppModule {
         context,
         AppDatabase::class.java,
         "fasttimes-db"
-    ).addCallback(callback).fallbackToDestructiveMigration(dropAllTables = true).build()
+    ).addCallback(callback).addMigrations(MIGRATION_4_5).build()
 
     @Provides
     fun provideFastDao(db: AppDatabase): FastDao = db.fastDao()

@@ -135,6 +135,7 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val profiles by viewModel.profiles.collectAsState()
+    val favoriteProfile by viewModel.favoriteProfile.collectAsState()
     val stats by viewModel.stats.collectAsState()
     val showAlarmPermissionRationale by viewModel.showAlarmPermissionRationale.collectAsState()
     val completedFast by viewModel.completedFast.collectAsState()
@@ -712,29 +713,36 @@ fun DashboardScreen(
         }
 
         if (uiState is DashboardUiState.NoFast && (uiState as DashboardUiState.NoFast).showFab) {
+            val fabItems = mutableListOf<FabButtonItem>()
+            favoriteProfile?.let {
+                fabItems.add(
+                    FabButtonItem(
+                        icon = Icons.Default.Star,
+                        label = "Start \"${it.name}\" Fast",
+                        action = { onStartFast(it) }
+                    )
+                )
+            }
+            fabItems.add(
+                FabButtonItem(
+                    icon = Icons.Default.Timer,
+                    label = "Start Manual Fast",
+                    action = viewModel::startManualFast
+                )
+            )
+            fabItems.add(
+                FabButtonItem(
+                    icon = Icons.Default.History,
+                    label = "View History",
+                    action = onHistoryClick
+                )
+            )
+
             MultiFab(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(16.dp),
-                items = listOf(
-                    FabButtonItem(
-                        icon = Icons.Default.Timer,
-                        label = "Start Manual Fast",
-                        action = viewModel::startManualFast
-                    ),
-                    FabButtonItem(
-                        icon = Icons.Default.Star,
-                        label = "Start Favourite Fast",
-                        action = {
-                            // TODO: Implement favourite fast functionality
-                        }
-                    ),
-                    FabButtonItem(
-                        icon = Icons.Default.History,
-                        label = "View History",
-                        action = onHistoryClick
-                    )
-                )
+                items = fabItems
             )
         }
     }

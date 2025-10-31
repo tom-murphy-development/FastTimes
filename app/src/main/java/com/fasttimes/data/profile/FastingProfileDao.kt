@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface FastingProfileDao {
 
-    @Query("SELECT * FROM fasting_profiles ORDER BY name ASC")
+    @Query("SELECT * FROM fasting_profiles ORDER BY isFavorite DESC, name ASC")
     fun getProfiles(): Flow<List<FastingProfile>>
 
     @Insert
@@ -21,4 +21,7 @@ interface FastingProfileDao {
 
     @Delete
     suspend fun delete(profile: FastingProfile)
+
+    @Query("UPDATE fasting_profiles SET isFavorite = 0")
+    suspend fun clearFavorites()
 }

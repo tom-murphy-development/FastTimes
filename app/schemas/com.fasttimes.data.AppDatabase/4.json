@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 4,
-    "identityHash": "96953156448846a6ecbc4fbdd4909bc5",
+    "identityHash": "c88f5b0f2a8f78f85a94a4936e479c46",
     "entities": [
       {
         "tableName": "fasts",
@@ -56,7 +56,7 @@
       },
       {
         "tableName": "fasting_profiles",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `duration` INTEGER, `description` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `duration` INTEGER, `description` TEXT NOT NULL, `isFavorite` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -80,6 +80,12 @@
             "columnName": "description",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "isFavorite",
+            "columnName": "isFavorite",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -92,7 +98,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '96953156448846a6ecbc4fbdd4909bc5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c88f5b0f2a8f78f85a94a4936e479c46')"
     ]
   }
 }

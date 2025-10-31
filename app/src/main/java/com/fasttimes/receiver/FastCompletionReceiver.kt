@@ -11,6 +11,7 @@ import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.fasttimes.MainActivity
+import com.fasttimes.R
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastsRepository
 import com.fasttimes.data.settings.SettingsRepository
@@ -102,7 +103,7 @@ class FastCompletionReceiver : BroadcastReceiver() {
         val durationInHours = fast.targetDuration?.let { it / (1000 * 60 * 60) } ?: 0
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // TODO: Replace with a proper app icon
+            .setSmallIcon(R.drawable.ic_timer)
             .setContentTitle("Goal Reached!")
             .setContentText("You've completed your ${durationInHours}-hour fast. Well done!")
             .setPriority(NotificationCompat.PRIORITY_HIGH)

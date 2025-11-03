@@ -3,7 +3,6 @@ package com.fasttimes.ui.dashboard
 import android.app.AlarmManager
 import android.app.Application
 import android.content.Intent
-import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasttimes.alarms.AlarmScheduler
@@ -48,7 +47,7 @@ data class DashboardStats(
 class DashboardViewModel @Inject constructor(
     private val fastsRepository: FastsRepository,
     private val settingsRepository: SettingsRepository,
-    private val fastingProfileRepository: FastingProfileRepository,
+    fastingProfileRepository: FastingProfileRepository,
     private val alarmScheduler: AlarmScheduler,
     private val alarmManager: AlarmManager,
     private val application: Application
@@ -192,34 +191,10 @@ class DashboardViewModel @Inject constructor(
     private val _showAlarmPermissionRationale = MutableStateFlow(false)
     val showAlarmPermissionRationale: StateFlow<Boolean> = _showAlarmPermissionRationale.asStateFlow()
 
-    private val _navigateToHistory = MutableStateFlow(false)
-    val navigateToHistory: StateFlow<Boolean> = _navigateToHistory.asStateFlow()
-
-    fun onNavigateToHistoryHandled() {
-        _navigateToHistory.value = false
-    }
-
-    fun startDefaultProfileFast() {
-        viewModelScope.launch {
-            val profile = defaultProfile.first()
-            if (profile != null) {
-                startProfileFast(profile)
-            }
-        }
-    }
-
-    fun onViewHistoryClicked() {
-        _navigateToHistory.value = true
-    }
-
     fun onConfettiShown(fastId: Long) {
         viewModelScope.launch {
             settingsRepository.setConfettiShownForFastId(fastId)
         }
-    }
-
-    fun showProfileModal(profile: FastingProfile) {
-        _modalProfile.value = profile
     }
 
     fun dismissProfileModal() {
@@ -254,7 +229,7 @@ class DashboardViewModel @Inject constructor(
 
     fun startProfileFast(profile: FastingProfile) {
         viewModelScope.launch {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            if (!alarmManager.canScheduleExactAlarms()) {
                 _showAlarmPermissionRationale.value = true
                 return@launch
             }

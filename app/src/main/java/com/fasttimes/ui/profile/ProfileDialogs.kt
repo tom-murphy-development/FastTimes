@@ -14,7 +14,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import com.fasttimes.data.profile.FastingProfile
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun AddEditProfileDialog(
@@ -25,11 +27,13 @@ fun AddEditProfileDialog(
     var name by remember(profile) { mutableStateOf(profile?.displayName ?: "") }
     var description by remember(profile) { mutableStateOf(profile?.description ?: "") }
     var hours by remember(profile) {
-        mutableStateOf(profile?.duration?.let { TimeUnit.MILLISECONDS.toHours(it) }?.toString() ?: "")
+        mutableStateOf(profile?.duration?.milliseconds?.inWholeHours?.toString() ?: "")
     }
     var minutes by remember(profile) {
         mutableStateOf(
-            profile?.duration?.let { (TimeUnit.MILLISECONDS.toMinutes(it) % 60) }?.toString() ?: ""
+            profile?.duration?.milliseconds?.toComponents {
+                _, minutes, _, _ -> minutes
+            }?.toString() ?: ""
         )
     }
     val isEditing = profile != null
@@ -68,7 +72,7 @@ fun AddEditProfileDialog(
                 onClick = {
                     val hoursLong = hours.toLongOrNull() ?: 0L
                     val minutesLong = minutes.toLongOrNull() ?: 0L
-                    val totalMillis = TimeUnit.HOURS.toMillis(hoursLong) + TimeUnit.MINUTES.toMillis(minutesLong)
+                    val totalMillis = (hoursLong.hours + minutesLong.minutes).inWholeMilliseconds
                     onSave(name, totalMillis.takeIf { it > 0 }, description)
                 },
                 enabled = name.isNotBlank()

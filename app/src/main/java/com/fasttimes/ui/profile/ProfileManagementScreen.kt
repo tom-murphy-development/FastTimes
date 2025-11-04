@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.profile.FastingProfile
 import com.fasttimes.ui.components.StatisticTile
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ProfileManagementRoute(
@@ -175,19 +175,17 @@ private fun formatDuration(duration: Long?): String {
     if (duration == null || duration <= 0) {
         return "Manual"
     }
-    val hours = TimeUnit.MILLISECONDS.toHours(duration)
-    val minutes = TimeUnit.MILLISECONDS.toMinutes(duration) % 60
-    val seconds = TimeUnit.MILLISECONDS.toSeconds(duration) % 60
-
-    return when {
-        hours > 0 -> {
-            if (minutes > 0) {
-                "$hours hr, $minutes min"
-            } else {
-                if (hours == 1L) "$hours Hour" else "$hours Hours"
-            }
+    val d = duration.milliseconds
+    return d.toComponents { hours, minutes, seconds, _ ->
+        if (hours > 0) {
+            val hourText = if (hours == 1L) "Hour" else "Hours"
+            "$hours $hourText, $minutes min"
+        } else if (minutes > 0) {
+            val minuteText = if (minutes == 1) "Minute" else "Minutes"
+            "$minutes $minuteText, $seconds sec"
+        } else {
+            val secondText = if (seconds == 1) "Second" else "Seconds"
+            "$seconds $secondText"
         }
-        minutes > 0 -> "$minutes min, $seconds sec"
-        else -> "$seconds sec"
     }
 }

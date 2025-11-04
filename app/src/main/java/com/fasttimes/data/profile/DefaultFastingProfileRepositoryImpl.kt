@@ -9,8 +9,8 @@ class DefaultFastingProfileRepositoryImpl @Inject constructor(
 
     override fun getProfiles(): Flow<List<FastingProfile>> = fastingProfileDao.getProfiles()
 
-    override suspend fun addProfile(profile: FastingProfile) {
-        fastingProfileDao.insert(profile)
+    override suspend fun addProfile(profile: FastingProfile): Long {
+        return fastingProfileDao.insert(profile)
     }
 
     override suspend fun updateProfile(profile: FastingProfile) {

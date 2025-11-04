@@ -19,20 +19,28 @@ class ProfileManagementViewModel @Inject constructor(
     val profiles: StateFlow<List<FastingProfile>> = fastingProfileRepository.getProfiles()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addProfile(name: String, duration: Long?, description: String) {
+    fun addProfile(name: String, duration: Long?, description: String, isFavorite: Boolean) {
         viewModelScope.launch {
             val profile = FastingProfile(
                 displayName = name,
                 duration = duration,
-                description = description
+                description = description,
+                isFavorite = isFavorite
             )
-            fastingProfileRepository.addProfile(profile)
+            val newId = fastingProfileRepository.addProfile(profile)
+            if (isFavorite) {
+                fastingProfileRepository.setFavoriteProfile(profile.copy(id = newId))
+            }
         }
     }
 
     fun updateProfile(profile: FastingProfile) {
         viewModelScope.launch {
-            fastingProfileRepository.updateProfile(profile)
+            if (profile.isFavorite) {
+                fastingProfileRepository.setFavoriteProfile(profile)
+            } else {
+                fastingProfileRepository.updateProfile(profile)
+            }
         }
     }
 

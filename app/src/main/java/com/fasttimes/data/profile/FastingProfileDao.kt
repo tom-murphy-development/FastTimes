@@ -15,7 +15,7 @@ interface FastingProfileDao {
     fun getProfiles(): Flow<List<FastingProfile>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(profile: FastingProfile)
+    suspend fun insert(profile: FastingProfile): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(profiles: List<FastingProfile>)

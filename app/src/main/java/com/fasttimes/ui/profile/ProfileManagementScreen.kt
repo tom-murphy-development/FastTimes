@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.profile.FastingProfile
@@ -49,7 +50,7 @@ fun ProfileManagementRoute(
     val profiles by viewModel.profiles.collectAsState()
     ProfileManagementScreen(
         profiles = profiles,
-        onAddProfile = { name, duration, description -> viewModel.addProfile(name, duration, description) },
+        onAddProfile = { name, duration, description, isFavorite -> viewModel.addProfile(name, duration, description, isFavorite) },
         onUpdateProfile = { viewModel.updateProfile(it) },
         onDeleteProfile = { viewModel.deleteProfile(it) },
         onSetFavorite = { viewModel.setFavoriteProfile(it) },
@@ -61,7 +62,7 @@ fun ProfileManagementRoute(
 @Composable
 fun ProfileManagementScreen(
     profiles: List<FastingProfile>,
-    onAddProfile: (name: String, duration: Long?, description: String) -> Unit,
+    onAddProfile: (name: String, duration: Long?, description: String, isFavorite: Boolean) -> Unit,
     onUpdateProfile: (FastingProfile) -> Unit,
     onDeleteProfile: (FastingProfile) -> Unit,
     onSetFavorite: (FastingProfile) -> Unit,
@@ -76,13 +77,17 @@ fun ProfileManagementScreen(
         AddEditProfileDialog(
             profile = profile,
             onDismiss = { showAddEditDialog = null },
-            onSave = { name, duration, description ->
+            onSave = { name, duration, description, isFavorite ->
                 if (profile.id != 0L) {
-                    onUpdateProfile(profile.copy(displayName = name, duration = duration, description = description))
+                    onUpdateProfile(profile.copy(displayName = name, duration = duration, description = description, isFavorite = isFavorite))
                 } else {
-                    onAddProfile(name, duration, description)
+                    onAddProfile(name, duration, description, isFavorite)
                 }
                 showAddEditDialog = null
+            },
+            onDeleteClick = {
+                showAddEditDialog = null
+                showDeleteDialog = profile
             }
         )
     }
@@ -119,12 +124,13 @@ fun ProfileManagementScreen(
         val otherProfiles = profiles.filter { !it.isFavorite }
 
         Column(modifier = Modifier.padding(padding)) {
+            Text(
+                text = "Favourite Fast",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
+            )
+
             if (favoriteProfile != null) {
-                Text(
-                    text = "Favourite Fast",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
-                )
                 StatisticTile(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -134,6 +140,15 @@ fun ProfileManagementScreen(
                     value = formatDuration(favoriteProfile.duration),
                     description = favoriteProfile.description,
                     onClick = { showAddEditDialog = favoriteProfile }
+                )
+            } else {
+                Text(
+                    text = "Press and hold a profile to add it as your favourite",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 )
             }
 

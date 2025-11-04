@@ -2,7 +2,7 @@ package com.fasttimes.di
 
 import com.fasttimes.data.fast.FastsRepository
 import com.fasttimes.data.fast.FastsRepositoryImpl
-import com.fasttimes.data.profile.DefaultFastingProfileRepository
+import com.fasttimes.data.profile.DefaultFastingProfileRepositoryImpl
 import com.fasttimes.data.profile.FastingProfileRepository
 import com.fasttimes.data.settings.DefaultSettingsRepository
 import com.fasttimes.data.settings.SettingsRepository
@@ -22,7 +22,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindFastingProfileRepository(impl: DefaultFastingProfileRepository): FastingProfileRepository
+    abstract fun bindFastingProfileRepository(impl: DefaultFastingProfileRepositoryImpl): FastingProfileRepository
 
     @Binds
     @Singleton

@@ -15,9 +15,17 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Provider
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
+@Retention(AnnotationRetention.RUNTIME)
+@Qualifier
+annotation class ApplicationScope
+
+@Suppress("unused")
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
@@ -28,6 +36,13 @@ object AppModule {
     @Singleton
     fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
         return context.dataStore
+    }
+
+    @ApplicationScope
+    @Singleton
+    @Provides
+    fun providesApplicationScope(): CoroutineScope {
+        return CoroutineScope(SupervisorJob())
     }
 
     @Provides
@@ -49,5 +64,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAppDatabaseCallback(fastingProfileDao: Provider<FastingProfileDao>): AppDatabaseCallback = AppDatabaseCallback(fastingProfileDao)
+    fun provideAppDatabaseCallback(
+        fastingProfileDao: Provider<FastingProfileDao>,
+        @ApplicationScope applicationScope: CoroutineScope
+    ): AppDatabaseCallback = AppDatabaseCallback(fastingProfileDao, applicationScope)
 }

@@ -22,7 +22,7 @@ fun AddEditProfileDialog(
     onDismiss: () -> Unit,
     onSave: (name: String, duration: Long?, description: String) -> Unit
 ) {
-    var name by remember(profile) { mutableStateOf(profile?.name ?: "") }
+    var name by remember(profile) { mutableStateOf(profile?.displayName ?: "") }
     var description by remember(profile) { mutableStateOf(profile?.description ?: "") }
     var hours by remember(profile) {
         mutableStateOf(profile?.duration?.let { TimeUnit.MILLISECONDS.toHours(it) }?.toString() ?: "")
@@ -93,7 +93,7 @@ fun DeleteConfirmationDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Delete Profile") },
-        text = { Text("Are you sure you want to delete the profile \"${profile.name}\"? This action cannot be undone.") },
+        text = { Text("Are you sure you want to delete the profile \"${profile.displayName}\"? This action cannot be undone.") },
         confirmButton = {
             Button(onClick = onConfirm) {
                 Text("Delete")

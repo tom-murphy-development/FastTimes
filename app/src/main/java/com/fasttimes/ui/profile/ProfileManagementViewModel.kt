@@ -22,7 +22,7 @@ class ProfileManagementViewModel @Inject constructor(
     fun addProfile(name: String, duration: Long?, description: String) {
         viewModelScope.launch {
             val profile = FastingProfile(
-                name = name,
+                displayName = name,
                 duration = duration,
                 description = description
             )

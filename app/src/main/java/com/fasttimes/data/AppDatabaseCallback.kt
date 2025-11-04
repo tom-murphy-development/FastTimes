@@ -5,18 +5,18 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.fasttimes.data.profile.FastingProfile
 import com.fasttimes.data.profile.FastingProfileDao
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Provider
 
 class AppDatabaseCallback @Inject constructor(
-    private val fastingProfileDao: Provider<FastingProfileDao>
+    private val fastingProfileDao: Provider<FastingProfileDao>,
+    private val applicationScope: CoroutineScope,
 ) : RoomDatabase.Callback() {
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
-        CoroutineScope(Dispatchers.IO).launch {
+        applicationScope.launch {
             prepopulateFastingProfiles()
         }
     }
@@ -25,7 +25,7 @@ class AppDatabaseCallback @Inject constructor(
         DefaultFastingProfile.entries.forEach {
             fastingProfileDao.get().insert(
                 FastingProfile(
-                    name = it.displayName,
+                    displayName = it.displayName,
                     duration = it.duration?.inWholeMilliseconds,
                     description = it.description
                 )

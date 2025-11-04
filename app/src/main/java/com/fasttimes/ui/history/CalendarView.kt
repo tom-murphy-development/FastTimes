@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.fasttimes.ui.theme.FastTimesTheme
 import kotlinx.collections.immutable.toImmutableMap
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -85,7 +86,7 @@ fun CalendarView(
     modifier: Modifier = Modifier
 ) {
     val daysOfWeek = remember(uiState.firstDayOfWeek) {
-        val days = java.time.DayOfWeek.values()
+        val days = DayOfWeek.entries.toTypedArray()
         val locale = Locale.getDefault()
         if (uiState.firstDayOfWeek == "Sunday") {
             (days.takeLast(1) + days.take(6)).map {

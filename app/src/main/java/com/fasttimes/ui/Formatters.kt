@@ -1,5 +1,6 @@
 package com.fasttimes.ui
 
+import java.util.Locale
 import kotlin.time.Duration
 
 /**
@@ -9,9 +10,9 @@ import kotlin.time.Duration
  * @return A formatted string representing the duration.
  */
 fun formatDuration(duration: Duration): String {
-    val seconds = duration.inWholeSeconds
-    val hours = seconds / 3600
-    val minutes = (seconds % 3600) / 60
-    val secs = seconds % 60
-    return String.format("%02d:%02d:%02d", hours, minutes, secs)
+    val totalSeconds = duration.inWholeSeconds
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return String.format(Locale.forLanguageTag("en-AU"), "%02d:%02d:%02d", hours, minutes, seconds)
 }

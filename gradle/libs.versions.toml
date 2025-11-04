@@ -1,7 +1,7 @@
 [versions]
 # Gradle & Kotlin
 agp = "8.13.0"  # Using stable version of AGP
-kotlin = "2.2.20"  # Matching Kotlin version with Compose compiler
+kotlin = "2.2.21"  # Matching Kotlin version with Compose compiler
 composeCompilerVersion = "1.5.3"
 konfetti = "2.0.5"
 kotlinx-collections-immutable = "0.4.0"
@@ -10,10 +10,10 @@ mockito-kotlin = "6.1.0"
 compose-bom-beta = "2025.10.01"
 accompanist-navigation-animation = "0.36.0"
 material = "1.13.0"
-serialization = "1.6.3"
+serialization = "1.9.0"
 
 # Material UI
-material3 = "material3-*:1.5.0-alpha06"
+# material3 = "material3-*:1.5.0-alpha06"
 
 # AndroidX Core Libraries
 core-ktx = "1.17.0"
@@ -41,7 +41,7 @@ androidx-test-ext = "1.3.0"
 espresso = "3.7.0"
 mockk = "1.14.6"
 turbine = "1.2.1"
-material3Version = "1.4.0"
+# material3Version = "1.4.0"
 
 [libraries]
 # AndroidX
@@ -97,7 +97,7 @@ androidx-test-ext = { group = "androidx.test.ext", name = "junit", version.ref =
 androidx-test-espresso = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
-androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
+# androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
 compose-bom-beta = { group = "androidx.compose", name = "compose-bom-beta", version.ref = "compose-bom-beta" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
@@ -109,6 +109,6 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version = "2.2.20-2.0.4" }
-org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+# org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

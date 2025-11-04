@@ -78,7 +78,7 @@ fun ProfileManagementScreen(
             onDismiss = { showAddEditDialog = null },
             onSave = { name, duration, description ->
                 if (profile.id != 0L) {
-                    onUpdateProfile(profile.copy(name = name, duration = duration, description = description))
+                    onUpdateProfile(profile.copy(displayName = name, duration = duration, description = description))
                 } else {
                     onAddProfile(name, duration, description)
                 }
@@ -110,7 +110,7 @@ fun ProfileManagementScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddEditDialog = FastingProfile(id = 0L, name = "", duration = null, description = "") }) {
+            FloatingActionButton(onClick = { showAddEditDialog = FastingProfile(id = 0L, displayName = "", duration = null, description = "") }) {
                 Icon(Icons.Filled.Add, "Add Profile")
             }
         }
@@ -130,7 +130,7 @@ fun ProfileManagementScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     icon = Icons.Filled.Favorite,
-                    label = favoriteProfile.name,
+                    label = favoriteProfile.displayName,
                     value = formatDuration(favoriteProfile.duration),
                     description = favoriteProfile.description,
                     onClick = { showAddEditDialog = favoriteProfile }
@@ -154,13 +154,13 @@ fun ProfileManagementScreen(
                         StatisticTile(
                             modifier = Modifier.aspectRatio(1f),
                             icon = Icons.Filled.Star, // Placeholder
-                            label = profile.name,
+                            label = profile.displayName,
                             value = formatDuration(profile.duration),
                             description = profile.description,
                             onClick = { showAddEditDialog = profile },
                             onLongClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                Toast.makeText(context, "'${profile.name}' set as favorite.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "'${profile.displayName}' set as favorite.", Toast.LENGTH_SHORT).show()
                                 onSetFavorite(profile)
                             }
                         )

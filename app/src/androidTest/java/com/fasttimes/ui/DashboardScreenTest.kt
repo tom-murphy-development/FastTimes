@@ -50,10 +50,10 @@ class DashboardScreenTest {
         composeTestRule.setContent {
             FastTimesTheme {
                 DashboardScreen(
-                    viewModel = mockViewModel,
                     onHistoryClick = {},
                     onViewFastDetails = {},
-                    onManageProfilesClick = {}
+                    onManageProfilesClick = {},
+                    viewModel = mockViewModel
                 )
             }
         }
@@ -84,10 +84,10 @@ class DashboardScreenTest {
         composeTestRule.setContent {
             FastTimesTheme {
                 DashboardScreen(
-                    viewModel = mockViewModel,
                     onHistoryClick = {},
                     onViewFastDetails = {},
-                    onManageProfilesClick = {}
+                    onManageProfilesClick = {},
+                    viewModel = mockViewModel
                 )
             }
         }

@@ -3,7 +3,7 @@ package com.fasttimes.data.profile
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class DefaultFastingProfileRepository @Inject constructor(
+class DefaultFastingProfileRepositoryImpl @Inject constructor(
     private val fastingProfileDao: FastingProfileDao
 ) : FastingProfileRepository {
 

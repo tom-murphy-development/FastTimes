@@ -22,7 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,7 +40,7 @@ fun FastingSummaryModal(
     onDismiss: () -> Unit,
     onSaveRating: (Int) -> Unit
 ) {
-    var rating by remember { mutableStateOf(fast.rating ?: 0) }
+    var rating by remember { mutableIntStateOf(fast.rating ?: 0) }
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
 
     val duration = Duration.between(

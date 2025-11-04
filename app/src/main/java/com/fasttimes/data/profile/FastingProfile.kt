@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class FastingProfile(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val name: String,
+    val displayName: String,
     val duration: Long?,
     val description: String,
     val isFavorite: Boolean = false,

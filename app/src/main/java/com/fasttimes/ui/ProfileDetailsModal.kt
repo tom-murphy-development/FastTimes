@@ -11,12 +11,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.fasttimes.data.profile.FastingProfile
 
 /**
- * A modal dialog that displays details about a [FastingProfile] and asks for confirmation
+ * A modal dialog that displays details about a [FastingProfiles] and asks for confirmation
  * before starting the fast.
  *
  * This composable is stateless and follows Unidirectional Data Flow principles.
  *
- * @param profile The [FastingProfile] to display details for.
+ * @param profile The [FastingProfiles] to display details for.
  * @param onDismiss Lambda to be invoked when the user dismisses the dialog (e.g., by clicking outside or pressing back).
  * @param onConfirm Lambda to be invoked when the user confirms the action to start the fast.
  */
@@ -30,10 +30,10 @@ fun ProfileDetailsModal(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Filled.Info, contentDescription = "Profile Details") },
         title = {
-            Text(text = profile.name)
+            Text(text = profile.displayName)
         },
         text = {
-            Text("Do you want to start this ${profile.name} fast?")
+            Text("Do you want to start this ${profile.displayName} fast?")
         },
         confirmButton = {
             TextButton(
@@ -57,7 +57,7 @@ fun ProfileDetailsModal(
 private fun ProfileDetailsModalPreview() {
     ProfileDetailsModal(
         profile = FastingProfile(
-            name = "Manual",
+            displayName = "Manual",
             duration = null,
             description = "A manually controlled fast."
         ),

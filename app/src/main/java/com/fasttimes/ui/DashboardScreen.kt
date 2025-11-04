@@ -78,7 +78,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.R
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.profile.FastingProfile
@@ -127,11 +127,11 @@ private data class FabButtonItem(
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    viewModel: DashboardViewModel = hiltViewModel(),
     onHistoryClick: () -> Unit,
     onViewFastDetails: (Long) -> Unit,
     onManageProfilesClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val profiles by viewModel.profiles.collectAsState()
@@ -278,7 +278,7 @@ fun DashboardScreen(
                                             )
                                         ) {
                                             Text(
-                                                profile.name,
+                                                profile.displayName,
                                                 style = MaterialTheme.typography.labelLarge
                                             )
                                         }
@@ -718,7 +718,7 @@ fun DashboardScreen(
                 fabItems.add(
                     FabButtonItem(
                         icon = Icons.Default.Star,
-                        label = "Start \"${it.name}\" Fast",
+                        label = "Start \"${it.displayName}\" Fast",
                         action = { onStartFast(it) }
                     )
                 )

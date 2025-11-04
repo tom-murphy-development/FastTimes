@@ -67,7 +67,7 @@ class DashboardViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val defaultProfile: StateFlow<FastingProfile?> = profiles
-        .map { profiles -> profiles.firstOrNull { it.name == "Manual" } }
+        .map { profiles -> profiles.firstOrNull { it.displayName == "Manual" } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val history: StateFlow<List<Fast>> = fastsRepository.getFasts()
@@ -236,10 +236,10 @@ class DashboardViewModel @Inject constructor(
 
             val fast = Fast(
                 startTime = System.currentTimeMillis(),
-                profileName = profile.name,
+                profileName = profile.displayName,
                 targetDuration = profile.duration,
                 endTime = null,
-                notes = "Started ${profile.name} fast"
+                notes = "Started ${profile.displayName} fast"
             )
             val fastId = fastsRepository.insertFast(fast)
             alarmScheduler.schedule(fast.copy(id = fastId))

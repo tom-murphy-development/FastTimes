@@ -1,5 +1,6 @@
 package com.fasttimes.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
  * @param description An optional description to display at the bottom of the tile.
  * @param containerColor The color of the card's container.
  * @param contentColor The color of the card's content.
+ * @param border An optional [BorderStroke] to apply to the card.
  * @param onClick An optional lambda to be invoked when the tile is clicked. If null, the tile will not be clickable.
  * @param onLongClick An optional lambda to be invoked when the tile is long-clicked.
  */
@@ -49,6 +51,7 @@ fun StatisticTile(
     description: String? = null,
     containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    border: BorderStroke? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null
 ) {
@@ -61,6 +64,7 @@ fun StatisticTile(
 
     Card(
         modifier = cardModifier,
+        border = border,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor

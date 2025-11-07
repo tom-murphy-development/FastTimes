@@ -1,29 +1,42 @@
 package com.fasttimes.ui.profile
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,10 +44,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -58,7 +74,10 @@ fun ProfileManagementRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun ProfileManagementScreen(
     profiles: List<FastingProfile>,
@@ -70,8 +89,14 @@ fun ProfileManagementScreen(
 ) {
     var showAddEditDialog by remember { mutableStateOf<FastingProfile?>(null) }
     var showDeleteDialog by remember { mutableStateOf<FastingProfile?>(null) }
+    var selectedProfile by remember { mutableStateOf<FastingProfile?>(null) }
     val context = LocalContext.current
-    val haptics = LocalHapticFeedback.current
+
+    if (selectedProfile != null) {
+        BackHandler {
+            selectedProfile = null
+        }
+    }
 
     showAddEditDialog?.let { profile ->
         AddEditProfileDialog(
@@ -115,8 +140,67 @@ fun ProfileManagementScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddEditDialog = FastingProfile(id = 0L, displayName = "", duration = null, description = "") }) {
-                Icon(Icons.Filled.Add, "Add Profile")
+            if (selectedProfile == null) {
+                FloatingActionButton(onClick = { showAddEditDialog = FastingProfile(id = 0L, displayName = "", duration = null, description = "") }) {
+                    Icon(Icons.Filled.Add, "Add Profile")
+                }
+            }
+        },
+        bottomBar = {
+            if (selectedProfile != null) {
+                BottomAppBar(
+                    containerColor = Color.Transparent,
+                    tonalElevation = 0.dp
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            val buttons = listOf("Edit", "Favourite", "Delete")
+                            buttons.forEachIndexed { index, label ->
+                                ToggleButton(
+                                    checked = false,
+                                    onCheckedChange = { isChecked ->
+                                        if (isChecked) {
+                                            when (label) {
+                                                "Edit" -> showAddEditDialog = selectedProfile
+                                                "Favourite" -> {
+                                                    onSetFavorite(selectedProfile!!)
+                                                    Toast.makeText(context, "'${selectedProfile?.displayName}' set as favorite.", Toast.LENGTH_SHORT).show()
+                                                }
+                                                "Delete" -> showDeleteDialog = selectedProfile
+                                            }
+                                            selectedProfile = null
+                                        }
+                                    },
+                                    shapes = when (index) {
+                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                        buttons.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                                    },
+                                    modifier = Modifier.semantics { role = Role.Button }
+                                ) {
+                                    val icon = when (label) {
+                                        "Edit" -> Icons.Default.Edit
+                                        "Favourite" -> Icons.Default.Favorite
+                                        else -> Icons.Default.Delete
+                                    }
+                                    Icon(
+                                        icon,
+                                        contentDescription = "$label Profile",
+                                    )
+                                    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                                    Text(label)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     ) { padding ->
@@ -131,6 +215,7 @@ fun ProfileManagementScreen(
             )
 
             if (favoriteProfile != null) {
+                val isSelected = selectedProfile == favoriteProfile
                 StatisticTile(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -139,7 +224,17 @@ fun ProfileManagementScreen(
                     label = favoriteProfile.displayName,
                     value = formatDuration(favoriteProfile.duration),
                     description = favoriteProfile.description,
-                    onClick = { showAddEditDialog = favoriteProfile }
+                    border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+                    onClick = {
+                        if (selectedProfile != null) {
+                            selectedProfile = if (isSelected) null else favoriteProfile
+                        } else {
+                            showAddEditDialog = favoriteProfile
+                        }
+                    },
+                    onLongClick = {
+                        selectedProfile = favoriteProfile
+                    }
                 )
             } else {
                 Text(
@@ -166,17 +261,24 @@ fun ProfileManagementScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(otherProfiles) { profile ->
+                        val isSelected = selectedProfile == profile
                         StatisticTile(
                             modifier = Modifier.aspectRatio(1f),
-                            icon = Icons.Filled.Star, // Placeholder
+                            icon = Icons.Filled.Star,
                             label = profile.displayName,
                             value = formatDuration(profile.duration),
                             description = profile.description,
-                            onClick = { showAddEditDialog = profile },
+                            border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+                            onClick = {
+                                if (selectedProfile != null) {
+                                    selectedProfile = if (isSelected) null else profile
+                                } else {
+                                    onSetFavorite(profile)
+                                    Toast.makeText(context, "'${profile.displayName}' set as favorite.", Toast.LENGTH_SHORT).show()
+                                }
+                            },
                             onLongClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                Toast.makeText(context, "'${profile.displayName}' set as favorite.", Toast.LENGTH_SHORT).show()
-                                onSetFavorite(profile)
+                                selectedProfile = profile
                             }
                         )
                     }

@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.compose.material3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splashscreen)
     implementation(libs.compose.ui)
@@ -100,6 +101,7 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.compose.foundation)
     implementation(libs.kotlinx.serialization.json)
+    implementation("androidx.compose.material3:material3:1.5.0-alpha07")
 
     // Testing
     testImplementation(libs.junit)

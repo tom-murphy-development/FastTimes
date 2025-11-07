@@ -196,6 +196,19 @@ fun SettingsScreen(
                     onCheckedChange = viewModel::onShowFabChanged
                 )
             }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Use Wavy Indicator", style = MaterialTheme.typography.bodyLarge)
+                Switch(
+                    checked = uiState.useWavyIndicator,
+                    onCheckedChange = viewModel::onUseWavyIndicatorChanged
+                )
+            }
 
             HorizontalDivider()
 

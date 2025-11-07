@@ -51,7 +51,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -72,9 +74,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -93,6 +97,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import java.text.SimpleDateFormat
 import java.time.Duration
@@ -111,7 +116,7 @@ private val confettiParty = listOf(
         damping = 0.9f,
         spread = 360,
         colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
-        position = nl.dionsegijn.konfetti.core.Position.Relative(0.5, 0.0),
+        position = Position.Relative(0.5, 0.0),
         emitter = Emitter(duration = 5, TimeUnit.SECONDS).perSecond(100),
         fadeOutEnabled = true,
     )
@@ -124,7 +129,9 @@ private data class FabButtonItem(
 )
 
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun DashboardScreen(
     onHistoryClick: () -> Unit,
@@ -319,7 +326,40 @@ fun DashboardScreen(
                             }
                             Spacer(Modifier.height(16.dp))
                             Box(contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(
+                                if (state.useWavyIndicator) {
+                                    CircularWavyProgressIndicator(
+                                        progress = { state.progress },
+                                        modifier = Modifier.size(260.dp),
+                                        color = FastTimesTheme.accentColor,
+                                        trackColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        stroke = Stroke(
+                                            width = with(LocalDensity.current) {
+                                                16.dp.toPx()
+                                            },
+                                            cap = StrokeCap.Round,
+                                        ),
+                                        trackStroke = Stroke(
+                                            width = with(LocalDensity.current) {
+                                                16.dp.toPx()
+                                            },
+                                            cap = StrokeCap.Round,
+                                        ),
+                                        wavelength = 60.dp,
+                                        gapSize = 8.dp
+                                    )
+                                } else {
+                                    CircularProgressIndicator(
+                                        progress = { state.progress },
+                                        modifier = Modifier.size(260.dp),
+                                        color = FastTimesTheme.accentColor,
+                                        strokeWidth = 20.dp,
+                                        trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                            alpha = 0.1f
+                                        ),
+                                        strokeCap = StrokeCap.Round
+                                    )
+                                }
+                                /*CircularProgressIndicator(
                                     progress = { state.progress },
                                     modifier = Modifier.size(260.dp),
                                     color = MaterialTheme.colorScheme.primary,
@@ -328,7 +368,27 @@ fun DashboardScreen(
                                         alpha = 0.1f
                                     ),
                                     strokeCap = StrokeCap.Round
-                                )
+                                )*/
+                                /*CircularWavyProgressIndicator(
+                                    progress = { state.progress },
+                                    modifier = Modifier.size(260.dp),
+                                    color = FastTimesTheme.accentColor,
+                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    stroke = Stroke(
+                                        width = with(LocalDensity.current) {
+                                            16.dp.toPx()
+                                        },
+                                        cap = StrokeCap.Round,
+                                    ),
+                                    trackStroke = Stroke(
+                                        width = with(LocalDensity.current) {
+                                            16.dp.toPx()
+                                        },
+                                        cap = StrokeCap.Round,
+                                    ),
+                                    wavelength = 60.dp,
+                                    gapSize = 8.dp
+                                )*/
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
                                         state.activeFast.profileName,
@@ -486,7 +546,7 @@ fun DashboardScreen(
                             }
                             Spacer(Modifier.height(16.dp))
                             Box(contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(
+                                /*CircularProgressIndicator(
                                     progress = { 1f },
                                     modifier = Modifier.size(260.dp),
                                     color = FastTimesTheme.accentColor, // Vibrant success color
@@ -495,6 +555,28 @@ fun DashboardScreen(
                                         alpha = 0.1f
                                     ),
                                     strokeCap = StrokeCap.Round
+                                )*/
+                                CircularWavyProgressIndicator(
+                                    progress = { 1f },
+                                    modifier = Modifier.size(260.dp),
+                                    color = FastTimesTheme.accentColor,
+                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                        alpha = 0.1f
+                                    ),
+                                    stroke = Stroke(
+                                        width = with(LocalDensity.current) {
+                                            16.dp.toPx()
+                                        },
+                                        cap = StrokeCap.Round,
+                                    ),
+                                    trackStroke = Stroke(
+                                        width = with(LocalDensity.current) {
+                                            16.dp.toPx()
+                                        },
+                                        cap = StrokeCap.Round,
+                                    ),
+                                    wavelength = 60.dp,
+                                    gapSize = 8.dp
                                 )
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(

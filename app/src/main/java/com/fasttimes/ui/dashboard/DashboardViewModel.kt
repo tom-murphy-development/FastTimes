@@ -12,6 +12,7 @@ import com.fasttimes.data.fast.FastsRepository
 import com.fasttimes.data.profile.FastingProfile
 import com.fasttimes.data.profile.FastingProfileRepository
 import com.fasttimes.data.settings.SettingsRepository
+import com.fasttimes.data.settings.UserData
 import com.fasttimes.service.FastTimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,10 +67,6 @@ class DashboardViewModel @Inject constructor(
         .map { it.firstOrNull { profile -> profile.isFavorite } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val defaultProfile: StateFlow<FastingProfile?> = profiles
-        .map { profiles -> profiles.firstOrNull { it.displayName == "Manual" } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
     private val history: StateFlow<List<Fast>> = fastsRepository.getFasts()
         .stateIn(
             scope = viewModelScope,
@@ -80,14 +77,12 @@ class DashboardViewModel @Inject constructor(
     val stats: StateFlow<DashboardStats> = history
         .map { fasts ->
             val completedFasts = fasts.filter { it.endTime != null }
-            val totalFastingTime = completedFasts.sumOf { it.endTime!! - it.startTime }.milliseconds
+            val totalFastingTime = completedFasts.sumOf { it.duration() }.milliseconds
             val completedFastsCount = completedFasts.size
 
             DashboardStats(
                 totalFasts = fasts.size,
-                longestFast = fasts.maxByOrNull { fast ->
-                    (fast.endTime ?: System.currentTimeMillis()) - fast.startTime
-                },
+                longestFast = fasts.maxByOrNull { it.duration() },
                 totalFastingTime = totalFastingTime,
                 averageFast = if (completedFastsCount > 0) {
                     totalFastingTime / completedFastsCount
@@ -106,15 +101,10 @@ class DashboardViewModel @Inject constructor(
         history,
         _isEditing,
         settingsRepository.confettiShownForFastId,
-        settingsRepository.showFab
-    ) { fasts, isEditing, confettiShownForFastId, showFab ->
-        object {
-            val fasts = fasts
-            val isEditing = isEditing
-            val confettiShownForFastId = confettiShownForFastId
-            val showFab = showFab
-        }
-    }.flatMapLatest { data ->
+        settingsRepository.showFab,
+        settingsRepository.userData,
+        ::toUiState
+    ).flatMapLatest { data ->
         val activeFast = data.fasts.firstOrNull { it.endTime == null }
 
         if (activeFast == null) {
@@ -174,7 +164,8 @@ class DashboardViewModel @Inject constructor(
                                     activeFast,
                                     remainingTime,
                                     progress,
-                                    data.isEditing
+                                    data.isEditing,
+                                    data.useWavyIndicator
                                 )
                             )
                         }
@@ -184,6 +175,16 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
+
+    private fun toUiState(
+        fasts: List<Fast>,
+        isEditing: Boolean,
+        confettiShownForFastId: Long?,
+        showFab: Boolean,
+        userData: UserData
+    ): DashboardUiStateContainer {
+        return DashboardUiStateContainer(fasts, isEditing, confettiShownForFastId, showFab, userData.useWavyIndicator)
+    }
 
     private val _modalProfile = MutableStateFlow<FastingProfile?>(null)
     val modalProfile: StateFlow<FastingProfile?> = _modalProfile.asStateFlow()
@@ -299,3 +300,11 @@ class DashboardViewModel @Inject constructor(
         }
     }
 }
+
+data class DashboardUiStateContainer(
+    val fasts: List<Fast>,
+    val isEditing: Boolean,
+    val confettiShownForFastId: Long?,
+    val showFab: Boolean,
+    val useWavyIndicator: Boolean
+)

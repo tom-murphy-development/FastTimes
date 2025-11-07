@@ -2,8 +2,18 @@ package com.fasttimes.data.settings
 
 import com.fasttimes.data.AppTheme
 import kotlinx.coroutines.flow.Flow
+import java.time.Duration
+
+data class UserData(
+    val fastingGoal: Duration,
+    val theme: AppTheme,
+    val accentColor: Long?,
+    val useWavyIndicator: Boolean
+)
 
 interface SettingsRepository {
+    val userData: Flow<UserData>
+
     val showLiveProgress: Flow<Boolean>
     suspend fun setShowLiveProgress(show: Boolean)
 
@@ -24,4 +34,6 @@ interface SettingsRepository {
 
     val showFab: Flow<Boolean>
     suspend fun setShowFab(show: Boolean)
+
+    suspend fun setUseWavyIndicator(useWavy: Boolean)
 }

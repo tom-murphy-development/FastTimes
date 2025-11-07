@@ -2,6 +2,7 @@ package com.fasttimes.data
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -21,7 +22,8 @@ enum class Theme {
 data class UserData(
     val fastingGoal: Duration,
     val theme: Theme,
-    val accentColor: Long? // Changed to nullable
+    val accentColor: Long?, // Changed to nullable
+    val useWavyIndicator: Boolean
 )
 
 @Singleton
@@ -31,6 +33,8 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
         val THEME_KEY = stringPreferencesKey("theme")
         val FASTING_GOAL_KEY = longPreferencesKey("fasting_goal")
         val ACCENT_COLOR_KEY = longPreferencesKey("accent_color")
+        val USE_WAVY_INDICATOR = booleanPreferencesKey("use_wavy_indicator")
+
     }
 
     val userData: Flow<UserData> = dataStore.data
@@ -46,9 +50,9 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
             val theme = Theme.valueOf(themeName)
             val fastingGoalInSeconds = preferences[PreferencesKeys.FASTING_GOAL_KEY] ?: (16 * 60 * 60)
             val fastingGoal = Duration.ofSeconds(fastingGoalInSeconds)
-            // Accent color is now read as nullable, no default here
             val accentColor = preferences[PreferencesKeys.ACCENT_COLOR_KEY]
-            UserData(fastingGoal, theme, accentColor)
+            val useWavyIndicator = preferences[PreferencesKeys.USE_WAVY_INDICATOR] ?: true
+            UserData(fastingGoal, theme, accentColor, useWavyIndicator)
         }
 
     suspend fun setTheme(theme: Theme) {
@@ -73,6 +77,11 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
     suspend fun clearAccentColor() {
         dataStore.edit { preferences ->
             preferences.remove(PreferencesKeys.ACCENT_COLOR_KEY)
+        }
+    }
+    suspend fun setUseWavyIndicator(useWavy: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.USE_WAVY_INDICATOR] = useWavy
         }
     }
 }

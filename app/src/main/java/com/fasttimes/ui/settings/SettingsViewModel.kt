@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.fasttimes.data.AppTheme
 import com.fasttimes.data.DataManagementUseCase
 import com.fasttimes.data.settings.SettingsRepository
+import com.fasttimes.data.settings.UserData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,9 +36,25 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.showGoalReachedNotification,
         settingsRepository.theme,
         settingsRepository.firstDayOfWeek,
-        settingsRepository.showFab
-    ) { showLiveProgress, showGoalReachedNotification, theme, firstDayOfWeek, showFab ->
-        SettingsUiState(showLiveProgress, showGoalReachedNotification, theme, firstDayOfWeek, showFab)
+        settingsRepository.showFab,
+        settingsRepository.userData
+    ) { args ->
+        @Suppress("UNCHECKED_CAST")
+        val showLiveProgress = args[0] as Boolean
+        val showGoalReachedNotification = args[1] as Boolean
+        val theme = args[2] as AppTheme
+        val firstDayOfWeek = args[3] as String
+        val showFab = args[4] as Boolean
+        val userData = args[5] as UserData
+
+        SettingsUiState(
+            showLiveProgress = showLiveProgress,
+            showGoalReachedNotification = showGoalReachedNotification,
+            theme = theme,
+            firstDayOfWeek = firstDayOfWeek,
+            showFab = showFab,
+            useWavyIndicator = userData.useWavyIndicator
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -71,6 +88,12 @@ class SettingsViewModel @Inject constructor(
     fun onShowFabChanged(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setShowFab(enabled)
+        }
+    }
+
+    fun onUseWavyIndicatorChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setUseWavyIndicator(enabled)
         }
     }
 

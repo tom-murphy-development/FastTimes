@@ -7,5 +7,6 @@ data class SettingsUiState(
     val showGoalReachedNotification: Boolean = true,
     val theme: AppTheme = AppTheme.SYSTEM,
     val firstDayOfWeek: String = "Sunday",
-    val showFab: Boolean = true
+    val showFab: Boolean = true,
+    val useWavyIndicator: Boolean = true
 )

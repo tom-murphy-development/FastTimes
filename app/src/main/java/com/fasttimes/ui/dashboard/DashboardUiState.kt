@@ -40,7 +40,8 @@ sealed class DashboardUiState {
         val activeFast: Fast,
         val remainingTime: Duration,
         val progress: Float,
-        val isEditing: Boolean = false
+        val isEditing: Boolean = false,
+        val useWavyIndicator: Boolean
     ) : DashboardUiState()
 
     /**

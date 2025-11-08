@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.fasttimes.ui.theme.FastTimesTheme
 
 @Composable
 fun WeeklyTimeline(
@@ -27,7 +26,7 @@ fun WeeklyTimeline(
     ) {
         segments.forEach { segment ->
             val color = when (segment.type) {
-                TimelineSegmentType.Fasting -> FastTimesTheme.accentColor
+                TimelineSegmentType.Fasting -> com.fasttimes.ui.theme.BrandColor
                 TimelineSegmentType.NonFasting -> Color.Gray
             }
             Box(

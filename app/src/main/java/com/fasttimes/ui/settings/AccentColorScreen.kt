@@ -1,41 +1,44 @@
 package com.fasttimes.ui.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Tonality
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.fasttimes.ui.theme.FastTimesTheme
-import kotlinx.coroutines.launch
 
 private val accentColors = listOf(
     Color(0xFF3DDC84),
@@ -45,29 +48,58 @@ private val accentColors = listOf(
     Color(0xFF8338EC),
     Color(0xFF3A86FF)
 )
+private val seedColors = listOf(
+    Color(0xfffeb4a7),
+    Color(0xffffb3c0),
+    Color(0xfffcaaff),
+    Color(0xffb9c3ff),
+    Color(0xff62d3ff),
+    Color(0xff44d9f1),
+    Color(0xff52dbc9),
+    Color(0xff78dd77),
+    Color(0xff9fd75c),
+    Color(0xffc1d02d),
+    Color(0xfffabd00),
+    Color(0xffffb86e),
+)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccentColorScreen(
-    onNavigateUp: () -> Unit
+    onNavigateUp: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    val themeViewModel = FastTimesTheme.themeViewModel
-    val themeState by themeViewModel.themeState.collectAsState()
-    val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsState()
 
-    val materialYouColors = listOf(
-        "Primary" to MaterialTheme.colorScheme.primary,
-        "Primary Container" to MaterialTheme.colorScheme.primaryContainer,
-        "Secondary" to MaterialTheme.colorScheme.secondary,
-        "Secondary Container" to MaterialTheme.colorScheme.secondaryContainer,
-        "Tertiary" to MaterialTheme.colorScheme.tertiary,
-        "Tertiary Container" to MaterialTheme.colorScheme.tertiaryContainer,
+    AccentColorScreenContent(
+        uiState = uiState,
+        onNavigateUp = onNavigateUp,
+        onUseSystemColorsChanged = viewModel::onUseSystemColorsChanged,
+        onUseExpressiveThemeChanged = viewModel::onUseExpressiveThemeChanged,
+        onClearSeedColor = viewModel::onClearSeedColor,
+        onSeedColorChanged = viewModel::onSeedColorChanged,
+        onClearBrandColor = viewModel::onClearBrandColor,
+        onBrandColorChanged = viewModel::onBrandColorChanged
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun AccentColorScreenContent(
+    uiState: SettingsUiState,
+    onNavigateUp: () -> Unit,
+    onUseSystemColorsChanged: (Boolean) -> Unit,
+    onUseExpressiveThemeChanged: (Boolean) -> Unit,
+    onClearSeedColor: () -> Unit,
+    onSeedColorChanged: (Long) -> Unit,
+    onClearBrandColor: () -> Unit,
+    onBrandColorChanged: (Long) -> Unit
+) {
+    val dynamicAccentColors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer) + accentColors
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Accent Color") },
+                title = { Text("Theme & Brand Color") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
@@ -83,106 +115,115 @@ fun AccentColorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                "Choose your accent color",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 80.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                item(key = "default-color") {
-                    val isSelected = themeState.accentColor == null
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { scope.launch { themeViewModel.clearAccentColor() } }
-                            .border(
-                                width = if (isSelected) 4.dp else 0.dp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tonality,
-                            contentDescription = "Use system default color",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Selected",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(48.dp)
-                            )
-                        }
-                    }
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Use System Colors")
+                    Switch(
+                        checked = uiState.useSystemColors,
+                        onCheckedChange = onUseSystemColorsChanged
+                    )
                 }
-                items(accentColors, key = { it.toArgb() }) { color ->
-                    val isSelected = themeState.accentColor == color.toArgb().toLong()
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .clickable {
-                                scope.launch { themeViewModel.setAccentColor(color.toArgb().toLong()) }
-                            }
-                            .border(
-                                width = if (isSelected) 4.dp else 0.dp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
+                AnimatedVisibility(visible = uiState.useSystemColors) {
+                    Text(
+                        text = "Disable to select a custom theme color.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Use Expressive Theme",
+                    color = MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = if (uiState.useSystemColors) 0.38f else 1.0f
+                    )
+                )
+                Switch(
+                    checked = uiState.useExpressiveTheme,
+                    onCheckedChange = onUseExpressiveThemeChanged,
+                    enabled = !uiState.useSystemColors
+                )
+            }
+
+            AnimatedVisibility(visible = !uiState.useSystemColors) {
+                Column {
+                    Text(
+                        "Base Color",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
+                    )
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Selected",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(48.dp)
-                            )
+                        seedColors.forEach { color ->
+                            val isItemSelected = uiState.seedColor == color.toArgb().toLong()
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .background(color, shape = CircleShape)
+                                    .clickable { onSeedColorChanged(color.toArgb().toLong()) }
+                                    .border(
+                                        width = if (isItemSelected) 4.dp else 0.dp,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isItemSelected) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Selected",
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
+
             Text(
-                "Material You Colors",
+                "Accent Color",
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 24.dp, bottom = 16.dp)
+                modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
             )
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 80.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                items(materialYouColors, key = { it.first }) { (name, color) ->
-                    val isSelected = themeState.accentColor == color.toArgb().toLong()
+                dynamicAccentColors.forEach { color ->
+                    val isItemSelected = uiState.brandColor == color.toArgb().toLong()
                     Box(
                         modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .clickable {
-                                scope.launch { themeViewModel.setAccentColor(color.toArgb().toLong()) }
-                            }
+                            .size(60.dp)
+                            .background(color, shape = CircleShape)
+                            .clickable { onBrandColorChanged(color.toArgb().toLong()) }
                             .border(
-                                width = if (isSelected) 4.dp else 0.dp,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                width = if (isItemSelected) 4.dp else 0.dp,
+                                color = MaterialTheme.colorScheme.outline,
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (isSelected) {
+                        if (isItemSelected) {
                             Icon(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = "Selected",
@@ -194,5 +235,22 @@ fun AccentColorScreen(
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun AccentColorScreenPreview() {
+    FastTimesTheme {
+        AccentColorScreenContent(
+            uiState = SettingsUiState(),
+            onNavigateUp = {},
+            onUseSystemColorsChanged = {},
+            onUseExpressiveThemeChanged = {},
+            onClearSeedColor = {},
+            onSeedColorChanged = {},
+            onClearBrandColor = {},
+            onBrandColorChanged = {}
+        )
     }
 }

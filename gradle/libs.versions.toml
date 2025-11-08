@@ -12,6 +12,7 @@ accompanist-navigation-animation = "0.36.0"
 material = "1.13.0"
 material3 = "material3-*:1.5.0-alpha07"
 serialization = "1.9.0"
+materialKolor = "4.0.0"
 
 
 # AndroidX Core Libraries
@@ -89,6 +90,10 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 # Material
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
+# Themeing
+materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+
+
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext" }
@@ -108,3 +113,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version = "2.2.20-2.0.4" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+

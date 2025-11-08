@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.AppTheme
-import com.fasttimes.ui.theme.FastTimesTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,7 +175,7 @@ fun SettingsScreen(
                 Box(
                     modifier = Modifier
                         .size(24.dp)
-                        .background(color = FastTimesTheme.accentColor, shape = CircleShape)
+                        .background(color = com.fasttimes.ui.theme.BrandColor, shape = CircleShape)
                 )
             }
             FirstDayOfWeekSetting(

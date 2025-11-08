@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.fasttimes.ui.theme.FastTimesTheme
 
 @Composable
 fun RatingDialog(
@@ -55,7 +54,7 @@ fun RatingDialog(
                             Icon(
                                 imageVector = if (rating <= selectedRating) Icons.Filled.Star else Icons.Outlined.StarOutline,
                                 contentDescription = "$rating star",
-                                tint = if (rating <= selectedRating) FastTimesTheme.accentColor else MaterialTheme.colorScheme.onSurface
+                                tint = if (rating <= selectedRating) com.fasttimes.ui.theme.BrandColor else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }

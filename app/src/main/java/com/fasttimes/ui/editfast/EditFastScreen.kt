@@ -34,7 +34,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.components.DateTimeDialog
 import com.fasttimes.ui.components.RatingDialog
-import com.fasttimes.ui.theme.FastTimesTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -228,7 +227,7 @@ private fun StarRatingDisplay(rating: Int) {
             Icon(
                 imageVector = imageVector,
                 contentDescription = null, // decorative
-                tint = if (index < rating) FastTimesTheme.accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (index < rating) com.fasttimes.ui.theme.BrandColor else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

@@ -51,9 +51,13 @@ class SettingsViewModel @Inject constructor(
             showLiveProgress = showLiveProgress,
             showGoalReachedNotification = showGoalReachedNotification,
             theme = theme,
+            seedColor = userData.seedColor,
+            brandColor = userData.brandColor,
             firstDayOfWeek = firstDayOfWeek,
             showFab = showFab,
-            useWavyIndicator = userData.useWavyIndicator
+            useWavyIndicator = userData.useWavyIndicator,
+            useExpressiveTheme = userData.useExpressiveTheme,
+            useSystemColors = userData.useSystemColors
         )
     }.stateIn(
         scope = viewModelScope,
@@ -79,6 +83,30 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun onSeedColorChanged(color: Long) {
+        viewModelScope.launch {
+            settingsRepository.setSeedColor(color)
+        }
+    }
+
+    fun onClearSeedColor() {
+        viewModelScope.launch {
+            settingsRepository.clearSeedColor()
+        }
+    }
+
+    fun onBrandColorChanged(color: Long) {
+        viewModelScope.launch {
+            settingsRepository.setBrandColor(color)
+        }
+    }
+
+    fun onClearBrandColor() {
+        viewModelScope.launch {
+            settingsRepository.clearBrandColor()
+        }
+    }
+
     fun onFirstDayOfWeekChanged(day: String) {
         viewModelScope.launch {
             settingsRepository.setFirstDayOfWeek(day)
@@ -94,6 +122,18 @@ class SettingsViewModel @Inject constructor(
     fun onUseWavyIndicatorChanged(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setUseWavyIndicator(enabled)
+        }
+    }
+
+    fun onUseExpressiveThemeChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setUseExpressiveTheme(enabled)
+        }
+    }
+
+    fun onUseSystemColorsChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setUseSystemColors(enabled)
         }
     }
 

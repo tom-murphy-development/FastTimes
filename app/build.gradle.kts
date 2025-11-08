@@ -101,7 +101,8 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.compose.foundation)
     implementation(libs.kotlinx.serialization.json)
-    implementation("androidx.compose.material3:material3:1.5.0-alpha07")
+    implementation("androidx.compose.material3:material3:1.5.0-alpha08")
+    implementation("com.materialkolor:material-kolor:5.0.0-alpha01")
 
     // Testing
     testImplementation(libs.junit)

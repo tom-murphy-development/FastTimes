@@ -33,7 +33,7 @@ fun Timeline(
         ) {
             segments.forEach { segment ->
                 val color = when (segment.type) {
-                    TimelineSegmentType.Fasting -> FastTimesTheme.accentColor
+                    TimelineSegmentType.Fasting -> com.fasttimes.ui.theme.BrandColor
                     TimelineSegmentType.NonFasting -> Color.Gray
                 }
                 Box(

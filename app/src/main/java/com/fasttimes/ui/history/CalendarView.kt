@@ -327,7 +327,7 @@ private fun RowScope.DayCell(
             }
 
             val iconColor = when (status) {
-                DayStatus.GOAL_MET -> FastTimesTheme.accentColor
+                DayStatus.GOAL_MET -> com.fasttimes.ui.theme.BrandColor
                 DayStatus.GOAL_NOT_MET -> Color.Gray
                 null -> Color.Transparent
             }

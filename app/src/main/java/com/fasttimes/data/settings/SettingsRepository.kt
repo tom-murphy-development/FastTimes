@@ -7,8 +7,11 @@ import java.time.Duration
 data class UserData(
     val fastingGoal: Duration,
     val theme: AppTheme,
-    val accentColor: Long?,
-    val useWavyIndicator: Boolean
+    val seedColor: Long?,
+    val brandColor: Long?,
+    val useWavyIndicator: Boolean,
+    val useExpressiveTheme: Boolean,
+    val useSystemColors: Boolean
 )
 
 interface SettingsRepository {
@@ -26,6 +29,12 @@ interface SettingsRepository {
     val theme: Flow<AppTheme>
     suspend fun setTheme(theme: AppTheme)
 
+    suspend fun setSeedColor(color: Long)
+    suspend fun clearSeedColor()
+
+    suspend fun setBrandColor(color: Long)
+    suspend fun clearBrandColor()
+
     val confettiShownForFastId: Flow<Long?>
     suspend fun setConfettiShownForFastId(fastId: Long)
 
@@ -36,4 +45,8 @@ interface SettingsRepository {
     suspend fun setShowFab(show: Boolean)
 
     suspend fun setUseWavyIndicator(useWavy: Boolean)
+
+    suspend fun setUseExpressiveTheme(useExpressive: Boolean)
+
+    suspend fun setUseSystemColors(useSystemColors: Boolean)
 }

@@ -17,6 +17,7 @@ import com.fasttimes.service.FastTimerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -61,20 +63,13 @@ class DashboardViewModel @Inject constructor(
     val completedFast: StateFlow<Fast?> = _completedFast.asStateFlow()
 
     val profiles: StateFlow<List<FastingProfile>> = fastingProfileRepository.getProfiles()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val favoriteProfile: StateFlow<FastingProfile?> = profiles
         .map { it.firstOrNull { profile -> profile.isFavorite } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    private val history: StateFlow<List<Fast>> = fastsRepository.getFasts()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-
-    val stats: StateFlow<DashboardStats> = history
+    val stats: StateFlow<DashboardStats> = fastsRepository.getFasts()
         .map { fasts ->
             val completedFasts = fasts.filter { it.endTime != null }
             val totalFastingTime = completedFasts.sumOf { it.duration() }.milliseconds
@@ -97,100 +92,114 @@ class DashboardViewModel @Inject constructor(
             initialValue = DashboardStats()
         )
 
-    val uiState: StateFlow<DashboardUiState> = combine(
-        history,
+    private data class DashboardData(
+        val fasts: List<Fast>,
+        val isEditing: Boolean,
+        val confettiShownForFastId: Long?,
+        val showFab: Boolean,
+        val userData: UserData
+    )
+
+    private val dashboardData = combine(
+        fastsRepository.getFasts(),
         _isEditing,
         settingsRepository.confettiShownForFastId,
         settingsRepository.showFab,
-        settingsRepository.userData,
-        ::toUiState
-    ).flatMapLatest { data ->
+        settingsRepository.userData
+    ) { fasts, isEditing, confettiShown, showFab, userData ->
+        DashboardData(fasts, isEditing, confettiShown, showFab, userData)
+    }
+
+    private val ticker = flow {
+        while (true) {
+            emit(Unit)
+            delay(1000)
+        }
+    }
+
+    val uiState: StateFlow<DashboardUiState> = dashboardData.flatMapLatest { data ->
         val activeFast = data.fasts.firstOrNull { it.endTime == null }
 
-        if (activeFast == null) {
-            flow {
-                val completedFasts = data.fasts.filter { it.endTime != null }.take(10)
-                val now = ZonedDateTime.now()
-                val startOfWeek =
-                    now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate()
-                        .atStartOfDay(now.zone)
-                val startOfLastWeek = startOfWeek.minusWeeks(1)
-
-                val thisWeekFasts = completedFasts.filter { it.start.isAfter(startOfWeek) }
-                val lastWeekFasts = completedFasts.filter {
-                    it.start.isAfter(startOfLastWeek) && it.start.isBefore(
-                        startOfWeek
-                    )
-                }
-
-                emit(
-                    DashboardUiState.NoFast(
-                        thisWeekFasts,
-                        lastWeekFasts,
-                        completedFasts.firstOrNull(),
-                        data.showFab
-                    )
+        val uiFlow: Flow<DashboardUiState> = if (activeFast == null) {
+            // No active fast, create the NoFast state and emit it once.
+            val completedFasts = data.fasts.filter { it.endTime != null }.take(10)
+            val now = ZonedDateTime.now()
+            val startOfWeek =
+                now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate()
+                    .atStartOfDay(now.zone)
+            val startOfLastWeek = startOfWeek.minusWeeks(1)
+            val thisWeekFasts = completedFasts.filter { it.start.isAfter(startOfWeek) }
+            val lastWeekFasts = completedFasts.filter {
+                it.start.isAfter(startOfLastWeek) && it.start.isBefore(
+                    startOfWeek
                 )
             }
+
+            flowOf(
+                DashboardUiState.NoFast(
+                    thisWeekFasts,
+                    lastWeekFasts,
+                    completedFasts.firstOrNull(),
+                    data.showFab
+                )
+            )
         } else {
-            flow {
-                while (true) {
-                    val now = System.currentTimeMillis()
-                    val startTime = activeFast.startTime
+            // Active fast, combine with the ticker to update the UI.
+            ticker.map {
+                val now = System.currentTimeMillis()
+                val startTime = activeFast.startTime
 
-                    if (activeFast.profileName == "Manual") {
+                if (activeFast.profileName == "Manual") {
+                    val elapsedTime = (now - startTime).milliseconds
+                    DashboardUiState.ManualFasting(
+                        activeFast,
+                        elapsedTime,
+                        data.isEditing,
+                        data.userData.useWavyIndicator
+                    )
+                } else {
+                    val targetDuration = activeFast.targetDuration?.milliseconds ?: Duration.ZERO
+                    val targetEndTime = startTime + targetDuration.inWholeMilliseconds
+
+                    if (now >= targetEndTime) {
                         val elapsedTime = (now - startTime).milliseconds
-                        emit(DashboardUiState.ManualFasting(activeFast, elapsedTime, data.isEditing))
+                        val showConfetti = data.confettiShownForFastId != activeFast.id
+                        DashboardUiState.FastingGoalReached(
+                            activeFast,
+                            elapsedTime,
+                            showConfetti,
+                            data.isEditing,
+                            data.userData.useWavyIndicator
+                        )
                     } else {
-                        val targetDuration = activeFast.targetDuration?.milliseconds ?: Duration.ZERO
-                        val targetEndTime = startTime + targetDuration.inWholeMilliseconds
-
-                        if (now >= targetEndTime) {
-                            val elapsedTime = (now - startTime).milliseconds
-                            val showConfetti = data.confettiShownForFastId != activeFast.id
-                            emit(
-                                DashboardUiState.FastingGoalReached(
-                                    activeFast,
-                                    elapsedTime,
-                                    showConfetti,
-                                    data.isEditing
-                                )
-                            )
-                        } else {
-                            val remainingTime = (targetEndTime - now).milliseconds
-                            val progress = 1f - (remainingTime.inWholeMilliseconds.toFloat() / targetDuration.inWholeMilliseconds)
-                            emit(
-                                DashboardUiState.FastingInProgress(
-                                    activeFast,
-                                    remainingTime,
-                                    progress,
-                                    data.isEditing,
-                                    data.useWavyIndicator
-                                )
-                            )
-                        }
+                        val remainingTime = (targetEndTime - now).milliseconds
+                        val progress =
+                            1f - (remainingTime.inWholeMilliseconds.toFloat() / targetDuration.inWholeMilliseconds)
+                        DashboardUiState.FastingInProgress(
+                            activeFast,
+                            remainingTime,
+                            progress,
+                            data.isEditing,
+                            data.userData.useWavyIndicator
+                        )
                     }
-                    delay(1000)
                 }
             }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
+        uiFlow
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = DashboardUiState.Loading()
+    )
 
-    private fun toUiState(
-        fasts: List<Fast>,
-        isEditing: Boolean,
-        confettiShownForFastId: Long?,
-        showFab: Boolean,
-        userData: UserData
-    ): DashboardUiStateContainer {
-        return DashboardUiStateContainer(fasts, isEditing, confettiShownForFastId, showFab, userData.useWavyIndicator)
-    }
 
     private val _modalProfile = MutableStateFlow<FastingProfile?>(null)
     val modalProfile: StateFlow<FastingProfile?> = _modalProfile.asStateFlow()
 
     private val _showAlarmPermissionRationale = MutableStateFlow(false)
-    val showAlarmPermissionRationale: StateFlow<Boolean> = _showAlarmPermissionRationale.asStateFlow()
+    val showAlarmPermissionRationale: StateFlow<Boolean> =
+        _showAlarmPermissionRationale.asStateFlow()
 
     fun onConfettiShown(fastId: Long) {
         viewModelScope.launch {
@@ -300,11 +309,3 @@ class DashboardViewModel @Inject constructor(
         }
     }
 }
-
-data class DashboardUiStateContainer(
-    val fasts: List<Fast>,
-    val isEditing: Boolean,
-    val confettiShownForFastId: Long?,
-    val showFab: Boolean,
-    val useWavyIndicator: Boolean
-)

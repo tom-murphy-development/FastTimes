@@ -8,9 +8,11 @@ import kotlin.time.Duration
  */
 sealed class DashboardUiState {
     /**
-     * The state where the UI is still loading.
+     * The state where the UI is still loading. This state is used to show skeleton loaders.
+     *
+     * @param showSkeleton A flag to indicate that a skeleton UI should be shown.
      */
-    data object Loading : DashboardUiState()
+    data class Loading(val showSkeleton: Boolean = true) : DashboardUiState()
 
     /**
      * The state where there is no active fast.
@@ -35,6 +37,7 @@ sealed class DashboardUiState {
      * @param remainingTime The time remaining until the fast goal is reached.
      * @param progress The progress of the fast, from 0.0f to 1.0f.
      * @param isEditing Whether the user is currently editing the fast.
+     * @param useWavyIndicator Whether to use the wavy progress indicator.
      */
     data class FastingInProgress(
         val activeFast: Fast,
@@ -51,12 +54,14 @@ sealed class DashboardUiState {
      * @param totalElapsedTime The total time elapsed since the fast started.
      * @param showConfetti Whether to show the confetti animation.
      * @param isEditing Whether the user is currently editing the fast.
+     * @param useWavyIndicator Whether to use the wavy progress indicator.
      */
     data class FastingGoalReached(
         val activeFast: Fast,
         val totalElapsedTime: Duration,
         val showConfetti: Boolean,
-        val isEditing: Boolean = false
+        val isEditing: Boolean = false,
+        val useWavyIndicator: Boolean
     ) : DashboardUiState()
 
     /**
@@ -65,10 +70,12 @@ sealed class DashboardUiState {
      * @param activeFast The currently active fast.
      * @param elapsedTime The time elapsed since the fast started.
      * @param isEditing Whether the user is currently editing the fast.
+     * @param useWavyIndicator Whether to use the wavy progress indicator.
      */
     data class ManualFasting(
         val activeFast: Fast,
         val elapsedTime: Duration,
-        val isEditing: Boolean = false
+        val isEditing: Boolean = false,
+        val useWavyIndicator: Boolean
     ) : DashboardUiState()
 }

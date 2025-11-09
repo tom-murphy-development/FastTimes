@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.fasttimes.data.fast.Fast
-import com.fasttimes.ui.theme.FastTimesTheme
+import com.fasttimes.ui.theme.FastTimesPreviewTheme
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -255,7 +255,7 @@ private fun RatingBar(rating: Int, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 private fun DailyFastDetailsSheetPreview() {
-    FastTimesTheme {
+    FastTimesPreviewTheme {
         val previewDate = LocalDate.of(2024, 6, 24)
         val previewFasts = listOf(
             Fast(

@@ -17,7 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.fasttimes.ui.theme.FastTimesTheme
+import com.fasttimes.ui.theme.FastTimesPreviewTheme
 
 @Composable
 fun Timeline(
@@ -61,7 +61,7 @@ fun Timeline(
 @Preview(showBackground = true, widthDp = 300)
 @Composable
 private fun TimelinePreview() {
-    FastTimesTheme {
+    FastTimesPreviewTheme {
         Timeline(
             segments = listOf(
                 TimelineSegment(TimelineSegmentType.NonFasting, 0.25f),       // 12AM - 6AM

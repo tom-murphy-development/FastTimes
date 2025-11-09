@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -19,6 +20,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.fasttimes.ui.FastTimesNavHost
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
+import com.fasttimes.ui.theme.BrandColor
 import com.fasttimes.ui.theme.FastTimesTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
@@ -28,6 +30,7 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    private val mainViewModel: MainViewModel by viewModels()
     private val dashboardViewModel: DashboardViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,11 +38,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        var dashboardUiState: DashboardUiState by mutableStateOf(DashboardUiState.Loading)
+        var uiState: MainUiState by mutableStateOf(mainViewModel.uiState.value)
+        var dashboardUiState: DashboardUiState by mutableStateOf(dashboardViewModel.uiState.value)
 
-        // Keep the splash screen on-screen until the UI state is loaded.
+        /*// Keep the splash screen on-screen until the UI state is loaded.
         splashScreen.setKeepOnScreenCondition {
-            dashboardUiState is DashboardUiState.Loading
+            uiState.isLoading || dashboardUiState is DashboardUiState.Loading
+        }*/
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.uiState
+                    .onEach { uiState = it }
+                    .collect()
+            }
         }
 
         lifecycleScope.launch {
@@ -51,7 +63,16 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            FastTimesTheme {
+            val seedColor = uiState.userData.seedColor?.let { Color(it) } ?: BrandColor
+            val brandColor = uiState.userData.brandColor?.let { Color(it) } ?: BrandColor
+
+            FastTimesTheme(
+                theme = uiState.userData.theme,
+                seedColor = seedColor,
+                brandColor = brandColor,
+                useExpressiveTheme = uiState.userData.useExpressiveTheme,
+                useSystemColors = uiState.userData.useSystemColors
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

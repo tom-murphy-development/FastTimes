@@ -60,7 +60,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.fasttimes.ui.theme.FastTimesTheme
+import com.fasttimes.ui.theme.FastTimesPreviewTheme
 import kotlinx.collections.immutable.toImmutableMap
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -356,7 +356,7 @@ private fun RowScope.DayCell(
 @Preview(showBackground = true)
 @Composable
 private fun CalendarViewPreview() {
-    FastTimesTheme {
+    FastTimesPreviewTheme {
         CalendarView(
             uiState = HistoryUiState(
                 dayStatusByDayOfMonth = mapOf(

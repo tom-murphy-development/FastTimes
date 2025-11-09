@@ -11,17 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.AppTheme
-import com.fasttimes.ui.settings.SettingsViewModel
 import com.materialkolor.DynamicMaterialTheme
 import com.materialkolor.PaletteStyle
 
@@ -31,19 +27,20 @@ private val LocalBrandColor = staticCompositionLocalOf<Color> {
 
 @Composable
 fun FastTimesTheme(
-    settingsViewModel: SettingsViewModel = hiltViewModel(),
+    theme: AppTheme,
+    seedColor: Color,
+    brandColor: Color,
+    useExpressiveTheme: Boolean,
+    useSystemColors: Boolean,
     content: @Composable () -> Unit
 ) {
-    val uiState by settingsViewModel.uiState.collectAsState()
-    val isDark = when (uiState.theme) {
+    val isDark = when (theme) {
         AppTheme.LIGHT -> false
         AppTheme.DARK -> true
         AppTheme.SYSTEM -> isSystemInDarkTheme()
     }
 
-    val brandColor = uiState.brandColor?.let { Color(it) } ?: BrandColor
-
-    val seedColor = if (uiState.useSystemColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    val finalSeedColor = if (useSystemColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         // Use system dynamic color as the seed
         val context = LocalContext.current
         if (isDark) {
@@ -53,17 +50,17 @@ fun FastTimesTheme(
         }
     } else {
         // Use user-selected seed color or default
-        uiState.seedColor?.let { Color(it) } ?: BrandColor
+        seedColor
     }
 
-    val style = if (uiState.useExpressiveTheme) PaletteStyle.Expressive else PaletteStyle.Vibrant
+    val style = if (useExpressiveTheme) PaletteStyle.Expressive else PaletteStyle.Vibrant
 
     CompositionLocalProvider(LocalBrandColor provides brandColor) {
         DynamicMaterialTheme(
-            seedColor = seedColor,
+            seedColor = finalSeedColor,
             isDark = isDark,
             style = style,
-            animate = true,
+            animate = false,
             typography = Typography
         ) {
             SystemBarsTheme(isDark = isDark, colorScheme = MaterialTheme.colorScheme)

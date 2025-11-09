@@ -37,7 +37,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.fasttimes.ui.theme.FastTimesTheme
+import com.fasttimes.ui.theme.FastTimesPreviewTheme
 import com.fasttimes.ui.theme.accentColors
 import com.fasttimes.ui.theme.seedColors
 
@@ -215,7 +215,7 @@ private fun AccentColorScreenContent(
 @Preview
 @Composable
 private fun AccentColorScreenPreview() {
-    FastTimesTheme {
+    FastTimesPreviewTheme {
         AccentColorScreenContent(
             uiState = SettingsUiState(),
             onNavigateUp = {},

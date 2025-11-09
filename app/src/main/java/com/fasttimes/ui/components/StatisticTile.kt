@@ -81,7 +81,7 @@ fun StatisticTile(
                 imageVector = icon,
                 contentDescription = null, // Decorative icon
                 modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                tint = contentColor
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(

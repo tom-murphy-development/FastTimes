@@ -240,7 +240,8 @@ fun DashboardScreen(
                         ) {
                             Text(
                                 "Current Fast",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(Modifier.height(16.dp))
@@ -255,9 +256,9 @@ fun DashboardScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    "Choose a Profile",
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    "Set your goal",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 )
                                 IconButton(onClick = onManageProfilesClick) {
                                     Icon(
@@ -268,24 +269,25 @@ fun DashboardScreen(
                             }
                             Spacer(Modifier.height(16.dp))
                             if (profiles.isEmpty()) {
-                                Text("No profiles created yet. Go to Settings to create one.")
+                                Text("No fasting profiles created yet. Go to Settings to create one.")
                             } else {
                                 FlowRow(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     profiles.forEach { profile ->
                                         Button(
-                                            onClick = { onStartFast(profile) },
+                                            onClick = { onStartFast(profile) }, shape = MaterialTheme.shapes.large,
                                             colors = ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.secondary,
-                                                contentColor = MaterialTheme.colorScheme.onSecondary
+                                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                             )
                                         ) {
                                             Text(
                                                 profile.displayName,
-                                                style = MaterialTheme.typography.labelLarge
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.SemiBold
                                             )
                                         }
                                     }
@@ -306,7 +308,7 @@ fun DashboardScreen(
                             ) {
                                 Text(
                                     "Current Fast",
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.headlineMedium,
                                 )
                                 Row {
                                     IconButton(onClick = viewModel::onEditFast) {
@@ -330,7 +332,9 @@ fun DashboardScreen(
                                         progress = { state.progress },
                                         modifier = Modifier.size(260.dp),
                                         color = com.fasttimes.ui.theme.BrandColor,
-                                        trackColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        trackColor = MaterialTheme.colorScheme.secondary.copy(
+                                            alpha = 0.1f
+                                        ),
                                         stroke = Stroke(
                                             width = with(LocalDensity.current) {
                                                 16.dp.toPx()
@@ -353,7 +357,7 @@ fun DashboardScreen(
                                         modifier = Modifier.size(260.dp),
                                         color = com.fasttimes.ui.theme.BrandColor,
                                         strokeWidth = 20.dp,
-                                        trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                        trackColor = MaterialTheme.colorScheme.secondary.copy(
                                             alpha = 0.1f
                                         ),
                                         strokeCap = StrokeCap.Round
@@ -439,7 +443,7 @@ fun DashboardScreen(
                             Spacer(Modifier.height(16.dp))
                             Box(contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator(
-                                    progress = { 1f }, // Static progress for manual fast
+                                    progress = { 1f },
                                     modifier = Modifier
                                         .size(260.dp)
                                         .graphicsLayer {
@@ -448,7 +452,7 @@ fun DashboardScreen(
                                         },
                                     color = MaterialTheme.colorScheme.secondary,
                                     strokeWidth = 20.dp,
-                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                    trackColor = MaterialTheme.colorScheme.secondary.copy(
                                         alpha = 0.1f
                                     ),
                                     strokeCap = StrokeCap.Round
@@ -497,7 +501,7 @@ fun DashboardScreen(
                             ) {
                                 Text(
                                     "Current Fast",
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.headlineMedium,
                                 )
                                 Row {
                                     IconButton(onClick = viewModel::onEditFast) {
@@ -520,7 +524,7 @@ fun DashboardScreen(
                                     progress = { 1f },
                                     modifier = Modifier.size(260.dp),
                                     color = com.fasttimes.ui.theme.BrandColor,
-                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                    trackColor = MaterialTheme.colorScheme.secondary.copy(
                                         alpha = 0.1f
                                     ),
                                     stroke = Stroke(
@@ -542,10 +546,8 @@ fun DashboardScreen(
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
                                         text = "Goal Reached!",
-                                        style = MaterialTheme.typography.titleLarge.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        style = MaterialTheme.typography.titleLargeEmphasized,
+                                        color = com.fasttimes.ui.theme.BrandColor
                                     )
                                     Spacer(Modifier.height(8.dp))
 
@@ -586,7 +588,7 @@ fun DashboardScreen(
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 text = "Statistics",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                style = MaterialTheme.typography.headlineSmall,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 8.dp)
@@ -602,17 +604,13 @@ fun DashboardScreen(
                                         modifier = Modifier.weight(1f),
                                         icon = Icons.Default.BarChart,
                                         label = "Total Fasts",
-                                        value = stats.totalFasts.toString(),
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                        value = stats.totalFasts.toString()
                                     )
                                     StatisticTile(
                                         modifier = Modifier.weight(1f),
                                         icon = Icons.Default.Timer,
                                         label = "Total Time",
-                                        value = formatDuration(stats.totalFastingTime),
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                        value = formatDuration(stats.totalFastingTime)
                                     )
                                 }
                                 Row(
@@ -627,17 +625,13 @@ fun DashboardScreen(
                                                 formatDuration((endTime - fast.startTime).milliseconds)
                                             }
                                         } ?: "-",
-                                        onClick = { stats.longestFast?.id?.let(onViewFastDetails) },
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                        onClick = { stats.longestFast?.id?.let(onViewFastDetails) }
                                     )
                                     StatisticTile(
                                         modifier = Modifier.weight(1f),
                                         icon = Icons.Default.AvTimer,
                                         label = "Average Fast",
-                                        value = formatDuration(stats.averageFast),
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                        value = formatDuration(stats.averageFast)
                                     )
                                 }
                             }
@@ -663,7 +657,7 @@ fun DashboardScreen(
                             ) {
                                 Text(
                                     "History",
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                    style = MaterialTheme.typography.headlineSmall,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(

@@ -64,6 +64,7 @@ fun FastTimesTheme(
             isDark = isDark,
             style = style,
             animate = true,
+            typography = Typography
         ) {
             SystemBarsTheme(isDark = isDark, colorScheme = MaterialTheme.colorScheme)
             content()

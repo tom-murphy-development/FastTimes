@@ -52,7 +52,7 @@ fun FastingSummaryModal(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Fast Complete!") },
+        title = { Text("Fast Complete!", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column {
                 Row(
@@ -143,10 +143,6 @@ fun FastingSummaryModal(
                 Text("Save")
             }
         },
-        dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("Dismiss")
-            }
-        }
+        dismissButton = null
     )
 }

@@ -33,35 +33,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fasttimes.ui.theme.FastTimesTheme
-
-private val accentColors = listOf(
-    Color(0xFF3DDC84),
-    Color(0xFFFFBE0B),
-    Color(0xFFFB5607),
-    Color(0xFFFF006E),
-    Color(0xFF8338EC),
-    Color(0xFF3A86FF)
-)
-private val seedColors = listOf(
-    Color(0xfffeb4a7),
-    Color(0xffffb3c0),
-    Color(0xfffcaaff),
-    Color(0xffb9c3ff),
-    Color(0xff62d3ff),
-    Color(0xff44d9f1),
-    Color(0xff52dbc9),
-    Color(0xff78dd77),
-    Color(0xff9fd75c),
-    Color(0xffc1d02d),
-    Color(0xfffabd00),
-    Color(0xffffb86e),
-)
+import com.fasttimes.ui.theme.accentColors
+import com.fasttimes.ui.theme.seedColors
 
 @Composable
 fun AccentColorScreen(
@@ -75,9 +53,7 @@ fun AccentColorScreen(
         onNavigateUp = onNavigateUp,
         onUseSystemColorsChanged = viewModel::onUseSystemColorsChanged,
         onUseExpressiveThemeChanged = viewModel::onUseExpressiveThemeChanged,
-        onClearSeedColor = viewModel::onClearSeedColor,
         onSeedColorChanged = viewModel::onSeedColorChanged,
-        onClearBrandColor = viewModel::onClearBrandColor,
         onBrandColorChanged = viewModel::onBrandColorChanged
     )
 }
@@ -89,9 +65,7 @@ private fun AccentColorScreenContent(
     onNavigateUp: () -> Unit,
     onUseSystemColorsChanged: (Boolean) -> Unit,
     onUseExpressiveThemeChanged: (Boolean) -> Unit,
-    onClearSeedColor: () -> Unit,
     onSeedColorChanged: (Long) -> Unit,
-    onClearBrandColor: () -> Unit,
     onBrandColorChanged: (Long) -> Unit
 ) {
     val dynamicAccentColors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer) + accentColors
@@ -247,9 +221,7 @@ private fun AccentColorScreenPreview() {
             onNavigateUp = {},
             onUseSystemColorsChanged = {},
             onUseExpressiveThemeChanged = {},
-            onClearSeedColor = {},
             onSeedColorChanged = {},
-            onClearBrandColor = {},
             onBrandColorChanged = {}
         )
     }

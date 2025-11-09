@@ -6,8 +6,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -26,7 +28,7 @@ import com.fasttimes.ui.settings.AccentColorScreen
 import com.fasttimes.ui.settings.SettingsScreen
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FastTimesNavHost() {
     val navController = rememberNavController()
@@ -40,6 +42,14 @@ fun FastTimesNavHost() {
                 DragAnchors.Dashboard -> "Fast Times"
                 DragAnchors.History -> "History"
             }
+            val currentStyle = when (draggableState.state.currentValue) {
+                DragAnchors.Dashboard -> MaterialTheme.typography.headlineLarge
+                DragAnchors.History -> MaterialTheme.typography.headlineLarge
+            }
+            val currentColor = when (draggableState.state.currentValue) {
+                DragAnchors.Dashboard -> com.fasttimes.ui.theme.BrandColor
+                DragAnchors.History -> MaterialTheme.colorScheme.onSurface
+            }
 
             BackHandler(enabled = draggableState.state.currentValue == DragAnchors.History) {
                 scope.launch {
@@ -50,7 +60,7 @@ fun FastTimesNavHost() {
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text(currentTitle) },
+                        title = { Text(currentTitle, style = currentStyle, color = currentColor) },
                         navigationIcon = {
                             if (draggableState.state.currentValue == DragAnchors.History) {
                                 IconButton(onClick = { scope.launch { draggableState.closeHistory() } }) {

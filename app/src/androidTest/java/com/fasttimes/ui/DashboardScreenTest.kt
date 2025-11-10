@@ -1,12 +1,14 @@
 package com.fasttimes.ui
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.fasttimes.data.DefaultFastingProfile
+import com.fasttimes.data.AppTheme
 import com.fasttimes.data.fast.Fast
+import com.fasttimes.data.profile.FastingProfile
 import com.fasttimes.ui.dashboard.DashboardStats
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
@@ -33,7 +35,6 @@ class DashboardScreenTest {
         whenever(mockViewModel.stats).thenReturn(MutableStateFlow(DashboardStats()))
         whenever(mockViewModel.profiles).thenReturn(MutableStateFlow(emptyList()))
         whenever(mockViewModel.favoriteProfile).thenReturn(MutableStateFlow(null))
-        whenever(mockViewModel.modalProfile).thenReturn(MutableStateFlow(null))
         whenever(mockViewModel.showAlarmPermissionRationale).thenReturn(MutableStateFlow(false))
         whenever(mockViewModel.completedFast).thenReturn(MutableStateFlow(null))
     }
@@ -48,7 +49,13 @@ class DashboardScreenTest {
         )))
 
         composeTestRule.setContent {
-            FastTimesTheme {
+            FastTimesTheme(
+                theme = AppTheme.LIGHT,
+                seedColor = Color.Blue,
+                brandColor = Color.Blue,
+                useExpressiveTheme = false,
+                useSystemColors = false
+            ) {
                 DashboardScreen(
                     onHistoryClick = {},
                     onViewFastDetails = {},
@@ -66,23 +73,30 @@ class DashboardScreenTest {
             id = 1,
             startTime = System.currentTimeMillis(),
             endTime = null,
-            profileName = DefaultFastingProfile.MANUAL.displayName,
+            profileName = "16:8",
             targetDuration = 1000,
             notes = null
         )
         whenever(mockViewModel.uiState).thenReturn(
             MutableStateFlow(
-                DashboardUiState.FastingGoalReached(
+                DashboardUiState.FastingInProgress(
                     activeFast = fast,
-                    totalElapsedTime = 0L.milliseconds,
-                    showConfetti = false,
-                    isEditing = false
+                    remainingTime = 0.milliseconds,
+                    progress = 0f,
+                    isEditing = false,
+                    useWavyIndicator = false
                 )
             )
         )
 
         composeTestRule.setContent {
-            FastTimesTheme {
+            FastTimesTheme(
+                theme = AppTheme.LIGHT,
+                seedColor = Color.Blue,
+                brandColor = Color.Blue,
+                useExpressiveTheme = false,
+                useSystemColors = false
+            ) {
                 DashboardScreen(
                     onHistoryClick = {},
                     onViewFastDetails = {},
@@ -92,5 +106,40 @@ class DashboardScreenTest {
             }
         }
         composeTestRule.onNodeWithText("End Fast").assertIsDisplayed()
+    }
+
+    @Test
+    fun no_fast_state_shows_profiles() {
+        val profiles = listOf(
+            FastingProfile(1, "16:8", 16, "desc", true),
+            FastingProfile(2, "18:6", 18, "desc2", false)
+        )
+        whenever(mockViewModel.profiles).thenReturn(MutableStateFlow(profiles))
+        whenever(mockViewModel.uiState).thenReturn(MutableStateFlow(DashboardUiState.NoFast(
+            thisWeekFasts = emptyList(),
+            lastWeekFasts = emptyList(),
+            lastFast = null,
+            showFab = true
+        )))
+
+        composeTestRule.setContent {
+            FastTimesTheme(
+                theme = AppTheme.LIGHT,
+                seedColor = Color.Blue,
+                brandColor = Color.Blue,
+                useExpressiveTheme = false,
+                useSystemColors = false
+            ) {
+                DashboardScreen(
+                    onHistoryClick = {},
+                    onViewFastDetails = {},
+                    onManageProfilesClick = {},
+                    viewModel = mockViewModel
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("16:8").assertIsDisplayed()
+        composeTestRule.onNodeWithText("18:6").assertIsDisplayed()
     }
 }

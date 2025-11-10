@@ -94,6 +94,7 @@ class DashboardViewModel @Inject constructor(
 
     private data class DashboardData(
         val fasts: List<Fast>,
+        val profiles: List<FastingProfile>,
         val isEditing: Boolean,
         val confettiShownForFastId: Long?,
         val showFab: Boolean,
@@ -102,12 +103,25 @@ class DashboardViewModel @Inject constructor(
 
     private val dashboardData = combine(
         fastsRepository.getFasts(),
+        profiles,
         _isEditing,
         settingsRepository.confettiShownForFastId,
-        settingsRepository.showFab,
-        settingsRepository.userData
-    ) { fasts, isEditing, confettiShown, showFab, userData ->
-        DashboardData(fasts, isEditing, confettiShown, showFab, userData)
+        settingsRepository.showFab
+    ) { fasts, profiles, isEditing, confettiShown, showFab ->
+        // Create a temporary tuple for the first 5 results
+        Triple(fasts, profiles, isEditing) to (confettiShown to showFab)
+    }.combine(settingsRepository.userData) { fiveResults, userData ->
+        val (triple, pair) = fiveResults
+        val (fasts, profiles, isEditing) = triple
+        val (confettiShown, showFab) = pair
+        DashboardData(
+            fasts = fasts,
+            profiles = profiles,
+            isEditing = isEditing,
+            confettiShownForFastId = confettiShown,
+            showFab = showFab,
+            userData = userData
+        )
     }
 
     private val ticker = flow {
@@ -119,6 +133,10 @@ class DashboardViewModel @Inject constructor(
 
     val uiState: StateFlow<DashboardUiState> = dashboardData.flatMapLatest { data ->
         val activeFast = data.fasts.firstOrNull { it.endTime == null }
+
+        if (activeFast == null && data.profiles.isEmpty()) {
+            return@flatMapLatest flowOf(DashboardUiState.Loading(showSkeleton = true))
+        }
 
         val uiFlow: Flow<DashboardUiState> = if (activeFast == null) {
             // No active fast, create the NoFast state and emit it once.

@@ -33,7 +33,7 @@ class FastDaoTest {
 
     @Test
     fun insert_and_getAllFasts() = runBlocking {
-        val fast = Fast(startTime = 1000, endTime = null, targetDuration = 10000, notes = "Test")
+        val fast = Fast(startTime = 1000, endTime = null, targetDuration = 10000, notes = "Test", profileName = "Test Profile")
         dao.insertFast(fast)
         val fasts = dao.getAllFasts().first()
         assertEquals(1, fasts.size)
@@ -42,11 +42,10 @@ class FastDaoTest {
 
     @Test
     fun updateFastEndTime() = runBlocking {
-        val fast = Fast(startTime = 1000, endTime = null, targetDuration = 10000, notes = null)
+        val fast = Fast(startTime = 1000, endTime = null, targetDuration = 10000, notes = null, profileName = "Test Profile")
         val id = dao.insertFast(fast)
         dao.updateFastEndTime(id, 2000)
         val fasts = dao.getAllFasts().first()
         assertEquals(2000, fasts[0].endTime)
     }
 }
-

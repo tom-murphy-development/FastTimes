@@ -264,32 +264,28 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(16.dp))
-                                if (profiles.isEmpty()) {
-                                    Text("No fasting profiles created yet. Go to Settings to create one.")
-                                } else {
-                                    FlowRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(
-                                            8.dp,
-                                            Alignment.CenterHorizontally
-                                        ),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        profiles.forEach { profile ->
-                                            Button(
-                                                onClick = { onStartFast(profile) },
-                                                shape = MaterialTheme.shapes.large,
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                                                )
-                                            ) {
-                                                Text(
-                                                    profile.displayName,
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    fontWeight = FontWeight.SemiBold
-                                                )
-                                            }
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(
+                                        8.dp,
+                                        Alignment.CenterHorizontally
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    profiles.forEach { profile ->
+                                        Button(
+                                            onClick = { onStartFast(profile) },
+                                            shape = MaterialTheme.shapes.large,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                            )
+                                        ) {
+                                            Text(
+                                                profile.displayName,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
                                         }
                                     }
                                 }

@@ -231,11 +231,7 @@ fun ProfileManagementScreen(
                     description = favoriteProfile.description,
                     border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
                     onClick = {
-                        if (selectedProfile != null) {
-                            selectedProfile = if (isSelected) null else favoriteProfile
-                        } else {
-                            showAddEditDialog = favoriteProfile
-                        }
+                        selectedProfile = if (isSelected) null else favoriteProfile
                     },
                     onLongClick = {
                         selectedProfile = favoriteProfile
@@ -259,13 +255,13 @@ fun ProfileManagementScreen(
                     modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
                 )
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                    columns = GridCells.Adaptive(180.dp),
                     contentPadding = PaddingValues(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(otherProfiles) { profile ->
+                    items(items = otherProfiles, key = { it.id }) { profile ->
                         val isSelected = selectedProfile == profile
                         StatisticTile(
                             modifier = Modifier.aspectRatio(1f),
@@ -275,12 +271,7 @@ fun ProfileManagementScreen(
                             description = profile.description,
                             border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
                             onClick = {
-                                if (selectedProfile != null) {
-                                    selectedProfile = if (isSelected) null else profile
-                                } else {
-                                    onSetFavorite(profile)
-                                    Toast.makeText(context, "'${profile.displayName}' set as favorite.", Toast.LENGTH_SHORT).show()
-                                }
+                                selectedProfile = if (isSelected) null else profile
                             },
                             onLongClick = {
                                 selectedProfile = profile

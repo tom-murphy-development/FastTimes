@@ -1,9 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="Theme.FastTimes" parent="Theme.Material3.DayNight.NoActionBar">
     </style>
 
-    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@android:color/black</item>
+    <!-- For API 30 and below -->
+    <style name="Theme.App.Starting" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_background</item>
         <item name="postSplashScreenTheme">@style/Theme.FastTimes</item>
     </style>
+
 </resources>

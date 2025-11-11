@@ -37,17 +37,13 @@ class FastAlarmScheduler @Inject constructor(
 
         // Ensure we only schedule for future fasts with a valid target duration
         if (completionTime > System.currentTimeMillis()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        completionTime,
-                        pendingIntent
-                    )
-                } else {
-                    // Cannot schedule exact alarms, so we don't do anything to prevent a crash
-                }
+            val canSchedule = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                alarmManager.canScheduleExactAlarms()
             } else {
+                true // No special permission needed before S
+            }
+
+            if (canSchedule) {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     completionTime,

@@ -1,8 +1,10 @@
 package com.fasttimes.receiver
 
+import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.fasttimes.alarms.AlarmScheduler
 import com.fasttimes.data.fast.FastsRepository
 import dagger.hilt.EntryPoint
@@ -31,13 +33,20 @@ class BootCompletedReceiver : BroadcastReceiver() {
             )
             val fastsRepository = hiltEntryPoint.fastsRepository()
             val alarmScheduler = hiltEntryPoint.alarmScheduler()
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
             CoroutineScope(Dispatchers.IO).launch {
-                // Find the current active fast (if any)
                 val activeFast = fastsRepository.getActiveFast().first()
                 activeFast?.let {
-                    // Reschedule the alarm for the active fast
-                    alarmScheduler.schedule(it)
+                    val canSchedule = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        alarmManager.canScheduleExactAlarms()
+                    } else {
+                        true // No special permission needed before S
+                    }
+
+                    if (canSchedule) {
+                        alarmScheduler.schedule(it)
+                    }
                 }
             }
         }

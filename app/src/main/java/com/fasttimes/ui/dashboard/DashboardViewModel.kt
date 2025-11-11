@@ -3,6 +3,7 @@ package com.fasttimes.ui.dashboard
 import android.app.AlarmManager
 import android.app.Application
 import android.content.Intent
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasttimes.alarms.AlarmScheduler
@@ -257,7 +258,7 @@ class DashboardViewModel @Inject constructor(
 
     fun startProfileFast(profile: FastingProfile) {
         viewModelScope.launch {
-            if (!alarmManager.canScheduleExactAlarms()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
                 _showAlarmPermissionRationale.value = true
                 return@launch
             }

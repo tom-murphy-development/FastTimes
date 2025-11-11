@@ -164,10 +164,13 @@ fun DashboardScreen(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (isGranted) {
-                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                    data = Uri.fromParts("package", context.packageName, null)
+                // For Tiramisu+, we also need to ask for exact alarm permissions
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
                 }
-                context.startActivity(intent)
             }
         }
     )
@@ -195,15 +198,20 @@ fun DashboardScreen(
         AlertDialog(
             onDismissRequest = onDismissAlarmPermissionRationale,
             title = { Text("Permission Required") },
-            text = { Text("To ensure you're notified when your fast is complete, the app needs permission to post notifications and schedule exact alarms. This is only used to show a notification when the timer ends.") },
+            text = { Text("To ensure you\'re notified when your fast is complete, the app needs permission to post notifications and schedule exact alarms. This is only used to show a notification when the timer ends.") },
             confirmButton = {
                 Button(onClick = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        }
+                        context.startActivity(intent)
                     }
                     onDismissAlarmPermissionRationale()
                 }) {
-                    Text("Go to Settings")
+                    Text("Grant Permission")
                 }
             },
             dismissButton = {

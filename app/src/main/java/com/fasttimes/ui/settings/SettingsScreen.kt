@@ -1,9 +1,11 @@
 package com.fasttimes.ui.settings
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -57,7 +59,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showNotificationPermissionRationale by remember { mutableStateOf(false) }
+    var showPermissionRationale by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var permissionAction by remember { mutableStateOf<(() -> Unit)?>(null) }
     var showImportConfirmation by remember { mutableStateOf(false) }
@@ -89,6 +91,23 @@ fun SettingsScreen(
         }
     )
 
+    fun handlePermission(onGranted: () -> Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                onGranted()
+            } else {
+                permissionAction = onGranted
+                showPermissionRationale = true
+            }
+        } else {
+            onGranted()
+        }
+    }
+
     LaunchedEffect(viewModel.effects) {
         viewModel.effects.collect { effect ->
             when (effect) {
@@ -118,23 +137,28 @@ fun SettingsScreen(
         )
     }
 
-    if (showNotificationPermissionRationale) {
+    if (showPermissionRationale) {
         AlertDialog(
-            onDismissRequest = { showNotificationPermissionRationale = false },
+            onDismissRequest = { showPermissionRationale = false },
             title = { Text("Permission Required") },
-            text = { Text("To show notifications, the app needs permission to post notifications.") },
+            text = { Text("To ensure you're notified, the app needs permission to post notifications and schedule exact alarms. This is only used to show a notification when the timer ends.") },
             confirmButton = {
                 Button(onClick = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        }
+                        context.startActivity(intent)
                     }
-                    showNotificationPermissionRationale = false
+                    showPermissionRationale = false
                 }) {
-                    Text("Continue")
+                    Text("Grant Permission")
                 }
             },
             dismissButton = {
-                Button(onClick = { showNotificationPermissionRationale = false }) {
+                Button(onClick = { showPermissionRationale = false }) {
                     Text("Cancel")
                 }
             }
@@ -226,20 +250,7 @@ fun SettingsScreen(
                     checked = uiState.showLiveProgress,
                     onCheckedChange = { show ->
                         if (show) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                if (ContextCompat.checkSelfPermission(
-                                        context,
-                                        Manifest.permission.POST_NOTIFICATIONS
-                                    ) == PackageManager.PERMISSION_GRANTED
-                                ) {
-                                    viewModel.onShowLiveProgressChanged(true)
-                                } else {
-                                    permissionAction = { viewModel.onShowLiveProgressChanged(true) }
-                                    showNotificationPermissionRationale = true
-                                }
-                            } else {
-                                viewModel.onShowLiveProgressChanged(true)
-                            }
+                            handlePermission { viewModel.onShowLiveProgressChanged(true) }
                         } else {
                             viewModel.onShowLiveProgressChanged(false)
                         }
@@ -258,20 +269,7 @@ fun SettingsScreen(
                     checked = uiState.showGoalReachedNotification,
                     onCheckedChange = { show ->
                         if (show) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                if (ContextCompat.checkSelfPermission(
-                                        context,
-                                        Manifest.permission.POST_NOTIFICATIONS
-                                    ) == PackageManager.PERMISSION_GRANTED
-                                ) {
-                                    viewModel.onShowGoalReachedNotificationChanged(true)
-                                } else {
-                                    permissionAction = { viewModel.onShowGoalReachedNotificationChanged(true) }
-                                    showNotificationPermissionRationale = true
-                                }
-                            } else {
-                                viewModel.onShowGoalReachedNotificationChanged(true)
-                            }
+                            handlePermission { viewModel.onShowGoalReachedNotificationChanged(true) }
                         } else {
                             viewModel.onShowGoalReachedNotificationChanged(false)
                         }

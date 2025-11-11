@@ -214,7 +214,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Show FAB", style = MaterialTheme.typography.bodyLarge)
+                Text(text = "Show Floating Action Button", style = MaterialTheme.typography.bodyLarge)
                 Switch(
                     checked = uiState.showFab,
                     onCheckedChange = viewModel::onShowFabChanged
@@ -227,7 +227,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Use Wavy Indicator", style = MaterialTheme.typography.bodyLarge)
+                Text(text = "Use Expressive Progress Indicator", style = MaterialTheme.typography.bodyLarge)
                 Switch(
                     checked = uiState.useWavyIndicator,
                     onCheckedChange = viewModel::onUseWavyIndicatorChanged

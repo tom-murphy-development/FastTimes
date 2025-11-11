@@ -21,15 +21,15 @@ import com.fasttimes.data.AppTheme
 import com.materialkolor.DynamicMaterialTheme
 import com.materialkolor.PaletteStyle
 
-private val LocalBrandColor = staticCompositionLocalOf<Color> {
-    error("No BrandColor provided")
+private val LocalAccentColor = staticCompositionLocalOf<Color> {
+    error("No AccentColor provided")
 }
 
 @Composable
 fun FastTimesTheme(
     theme: AppTheme,
     seedColor: Color,
-    brandColor: Color,
+    accentColor: Color,
     useExpressiveTheme: Boolean,
     useSystemColors: Boolean,
     content: @Composable () -> Unit
@@ -55,7 +55,7 @@ fun FastTimesTheme(
 
     val style = if (useExpressiveTheme) PaletteStyle.Expressive else PaletteStyle.Vibrant
 
-    CompositionLocalProvider(LocalBrandColor provides brandColor) {
+    CompositionLocalProvider(LocalAccentColor provides accentColor) {
         DynamicMaterialTheme(
             seedColor = finalSeedColor,
             isDark = isDark,
@@ -86,8 +86,8 @@ private fun SystemBarsTheme(isDark: Boolean, colorScheme: ColorScheme) {
 }
 
 object FastTimesTheme {
-    val brandColor: Color
+    val accentColor: Color
         @Composable
         @ReadOnlyComposable
-        get() = LocalBrandColor.current
+        get() = LocalAccentColor.current
 }

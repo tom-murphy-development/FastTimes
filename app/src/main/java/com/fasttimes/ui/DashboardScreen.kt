@@ -92,6 +92,7 @@ import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
 import com.fasttimes.ui.dashboard.FastingSummaryModal
 import com.fasttimes.ui.editfast.EditFastRoute
+import com.fasttimes.ui.theme.FastTimesTheme
 import com.fasttimes.ui.theme.contentColorFor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -327,7 +328,7 @@ fun DashboardScreen(
                                         CircularWavyProgressIndicator(
                                             progress = { state.progress },
                                             modifier = Modifier.size(260.dp),
-                                            color = com.fasttimes.ui.theme.BrandColor,
+                                            color = FastTimesTheme.accentColor,
                                             trackColor = MaterialTheme.colorScheme.secondary.copy(
                                                 alpha = 0.1f
                                             ),
@@ -351,7 +352,7 @@ fun DashboardScreen(
                                         CircularProgressIndicator(
                                             progress = { state.progress },
                                             modifier = Modifier.size(260.dp),
-                                            color = com.fasttimes.ui.theme.BrandColor,
+                                            color = FastTimesTheme.accentColor,
                                             strokeWidth = 20.dp,
                                             trackColor = MaterialTheme.colorScheme.secondary.copy(
                                                 alpha = 0.1f
@@ -522,7 +523,7 @@ fun DashboardScreen(
                                     CircularWavyProgressIndicator(
                                         progress = { 1f },
                                         modifier = Modifier.size(260.dp),
-                                        color = com.fasttimes.ui.theme.BrandColor,
+                                        color = FastTimesTheme.accentColor,
                                         trackColor = MaterialTheme.colorScheme.secondary.copy(
                                             alpha = 0.1f
                                         ),
@@ -546,7 +547,7 @@ fun DashboardScreen(
                                         Text(
                                             text = "Goal Reached!",
                                             style = MaterialTheme.typography.titleLargeEmphasized,
-                                            color = com.fasttimes.ui.theme.BrandColor
+                                            color = FastTimesTheme.accentColor
                                         )
                                         Spacer(Modifier.height(8.dp))
 
@@ -967,8 +968,8 @@ private fun MultiFab(
                     },
                     icon = { Icon(item.icon, contentDescription = item.label) },
                     text = { Text(item.label) },
-                    containerColor = com.fasttimes.ui.theme.BrandColor,
-                    contentColor = contentColorFor(backgroundColor = com.fasttimes.ui.theme.BrandColor),
+                    containerColor = FastTimesTheme.accentColor,
+                    contentColor = contentColorFor(backgroundColor = FastTimesTheme.accentColor),
                 )
             }
         }
@@ -976,14 +977,14 @@ private fun MultiFab(
         FloatingActionButton(
             onClick = { isExpanded = !isExpanded },
             modifier = Modifier.align(Alignment.End),
-            containerColor = com.fasttimes.ui.theme.BrandColor
+            containerColor = FastTimesTheme.accentColor
         ) {
             Icon(
                 //imageVector = Icons.Default.Add,
                 painter = painterResource(id = R.drawable.ic_timer),
                 contentDescription = "Add Fast",
                 modifier = Modifier.size(24.dp),
-                tint = contentColorFor(backgroundColor = com.fasttimes.ui.theme.BrandColor)
+                tint = contentColorFor(backgroundColor = FastTimesTheme.accentColor)
             )
         }
     }
@@ -998,7 +999,7 @@ private fun RatingBar(rating: Int, modifier: Modifier = Modifier) {
             Icon(
                 imageVector = icon,
                 contentDescription = null, // decorative
-                tint = if (index < rating) com.fasttimes.ui.theme.BrandColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (index < rating) FastTimesTheme.accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -1039,7 +1040,7 @@ private fun LastFastItem(
                 Icon(
                     imageVector = if (fast.goalMet()) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
                     contentDescription = if (fast.goalMet()) "Goal Reached" else "Goal Not Reached",
-                    tint = if (fast.goalMet()) com.fasttimes.ui.theme.BrandColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                    tint = if (fast.goalMet()) FastTimesTheme.accentColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(
                         alpha = 0.5f
                     )
                 )

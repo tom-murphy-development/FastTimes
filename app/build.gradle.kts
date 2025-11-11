@@ -17,7 +17,7 @@ android {
 
     defaultConfig {
         applicationId = "com.fasttimes"
-        minSdk = 33
+        minSdk = 30
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -30,7 +30,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -57,6 +58,9 @@ android {
         resources {
             excludes += "META-INF/AL2.0"
             excludes += "META-INF/LGPL2.1"
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
+            excludes += "META-INF/NOTICE"
         }
     }
 }
@@ -72,7 +76,6 @@ kotlin {
 dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.compose.material3)
     implementation(libs.androidx.activity.compose)
@@ -85,7 +88,6 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.konfetti.compose)
     implementation(libs.navigation.compose)
-    implementation(libs.accompanist.navigation.animation)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.lifecycle.viewmodel)
@@ -113,7 +115,8 @@ dependencies {
     // Android Testing
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso)
-    androidTestImplementation(libs.mockito.kotlin)
     androidTestImplementation(platform(libs.compose.bom.beta))
     androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.mockk)
+
 }

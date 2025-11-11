@@ -8,7 +8,7 @@ data class UserData(
     val fastingGoal: Duration,
     val theme: AppTheme,
     val seedColor: Long?,
-    val brandColor: Long?,
+    val accentColor: Long?,
     val useWavyIndicator: Boolean,
     val useExpressiveTheme: Boolean,
     val useSystemColors: Boolean
@@ -32,8 +32,8 @@ interface SettingsRepository {
     suspend fun setSeedColor(color: Long)
     suspend fun clearSeedColor()
 
-    suspend fun setBrandColor(color: Long)
-    suspend fun clearBrandColor()
+    suspend fun setAccentColor(color: Long)
+    suspend fun clearAccentColor()
 
     val confettiShownForFastId: Flow<Long?>
     suspend fun setConfettiShownForFastId(fastId: Long)

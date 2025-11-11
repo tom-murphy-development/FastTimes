@@ -20,7 +20,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.fasttimes.ui.FastTimesNavHost
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
-import com.fasttimes.ui.theme.BrandColor
 import com.fasttimes.ui.theme.FastTimesTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
@@ -63,13 +62,13 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val seedColor = uiState.userData.seedColor?.let { Color(it) } ?: BrandColor
-            val brandColor = uiState.userData.brandColor?.let { Color(it) } ?: BrandColor
+            val seedColor = uiState.userData.seedColor?.let { Color(it) } ?: Color(0xFF3DDC84)
+            val accentColor = uiState.userData.accentColor?.let { Color(it) } ?: Color(0xFF3DDC84)
 
             FastTimesTheme(
                 theme = uiState.userData.theme,
                 seedColor = seedColor,
-                brandColor = brandColor,
+                accentColor = accentColor,
                 useExpressiveTheme = uiState.userData.useExpressiveTheme,
                 useSystemColors = uiState.userData.useSystemColors
             ) {

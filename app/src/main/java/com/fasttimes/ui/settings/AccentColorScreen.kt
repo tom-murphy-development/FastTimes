@@ -54,7 +54,7 @@ fun AccentColorScreen(
         onUseSystemColorsChanged = viewModel::onUseSystemColorsChanged,
         onUseExpressiveThemeChanged = viewModel::onUseExpressiveThemeChanged,
         onSeedColorChanged = viewModel::onSeedColorChanged,
-        onBrandColorChanged = viewModel::onBrandColorChanged
+        onAccentColorChanged = viewModel::onAccentColorChanged
     )
 }
 
@@ -66,14 +66,14 @@ private fun AccentColorScreenContent(
     onUseSystemColorsChanged: (Boolean) -> Unit,
     onUseExpressiveThemeChanged: (Boolean) -> Unit,
     onSeedColorChanged: (Long) -> Unit,
-    onBrandColorChanged: (Long) -> Unit
+    onAccentColorChanged: (Long) -> Unit
 ) {
-    val dynamicAccentColors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer) + accentColors
+    val dynamicAccentColors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.tertiary) + accentColors
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Theme & Brand Color") },
+                title = { Text("Theme & Accent Color") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
@@ -184,12 +184,12 @@ private fun AccentColorScreenContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 dynamicAccentColors.forEach { color ->
-                    val isItemSelected = uiState.brandColor == color.toArgb().toLong()
+                    val isItemSelected = uiState.accentColor == color.toArgb().toLong()
                     Box(
                         modifier = Modifier
                             .size(60.dp)
                             .background(color, shape = CircleShape)
-                            .clickable { onBrandColorChanged(color.toArgb().toLong()) }
+                            .clickable { onAccentColorChanged(color.toArgb().toLong()) }
                             .border(
                                 width = if (isItemSelected) 4.dp else 0.dp,
                                 color = MaterialTheme.colorScheme.outline,
@@ -222,7 +222,7 @@ private fun AccentColorScreenPreview() {
             onUseSystemColorsChanged = {},
             onUseExpressiveThemeChanged = {},
             onSeedColorChanged = {},
-            onBrandColorChanged = {}
+            onAccentColorChanged = {}
         )
     }
 }

@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.profile.FastingProfile
 import com.fasttimes.ui.components.StatisticTile
+import com.fasttimes.ui.theme.FastTimesTheme
 import com.fasttimes.ui.theme.contentColorFor
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -144,8 +145,8 @@ fun ProfileManagementScreen(
             if (selectedProfile == null) {
                 FloatingActionButton(
                     onClick = { showAddEditDialog = FastingProfile(id = 0L, displayName = "", duration = null, description = "") },
-                    containerColor = com.fasttimes.ui.theme.BrandColor,
-                    contentColor = contentColorFor(backgroundColor = com.fasttimes.ui.theme.BrandColor),                    ) {
+                    containerColor = FastTimesTheme.accentColor,
+                    contentColor = contentColorFor(backgroundColor = FastTimesTheme.accentColor),                    ) {
                     Icon(Icons.Filled.Add, "Add Profile")
                 }
             }

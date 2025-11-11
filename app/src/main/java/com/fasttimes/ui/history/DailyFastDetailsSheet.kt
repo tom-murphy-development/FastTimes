@@ -39,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.theme.FastTimesPreviewTheme
+import com.fasttimes.ui.theme.FastTimesTheme
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -244,7 +245,7 @@ private fun RatingBar(rating: Int, modifier: Modifier = Modifier) {
             Icon(
                 imageVector = icon,
                 contentDescription = null, // decorative
-                tint = if (index < rating) com.fasttimes.ui.theme.BrandColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (index < rating) FastTimesTheme.accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }

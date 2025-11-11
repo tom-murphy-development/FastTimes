@@ -39,7 +39,7 @@ class MainViewModel @Inject constructor(
                 fastingGoal = Duration.ofSeconds(57600),
                 theme = AppTheme.SYSTEM,
                 seedColor = null,
-                brandColor = null,
+                accentColor = null,
                 useWavyIndicator = true,
                 useExpressiveTheme = false,
                 useSystemColors = false

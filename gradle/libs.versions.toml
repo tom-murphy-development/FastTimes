@@ -1,29 +1,26 @@
 [versions]
 # Gradle & Kotlin
-agp = "8.13.0"  # Using stable version of AGP
+agp = "8.13.1"  # Using stable version of AGP
 kotlin = "2.2.21"  # Matching Kotlin version with Compose compiler
 composeCompilerVersion = "1.5.3"
 konfetti = "2.0.5"
 kotlinx-collections-immutable = "0.4.0"
 compose-foundation = "1.9.4"
-mockito-kotlin = "6.1.0"
-compose-bom-beta = "2025.10.01"
-accompanist-navigation-animation = "0.36.0"
+compose-bom-beta = "2025.11.00"
 material = "1.13.0"
 material3 = "material3-*:1.5.0-alpha07"
 serialization = "1.9.0"
-materialKolor = "4.0.0"
+materialKolor = "4.0.3"
 
 
 # AndroidX Core Libraries
 core-ktx = "1.17.0"
-appcompat = "1.7.1"
 activity = "1.11.0"
 lifecycle = "2.9.4"
-compose-bom = "2025.10.01"
-navigation = "2.9.5"
+compose-bom = "2025.11.00"
+navigation = "2.9.6"
 datastore = "1.1.7"
-splashscreen = "1.0.1"
+splashscreen = "1.2.0"
 
 # DI
 hilt = "2.57.2"
@@ -45,7 +42,6 @@ turbine = "1.2.1"
 [libraries]
 # AndroidX
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 androidx-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
@@ -68,8 +64,6 @@ compose-foundation = { group = "androidx.compose.foundation", name = "foundation
 
 # Navigation
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
-accompanist-navigation-animation = { group = "com.google.accompanist", name = "accompanist-navigation-animation", version.ref = "accompanist-navigation-animation" }
-
 
 # Dependency Injection
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
@@ -100,7 +94,6 @@ androidx-test-ext = { group = "androidx.test.ext", name = "junit", version.ref =
 androidx-test-espresso = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
-mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
 compose-bom-beta = { group = "androidx.compose", name = "compose-bom-beta", version.ref = "compose-bom-beta" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 
@@ -113,4 +106,3 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version = "2.2.20-2.0.4" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-

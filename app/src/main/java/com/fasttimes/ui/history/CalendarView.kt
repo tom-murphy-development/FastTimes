@@ -61,6 +61,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.fasttimes.ui.theme.FastTimesPreviewTheme
+import com.fasttimes.ui.theme.FastTimesTheme
 import kotlinx.collections.immutable.toImmutableMap
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -327,7 +328,7 @@ private fun RowScope.DayCell(
             }
 
             val iconColor = when (status) {
-                DayStatus.GOAL_MET -> com.fasttimes.ui.theme.BrandColor
+                DayStatus.GOAL_MET -> FastTimesTheme.accentColor
                 DayStatus.GOAL_NOT_MET -> Color.Gray
                 null -> Color.Transparent
             }

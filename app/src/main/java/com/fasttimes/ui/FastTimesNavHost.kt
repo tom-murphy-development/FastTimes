@@ -26,6 +26,7 @@ import com.fasttimes.ui.profile.navigateToProfileManagement
 import com.fasttimes.ui.profile.profileManagementScreen
 import com.fasttimes.ui.settings.AccentColorScreen
 import com.fasttimes.ui.settings.SettingsScreen
+import com.fasttimes.ui.theme.FastTimesTheme
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -47,7 +48,7 @@ fun FastTimesNavHost() {
                 DragAnchors.History -> MaterialTheme.typography.headlineLarge
             }
             val currentColor = when (draggableState.state.currentValue) {
-                DragAnchors.Dashboard -> com.fasttimes.ui.theme.BrandColor
+                DragAnchors.Dashboard -> FastTimesTheme.accentColor
                 DragAnchors.History -> MaterialTheme.colorScheme.onSurface
             }
 

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.fasttimes.ui.theme.FastTimesPreviewTheme
+import com.fasttimes.ui.theme.FastTimesTheme
 
 @Composable
 fun Timeline(
@@ -33,7 +34,7 @@ fun Timeline(
         ) {
             segments.forEach { segment ->
                 val color = when (segment.type) {
-                    TimelineSegmentType.Fasting -> com.fasttimes.ui.theme.BrandColor
+                    TimelineSegmentType.Fasting -> FastTimesTheme.accentColor
                     TimelineSegmentType.NonFasting -> Color.Gray
                 }
                 Box(

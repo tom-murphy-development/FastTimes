@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fasttimes.data.fast.Fast
+import com.fasttimes.ui.theme.FastTimesTheme
 import java.time.Duration
 import java.time.format.DateTimeFormatter
 
@@ -82,7 +83,7 @@ fun FastingSummaryModal(
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
                             contentDescription = "Goal Reached",
-                            tint = com.fasttimes.ui.theme.BrandColor
+                            tint = FastTimesTheme.accentColor
                         )
                     }
                 }

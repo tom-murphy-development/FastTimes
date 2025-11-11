@@ -23,7 +23,7 @@ class DefaultSettingsRepository @Inject constructor(
         val THEME_KEY = stringPreferencesKey("theme")
         val FASTING_GOAL_KEY = longPreferencesKey("fasting_goal")
         val SEED_COLOR_KEY = longPreferencesKey("seed_color")
-        val BRAND_COLOR_KEY = longPreferencesKey("brand_color")
+        val ACCENT_COLOR_KEY = longPreferencesKey("accent_color")
         val CONFETTI_SHOWN_FOR_FAST_ID = longPreferencesKey("confetti_shown_for_fast_id")
         val SHOW_FAB = booleanPreferencesKey("show_fab")
         val SHOW_LIVE_PROGRESS = booleanPreferencesKey("show_live_progress")
@@ -50,7 +50,7 @@ class DefaultSettingsRepository @Inject constructor(
             val fastingGoalInSeconds = preferences[PreferencesKeys.FASTING_GOAL_KEY] ?: (16 * 60 * 60)
             val fastingGoal = Duration.ofSeconds(fastingGoalInSeconds)
             val seedColor = preferences[PreferencesKeys.SEED_COLOR_KEY]
-            val brandColor = preferences[PreferencesKeys.BRAND_COLOR_KEY]
+            val accentColor = preferences[PreferencesKeys.ACCENT_COLOR_KEY]
             val useWavyIndicator = preferences[PreferencesKeys.USE_WAVY_INDICATOR] ?: true
             val useExpressiveTheme = preferences[PreferencesKeys.USE_EXPRESSIVE_THEME] ?: false
             val useSystemColors = preferences[PreferencesKeys.USE_SYSTEM_COLORS] ?: false
@@ -58,7 +58,7 @@ class DefaultSettingsRepository @Inject constructor(
                 fastingGoal = fastingGoal,
                 theme = theme,
                 seedColor = seedColor,
-                brandColor = brandColor,
+                accentColor = accentColor,
                 useWavyIndicator = useWavyIndicator,
                 useExpressiveTheme = useExpressiveTheme,
                 useSystemColors = useSystemColors
@@ -101,12 +101,12 @@ class DefaultSettingsRepository @Inject constructor(
         dataStore.edit { it.remove(PreferencesKeys.SEED_COLOR_KEY) }
     }
 
-    override suspend fun setBrandColor(color: Long) {
-        dataStore.edit { it[PreferencesKeys.BRAND_COLOR_KEY] = color }
+    override suspend fun setAccentColor(color: Long) {
+        dataStore.edit { it[PreferencesKeys.ACCENT_COLOR_KEY] = color }
     }
 
-    override suspend fun clearBrandColor() {
-        dataStore.edit { it.remove(PreferencesKeys.BRAND_COLOR_KEY) }
+    override suspend fun clearAccentColor() {
+        dataStore.edit { it.remove(PreferencesKeys.ACCENT_COLOR_KEY) }
     }
 
     override val confettiShownForFastId: Flow<Long?> =

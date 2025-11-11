@@ -52,7 +52,7 @@ class SettingsViewModel @Inject constructor(
             showGoalReachedNotification = showGoalReachedNotification,
             theme = theme,
             seedColor = userData.seedColor,
-            brandColor = userData.brandColor,
+            accentColor = userData.accentColor,
             firstDayOfWeek = firstDayOfWeek,
             showFab = showFab,
             useWavyIndicator = userData.useWavyIndicator,
@@ -95,15 +95,15 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun onBrandColorChanged(color: Long) {
+    fun onAccentColorChanged(color: Long) {
         viewModelScope.launch {
-            settingsRepository.setBrandColor(color)
+            settingsRepository.setAccentColor(color)
         }
     }
 
-    fun onClearBrandColor() {
+    fun onClearAccentColor() {
         viewModelScope.launch {
-            settingsRepository.clearBrandColor()
+            settingsRepository.clearAccentColor()
         }
     }
 

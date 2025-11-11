@@ -13,13 +13,13 @@ import com.fasttimes.ui.dashboard.DashboardStats
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
 import com.fasttimes.ui.theme.FastTimesTheme
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import kotlin.time.Duration.Companion.milliseconds
 
 @RunWith(AndroidJUnit4::class)
@@ -31,17 +31,17 @@ class DashboardScreenTest {
 
     @Before
     fun setUp() {
-        mockViewModel = mock()
-        whenever(mockViewModel.stats).thenReturn(MutableStateFlow(DashboardStats()))
-        whenever(mockViewModel.profiles).thenReturn(MutableStateFlow(emptyList()))
-        whenever(mockViewModel.favoriteProfile).thenReturn(MutableStateFlow(null))
-        whenever(mockViewModel.showAlarmPermissionRationale).thenReturn(MutableStateFlow(false))
-        whenever(mockViewModel.completedFast).thenReturn(MutableStateFlow(null))
+        mockViewModel = mockk(relaxed = true)
+        every { mockViewModel.stats } returns (MutableStateFlow(DashboardStats()))
+        every { mockViewModel.profiles } returns (MutableStateFlow(emptyList()))
+        every { mockViewModel.favoriteProfile } returns (MutableStateFlow(null))
+        every { mockViewModel.showAlarmPermissionRationale } returns (MutableStateFlow(false))
+        every { mockViewModel.completedFast } returns (MutableStateFlow(null))
     }
 
     @Test
     fun fab_is_visible_when_no_fast_in_progress() {
-        whenever(mockViewModel.uiState).thenReturn(MutableStateFlow(DashboardUiState.NoFast(
+        every { mockViewModel.uiState } returns (MutableStateFlow(DashboardUiState.NoFast(
             thisWeekFasts = emptyList(),
             lastWeekFasts = emptyList(),
             lastFast = null,
@@ -52,7 +52,7 @@ class DashboardScreenTest {
             FastTimesTheme(
                 theme = AppTheme.LIGHT,
                 seedColor = Color.Blue,
-                brandColor = Color.Blue,
+                accentColor = Color.Blue,
                 useExpressiveTheme = false,
                 useSystemColors = false
             ) {
@@ -77,7 +77,7 @@ class DashboardScreenTest {
             targetDuration = 1000,
             notes = null
         )
-        whenever(mockViewModel.uiState).thenReturn(
+        every { mockViewModel.uiState } returns (
             MutableStateFlow(
                 DashboardUiState.FastingInProgress(
                     activeFast = fast,
@@ -93,7 +93,7 @@ class DashboardScreenTest {
             FastTimesTheme(
                 theme = AppTheme.LIGHT,
                 seedColor = Color.Blue,
-                brandColor = Color.Blue,
+                accentColor = Color.Blue,
                 useExpressiveTheme = false,
                 useSystemColors = false
             ) {
@@ -114,8 +114,8 @@ class DashboardScreenTest {
             FastingProfile(1, "16:8", 16, "desc", true),
             FastingProfile(2, "18:6", 18, "desc2", false)
         )
-        whenever(mockViewModel.profiles).thenReturn(MutableStateFlow(profiles))
-        whenever(mockViewModel.uiState).thenReturn(MutableStateFlow(DashboardUiState.NoFast(
+        every { mockViewModel.profiles } returns (MutableStateFlow(profiles))
+        every { mockViewModel.uiState } returns (MutableStateFlow(DashboardUiState.NoFast(
             thisWeekFasts = emptyList(),
             lastWeekFasts = emptyList(),
             lastFast = null,
@@ -126,7 +126,7 @@ class DashboardScreenTest {
             FastTimesTheme(
                 theme = AppTheme.LIGHT,
                 seedColor = Color.Blue,
-                brandColor = Color.Blue,
+                accentColor = Color.Blue,
                 useExpressiveTheme = false,
                 useSystemColors = false
             ) {

@@ -2,8 +2,6 @@ package com.fasttimes.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val BrandColor = Color(0xFF3DDC84)
-
 internal val accentColors = listOf(
     Color(0xFF3DDC84),
     Color(0xFFFFBE0B),

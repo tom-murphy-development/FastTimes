@@ -168,7 +168,7 @@ class DashboardViewModel @Inject constructor(
                 val now = System.currentTimeMillis()
                 val startTime = activeFast.startTime
 
-                if (activeFast.profileName == "Manual") {
+                if (activeFast.targetDuration == null) {
                     val elapsedTime = (now - startTime).milliseconds
                     DashboardUiState.ManualFasting(
                         activeFast,
@@ -177,7 +177,7 @@ class DashboardViewModel @Inject constructor(
                         data.userData.useWavyIndicator
                     )
                 } else {
-                    val targetDuration = activeFast.targetDuration?.milliseconds ?: Duration.ZERO
+                    val targetDuration = activeFast.targetDuration.milliseconds
                     val targetEndTime = startTime + targetDuration.inWholeMilliseconds
 
                     if (now >= targetEndTime) {

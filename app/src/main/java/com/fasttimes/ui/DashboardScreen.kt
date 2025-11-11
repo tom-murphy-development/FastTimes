@@ -408,9 +408,9 @@ fun DashboardScreen(
                                 rememberInfiniteTransition(label = "pulsating_ring")
                             val scale by infiniteTransition.animateFloat(
                                 initialValue = 1f,
-                                targetValue = 1.05f,
+                                targetValue = 1.08f,
                                 animationSpec = infiniteRepeatable(
-                                    animation = tween(1500, easing = LinearEasing),
+                                    animation = tween(3000, easing = LinearEasing),
                                     repeatMode = RepeatMode.Reverse
                                 ),
                                 label = "pulsating_scale"

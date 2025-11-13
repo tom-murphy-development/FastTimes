@@ -1,6 +1,7 @@
 package com.fasttimes.ui.settings
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -14,17 +15,30 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,14 +58,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.AppTheme
 import com.fasttimes.ui.theme.FastTimesTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Suppress("UNUSED_ASSIGNMENT")
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
@@ -164,6 +182,17 @@ fun SettingsScreen(
             }
         )
     }
+    val sectionModifier = Modifier
+        .padding(horizontal = 16.dp, vertical = 8.dp)
+        .clip(MaterialTheme.shapes.extraLarge)
+        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+
+    val settingsRowModifier = Modifier
+        .fillMaxWidth()
+        .height(64.dp)
+        .padding(horizontal = 16.dp)
+
+    val settingsTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -184,124 +213,136 @@ fun SettingsScreen(
         Column(modifier = Modifier.padding(paddingValues)) {
             // Appearance Section
             SettingsHeader(title = "Appearance")
-            ThemeSetting(
-                selectedTheme = uiState.theme,
-                onThemeChanged = viewModel::onThemeChanged,
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onAccentColorClick() }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = sectionModifier
             ) {
-                Text(text = "Accent Color", style = MaterialTheme.typography.bodyLarge)
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .background(color = FastTimesTheme.accentColor, shape = CircleShape)
+                ThemeSetting(
+                    selectedTheme = uiState.theme,
+                    onThemeChanged = viewModel::onThemeChanged,
                 )
-            }
-            FirstDayOfWeekSetting(
-                selectedFirstDayOfWeek = uiState.firstDayOfWeek,
-                onFirstDayOfWeekChanged = viewModel::onFirstDayOfWeekChanged
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Show Floating Action Button", style = MaterialTheme.typography.bodyLarge)
-                Switch(
-                    checked = uiState.showFab,
-                    onCheckedChange = viewModel::onShowFabChanged
+                SettingsDivider()
+                Row(
+                    modifier = settingsRowModifier.clickable { onAccentColorClick() },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = Icons.Default.ColorLens, contentDescription = null)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(text = "Color Scheme", style = settingsTextStyle)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(color = FastTimesTheme.accentColor, shape = CircleShape)
+                    )
+                }
+                SettingsDivider()
+                FirstDayOfWeekSetting(
+                    selectedFirstDayOfWeek = uiState.firstDayOfWeek,
+                    onFirstDayOfWeekChanged = viewModel::onFirstDayOfWeekChanged
                 )
+                SettingsDivider()
+                Row(
+                    modifier = settingsRowModifier,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = Icons.Default.AddCircle, contentDescription = null)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(text = "Show Floating Action Button", style = settingsTextStyle)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = uiState.showFab,
+                        onCheckedChange = viewModel::onShowFabChanged
+                    )
+                }
+                SettingsDivider()
+                Row(
+                    modifier = settingsRowModifier,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = Icons.Default.CheckCircleOutline, contentDescription = null)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(text = "Use Expressive Progress Indicator", style = settingsTextStyle)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = uiState.useWavyIndicator,
+                        onCheckedChange = viewModel::onUseWavyIndicatorChanged
+                    )
+                }
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Use Expressive Progress Indicator", style = MaterialTheme.typography.bodyLarge)
-                Switch(
-                    checked = uiState.useWavyIndicator,
-                    onCheckedChange = viewModel::onUseWavyIndicatorChanged
-                )
-            }
-
-            HorizontalDivider()
 
             // Notifications Section
             SettingsHeader(title = "Notifications")
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = sectionModifier
             ) {
-                Text(text = "Show live fast progress", style = MaterialTheme.typography.bodyLarge)
-                Switch(
-                    checked = uiState.showLiveProgress,
-                    onCheckedChange = { show ->
-                        if (show) {
-                            handlePermission { viewModel.onShowLiveProgressChanged(true) }
-                        } else {
-                            viewModel.onShowLiveProgressChanged(false)
+                Row(
+                    modifier = settingsRowModifier,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = Icons.Default.Timelapse, contentDescription = null)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(text = "Show live progress notification", style = settingsTextStyle)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = uiState.showLiveProgress,
+                        onCheckedChange = { show ->
+                            if (show) {
+                                handlePermission { viewModel.onShowLiveProgressChanged(true) }
+                            } else {
+                                viewModel.onShowLiveProgressChanged(false)
+                            }
                         }
-                    }
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Goal reached notification", style = MaterialTheme.typography.bodyLarge)
-                Switch(
-                    checked = uiState.showGoalReachedNotification,
-                    onCheckedChange = { show ->
-                        if (show) {
-                            handlePermission { viewModel.onShowGoalReachedNotificationChanged(true) }
-                        } else {
-                            viewModel.onShowGoalReachedNotificationChanged(false)
+                    )
+                }
+                SettingsDivider()
+                Row(
+                    modifier = settingsRowModifier,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(text = "Goal reached notification", style = settingsTextStyle)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = uiState.showGoalReachedNotification,
+                        onCheckedChange = { show ->
+                            if (show) {
+                                handlePermission { viewModel.onShowGoalReachedNotificationChanged(true) }
+                            } else {
+                                viewModel.onShowGoalReachedNotificationChanged(false)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
-
-            HorizontalDivider()
 
             // Data Management Section
             SettingsHeader(title = "Data Management")
+            Column(
+                modifier = sectionModifier
+            ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { exportLauncher.launch("fasts.json") }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = settingsRowModifier.clickable { exportLauncher.launch("fasts.json") },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Export Data", style = MaterialTheme.typography.bodyLarge)
+                Icon(imageVector = Icons.Default.FileDownload, contentDescription = null)
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(text = "Export Data", style = settingsTextStyle)
+                Spacer(modifier = Modifier.weight(1f))
             }
+                SettingsDivider()
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { importLauncher.launch(arrayOf("application/json")) }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = settingsRowModifier.clickable { importLauncher.launch(arrayOf("application/json")) },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Import Data", style = MaterialTheme.typography.bodyLarge)
+                Icon(imageVector = Icons.Default.UploadFile, contentDescription = null)
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(text = "Import Data", style = settingsTextStyle)
+                Spacer(modifier = Modifier.weight(1f))
             }
-        }
+        }}
     }
 }
 
@@ -309,12 +350,13 @@ fun SettingsScreen(
 private fun SettingsHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.labelLarge,
+        style = MaterialTheme.typography.headlineSmall,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ThemeSetting(
     selectedTheme: AppTheme,
@@ -323,19 +365,25 @@ private fun ThemeSetting(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    val settingsTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .height(64.dp)
             .clickable(onClick = { expanded = true })
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.CenterStart
 
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Theme", style = MaterialTheme.typography.bodyLarge)
+            Icon(imageVector = Icons.Default.Palette, contentDescription = null)
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("Theme", style = settingsTextStyle)
+            Spacer(modifier = Modifier.weight(1f))
             Text(selectedTheme.name.lowercase().replaceFirstChar { it.uppercase() })
         }
 
@@ -346,7 +394,7 @@ private fun ThemeSetting(
         ) {
             AppTheme.entries.forEach { theme ->
                 DropdownMenuItem(
-                    text = { Text(text = theme.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                    text = { Text(text = theme.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelLarge) },
                     onClick = {
                         onThemeChanged(theme)
                         expanded = false
@@ -365,20 +413,25 @@ private fun FirstDayOfWeekSetting(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val days = listOf("Sunday", "Monday")
+    val settingsTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .height(64.dp)
             .clickable(onClick = { expanded = true })
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.CenterStart
 
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("First Day of Week", style = MaterialTheme.typography.bodyLarge)
+            Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null)
+            Spacer(modifier = Modifier.width(16.dp))
+            Text("First Day of Week", style = settingsTextStyle)
+            Spacer(modifier = Modifier.weight(1f))
             Text(selectedFirstDayOfWeek)
         }
 
@@ -389,7 +442,7 @@ private fun FirstDayOfWeekSetting(
         ) {
             days.forEach { day ->
                 DropdownMenuItem(
-                    text = { Text(text = day) },
+                    text = { Text(day, style = MaterialTheme.typography.labelLarge) },
                     onClick = {
                         onFirstDayOfWeekChanged(day)
                         expanded = false
@@ -398,4 +451,13 @@ private fun FirstDayOfWeekSetting(
             }
         }
     }
+}
+
+@Composable
+private fun SettingsDivider() {
+    HorizontalDivider(
+        modifier = Modifier.height(5.dp),
+        color = MaterialTheme.colorScheme.surface,
+        thickness = 2.dp
+    )
 }

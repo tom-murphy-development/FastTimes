@@ -11,6 +11,7 @@ material = "1.13.0"
 material3 = "material3-*:1.5.0-alpha07"
 serialization = "1.9.0"
 materialKolor = "4.0.3"
+spotless = "6.23.3"
 
 
 # AndroidX Core Libraries
@@ -52,6 +53,7 @@ androidx-splashscreen = { group = "androidx.core", name = "core-splashscreen", v
 
 # Compose
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 compose-ui = { group = "androidx.compose.ui", name = "ui" }
 compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
@@ -106,3 +108,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version = "2.2.20-2.0.4" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

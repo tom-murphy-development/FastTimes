@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.spotless)
 }
 
 ksp {
@@ -23,9 +24,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-
-
     }
 
     buildTypes {
@@ -73,6 +71,13 @@ kotlin {
     }
 }
 
+spotless {
+    kotlin {
+        target("**/*.kt")
+        licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
+    }
+}
+
 dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.androidx.core.ktx)
@@ -105,6 +110,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation("androidx.compose.material3:material3:1.5.0-alpha08")
     implementation("com.materialkolor:material-kolor:5.0.0-alpha01")
+    implementation(libs.compose.runtime)
 
     // Testing
     testImplementation(libs.junit)
@@ -118,5 +124,4 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom.beta))
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation(libs.mockk)
-
 }

@@ -50,5 +50,13 @@ app/src/main/java/com/fasttimes/
 - Use MVVM and Hilt for architecture and DI.
 - Submit a pull request with a clear description.
 
+## Donate
+Help support the ongoing development of FastTimes through:
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/tommurphydp)
+
+Special thanks to the following sponsors!
+<!-- sponsors --><!-- sponsors -->
+
 ## License
 This project is licensed under the **GNU General Public License v3.0**. See [LICENSE](LICENSE) for details.

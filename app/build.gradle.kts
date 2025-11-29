@@ -73,7 +73,7 @@ kotlin {
 
 spotless {
     kotlin {
-        target("**/*.kt")
+        target("src/**/*.kt")
         licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
     }
 }

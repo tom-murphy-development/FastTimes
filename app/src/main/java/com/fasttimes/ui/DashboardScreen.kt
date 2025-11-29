@@ -17,6 +17,8 @@
 package com.fasttimes.ui
 
 import android.Manifest
+import android.app.AlarmManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -211,19 +213,26 @@ fun DashboardScreen(
     }
 
     if (showAlarmPermissionRationale) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
         AlertDialog(
-            onDismissRequest = onDismissAlarmPermissionRationale,
-            title = { Text("Permission Required") },
-            text = { Text("To ensure you\'re notified when your fast is complete, the app needs permission to post notifications and schedule exact alarms. This is only used to show a notification when the timer ends.") },
+            onDismissRequest = onDismissAlarmPermissionRationale,            title = { Text("Permission Required") },
+            text = { Text("To ensure you're notified when your fast is complete, the app needs permission to post notifications and schedule exact alarms. This is only used to show a notification when the timer ends.") },
             confirmButton = {
                 Button(onClick = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        // On Android 13+, ask for notifications first.
+                        // The launcher callback handles the Exact Alarm check.
                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
+                        // On Android 12 (S/S_V2), notifications are implicit, but we might need Exact Alarm.
+                        // Only send to settings if we don't have it.
+                        if (!alarmManager.canScheduleExactAlarms()) {
+                            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+                            context.startActivity(intent)
                         }
-                        context.startActivity(intent)
                     }
                     onDismissAlarmPermissionRationale()
                 }) {

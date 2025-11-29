@@ -16,10 +16,13 @@
  */
 package com.fasttimes.ui.dashboard
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.Application
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasttimes.alarms.AlarmScheduler
@@ -236,6 +239,9 @@ class DashboardViewModel @Inject constructor(
     val showAlarmPermissionRationale: StateFlow<Boolean> =
         _showAlarmPermissionRationale.asStateFlow()
 
+    val showGoalReachedNotification: StateFlow<Boolean> = settingsRepository.showGoalReachedNotification
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     fun onConfettiShown(fastId: Long) {
         viewModelScope.launch {
             settingsRepository.setConfettiShownForFastId(fastId)
@@ -260,6 +266,22 @@ class DashboardViewModel @Inject constructor(
 
     fun startManualFast() {
         viewModelScope.launch {
+            val showLiveProgress = settingsRepository.showLiveProgress.first()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (showLiveProgress) {
+                    val hasNotificationPermission = ContextCompat.checkSelfPermission(
+                        application,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    if (!hasNotificationPermission) {
+                        _showAlarmPermissionRationale.value = true
+                        return@launch
+                    }
+                }
+            }
+
             val fast = Fast(
                 startTime = System.currentTimeMillis(),
                 profileName = DefaultFastingProfile.MANUAL.displayName,
@@ -274,7 +296,24 @@ class DashboardViewModel @Inject constructor(
 
     fun startProfileFast(profile: FastingProfile) {
         viewModelScope.launch {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            val showGoalReached = settingsRepository.showGoalReachedNotification.first()
+            val showLiveProgress = settingsRepository.showLiveProgress.first()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (showGoalReached || showLiveProgress) {
+                    val hasNotificationPermission = ContextCompat.checkSelfPermission(
+                        application,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                    if (!hasNotificationPermission) {
+                        _showAlarmPermissionRationale.value = true
+                        return@launch
+                    }
+                }
+            }
+
+            if (showGoalReached && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
                 _showAlarmPermissionRationale.value = true
                 return@launch
             }

@@ -69,7 +69,7 @@ class DefaultSettingsRepository @Inject constructor(
             val accentColor = preferences[PreferencesKeys.ACCENT_COLOR_KEY]
             val useWavyIndicator = preferences[PreferencesKeys.USE_WAVY_INDICATOR] ?: true
             val useExpressiveTheme = preferences[PreferencesKeys.USE_EXPRESSIVE_THEME] ?: false
-            val useSystemColors = preferences[PreferencesKeys.USE_SYSTEM_COLORS] ?: false
+            val useSystemColors = preferences[PreferencesKeys.USE_SYSTEM_COLORS] ?: true
             UserData(
                 fastingGoal = fastingGoal,
                 theme = theme,
@@ -133,7 +133,7 @@ class DefaultSettingsRepository @Inject constructor(
     }
 
     override val firstDayOfWeek: Flow<String> =
-        safeDataStoreData.map { it[PreferencesKeys.FIRST_DAY_OF_WEEK] ?: "Sunday" }
+        safeDataStoreData.map { it[PreferencesKeys.FIRST_DAY_OF_WEEK] ?: "Monday" }
 
     override suspend fun setFirstDayOfWeek(day: String) {
         dataStore.edit { it[PreferencesKeys.FIRST_DAY_OF_WEEK] = day }

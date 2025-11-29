@@ -19,7 +19,6 @@ package com.fasttimes.data
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Represents the different types of fasting profiles available in the app.
@@ -63,16 +62,6 @@ enum class DefaultFastingProfile(
         duration = 24.hours,
         displayName = "24-Hour Fast",
         description = "A full day fast, typically done once or twice a week. Involves fasting for 24 hours straight."
-    ),
-    TEST_TIMER(
-        duration = 10.seconds,
-        displayName = "Test Timer",
-        description = "A short-duration fast for testing purposes."
-    ),
-    ONE_HOUR_TIMER(
-        duration = 1.hours,
-        displayName = "Test 1 Hour",
-        description = "A short-duration fast for testing purposes."
     );
 
     companion object {

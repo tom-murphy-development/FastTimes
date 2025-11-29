@@ -27,7 +27,6 @@ import com.fasttimes.data.AppTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import java.io.IOException
 import java.time.Duration
 import javax.inject.Inject
 
@@ -51,14 +50,15 @@ class DefaultSettingsRepository @Inject constructor(
         val USE_SYSTEM_COLORS = booleanPreferencesKey("use_system_colors")
     }
 
-    override val userData: Flow<UserData> = dataStore.data
+    // Centralized safe flow access to handle DataStore corruption/decryption errors
+    private val safeDataStoreData: Flow<Preferences> = dataStore.data
         .catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
+            // Catch all exceptions (including BadPaddingException) and emit empty preferences
+            // This allows the app to reset/recover instead of crashing.
+            emit(emptyPreferences())
         }
+
+    override val userData: Flow<UserData> = safeDataStoreData
         .map { preferences ->
             val themeName = preferences[PreferencesKeys.THEME_KEY] ?: AppTheme.SYSTEM.name
             val theme = AppTheme.valueOf(themeName)
@@ -82,28 +82,28 @@ class DefaultSettingsRepository @Inject constructor(
         }
 
     override val showLiveProgress: Flow<Boolean> =
-        dataStore.data.map { it[PreferencesKeys.SHOW_LIVE_PROGRESS] ?: false }
+        safeDataStoreData.map { it[PreferencesKeys.SHOW_LIVE_PROGRESS] ?: false }
 
     override suspend fun setShowLiveProgress(show: Boolean) {
         dataStore.edit { it[PreferencesKeys.SHOW_LIVE_PROGRESS] = show }
     }
 
     override val showDashboardFab: Flow<Boolean> =
-        dataStore.data.map { it[PreferencesKeys.SHOW_DASHBOARD_FAB] ?: true }
+        safeDataStoreData.map { it[PreferencesKeys.SHOW_DASHBOARD_FAB] ?: true }
 
     override suspend fun setShowDashboardFab(show: Boolean) {
         dataStore.edit { it[PreferencesKeys.SHOW_DASHBOARD_FAB] = show }
     }
 
     override val showGoalReachedNotification: Flow<Boolean> =
-        dataStore.data.map { it[PreferencesKeys.SHOW_GOAL_REACHED_NOTIFICATION] ?: true }
+        safeDataStoreData.map { it[PreferencesKeys.SHOW_GOAL_REACHED_NOTIFICATION] ?: true }
 
     override suspend fun setShowGoalReachedNotification(show: Boolean) {
         dataStore.edit { it[PreferencesKeys.SHOW_GOAL_REACHED_NOTIFICATION] = show }
     }
 
     override val theme: Flow<AppTheme> =
-        dataStore.data.map { AppTheme.valueOf(it[PreferencesKeys.THEME_KEY] ?: AppTheme.SYSTEM.name) }
+        safeDataStoreData.map { AppTheme.valueOf(it[PreferencesKeys.THEME_KEY] ?: AppTheme.SYSTEM.name) }
 
     override suspend fun setTheme(theme: AppTheme) {
         dataStore.edit { it[PreferencesKeys.THEME_KEY] = theme.name }
@@ -126,21 +126,21 @@ class DefaultSettingsRepository @Inject constructor(
     }
 
     override val confettiShownForFastId: Flow<Long?> =
-        dataStore.data.map { it[PreferencesKeys.CONFETTI_SHOWN_FOR_FAST_ID] }
+        safeDataStoreData.map { it[PreferencesKeys.CONFETTI_SHOWN_FOR_FAST_ID] }
 
     override suspend fun setConfettiShownForFastId(fastId: Long) {
         dataStore.edit { it[PreferencesKeys.CONFETTI_SHOWN_FOR_FAST_ID] = fastId }
     }
 
     override val firstDayOfWeek: Flow<String> =
-        dataStore.data.map { it[PreferencesKeys.FIRST_DAY_OF_WEEK] ?: "Sunday" }
+        safeDataStoreData.map { it[PreferencesKeys.FIRST_DAY_OF_WEEK] ?: "Sunday" }
 
     override suspend fun setFirstDayOfWeek(day: String) {
         dataStore.edit { it[PreferencesKeys.FIRST_DAY_OF_WEEK] = day }
     }
 
     override val showFab: Flow<Boolean> =
-        dataStore.data.map { it[PreferencesKeys.SHOW_FAB] ?: true }
+        safeDataStoreData.map { it[PreferencesKeys.SHOW_FAB] ?: true }
 
     override suspend fun setShowFab(show: Boolean) {
         dataStore.edit { it[PreferencesKeys.SHOW_FAB] = show }

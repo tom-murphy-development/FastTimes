@@ -18,7 +18,9 @@ package com.fasttimes.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.fasttimes.data.AppDatabase
@@ -26,6 +28,7 @@ import com.fasttimes.data.AppDatabase.Companion.MIGRATION_4_5
 import com.fasttimes.data.AppDatabaseCallback
 import com.fasttimes.data.fast.FastDao
 import com.fasttimes.data.profile.FastingProfileDao
+import com.fasttimes.data.profile.FastingProfileProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -46,7 +49,12 @@ annotation class ApplicationScope
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+        name = "user_preferences",
+        corruptionHandler = ReplaceFileCorruptionHandler {
+            emptyPreferences()
+        }
+    )
 
     @Provides
     @Singleton
@@ -82,6 +90,7 @@ object AppModule {
     @Singleton
     fun provideAppDatabaseCallback(
         fastingProfileDao: Provider<FastingProfileDao>,
-        @ApplicationScope applicationScope: CoroutineScope
-    ): AppDatabaseCallback = AppDatabaseCallback(fastingProfileDao, applicationScope)
+        @ApplicationScope applicationScope: CoroutineScope,
+        fastingProfileProvider: FastingProfileProvider
+    ): AppDatabaseCallback = AppDatabaseCallback(fastingProfileDao, applicationScope, fastingProfileProvider)
 }

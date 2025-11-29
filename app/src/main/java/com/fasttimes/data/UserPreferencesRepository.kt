@@ -26,7 +26,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import java.io.IOException
 import java.time.Duration
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -55,11 +54,10 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
 
     val userData: Flow<UserData> = dataStore.data
         .catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
+            // DataStore issues, including BadPaddingException (decryption failure), will be caught here.
+            // The corruptionHandler in AppModule should ideally handle file corruption/replacement,
+            // but this catch block prevents the app from crashing during flow collection.
+            emit(emptyPreferences())
         }
         .map { preferences ->
             val themeName = preferences[PreferencesKeys.THEME_KEY] ?: Theme.SYSTEM.name

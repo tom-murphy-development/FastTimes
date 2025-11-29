@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -26,10 +29,51 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                val properties = Properties()
+                properties.load(FileInputStream(keystorePropertiesFile))
+                storeFile = rootProject.file(properties.getProperty("storeFile"))
+                storePassword = properties.getProperty("storePassword")
+                keyAlias = properties.getProperty("keyAlias")
+                keyPassword = properties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
-        release {
+        // 1. DEBUG
+        getByName("debug") {
+            // Adds .debug to the package name so it can be installed alongside release
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-DEBUG"
+            // Debug builds are not minified to speed up compilation
+            isMinifyEnabled = false
+        }
+        // 2. BETA (New)
+        create("beta") {
+            // Inherit all settings from 'release' (minification, optimization, etc.)
+            initWith(getByName("release"))
+
+            // Distinct ID so it can exist alongside Debug and Release
+            applicationIdSuffix = ".beta"
+
+            // Distinct version name
+            versionNameSuffix = "-BETA"
+
+            // Use the release signing key (standard practice for Beta)
+            signingConfig = signingConfigs.getByName("release")
+
+            // Fallback: If a library dependency doesn't have a "beta" variant, use "release"
+            matchingFallbacks += listOf("release")
+        }
+        // 3. RELEASE (Stable)
+        getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

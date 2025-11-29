@@ -20,17 +20,22 @@ import android.app.AlarmManager
 import android.app.Application
 import app.cash.turbine.test
 import com.fasttimes.alarms.AlarmScheduler
+import com.fasttimes.data.AppTheme
 import com.fasttimes.data.DefaultFastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastsRepository
 import com.fasttimes.data.profile.FastingProfileRepository
 import com.fasttimes.data.settings.SettingsRepository
+import com.fasttimes.data.settings.UserData
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -38,6 +43,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.time.Duration
 import kotlin.time.Duration.Companion.hours
 
 @ExperimentalCoroutinesApi
@@ -68,6 +74,17 @@ class DashboardViewModelTest {
         every { settingsRepository.showLiveProgress } returns flowOf(true)
         every { settingsRepository.confettiShownForFastId } returns flowOf(0)
         every { settingsRepository.showFab } returns flowOf(true)
+        every { settingsRepository.userData } returns flowOf(
+            UserData(
+                fastingGoal = Duration.ofHours(16),
+                theme = AppTheme.SYSTEM,
+                seedColor = null,
+                accentColor = null,
+                useWavyIndicator = false,
+                useExpressiveTheme = false,
+                useSystemColors = false
+            )
+        )
         every { fastingProfileRepository.getProfiles() } returns flowOf(emptyList())
 
 
@@ -83,6 +100,8 @@ class DashboardViewModelTest {
 
     @Test
     fun `startManualFast inserts new fast`() = runTest {
+        every { settingsRepository.showLiveProgress } returns flowOf(false) // Disable service start to avoid Intent mock issue
+
         viewModel.startManualFast()
         advanceUntilIdle()
         coVerify { fastsRepository.insertFast(any()) }
@@ -99,6 +118,7 @@ class DashboardViewModelTest {
             notes = null
         )
         every { fastsRepository.getFasts() } returns flowOf(listOf(fast))
+        every { settingsRepository.showLiveProgress } returns flowOf(false) // Disable service start
 
         viewModel = DashboardViewModel(
             fastsRepository,
@@ -109,10 +129,19 @@ class DashboardViewModelTest {
             application
         )
 
+        // Collect in backgroundScope to keep the subscription active but cancel it automatically at end of test.
+        // Use UnconfinedTestDispatcher to eagerly emit the first value.
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect()
+        }
+        
+        // Ensure the UI state has emitted its initial value derived from the flow
+        // (runCurrent works because Unconfined executes eagerly, but this ensures safety)
         runCurrent()
 
         viewModel.endCurrentFast()
 
+        // Execute the viewModelScope.launch block triggered by endCurrentFast
         runCurrent()
 
         coVerify { fastsRepository.endFast(fast.id, any()) }
@@ -138,10 +167,14 @@ class DashboardViewModelTest {
             application
         )
 
-        advanceUntilIdle()
+        // Note: no need to advanceUntilIdle() here because turbine subscribes and triggers the flow
 
         viewModel.stats.test {
-            val stats = awaitItem()
+            // The StateFlow will emit its initial value (default/empty) immediately upon subscription.
+            // We need to check if the first item is the one we want, or wait for the next one.
+            val firstItem = awaitItem()
+            val stats = if (firstItem.totalFasts == 0) awaitItem() else firstItem
+
             assertEquals(2, stats.totalFasts)
             assertEquals(6.hours, stats.totalFastingTime)
             assertEquals(fasts[1], stats.longestFast)

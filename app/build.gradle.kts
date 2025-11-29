@@ -39,37 +39,28 @@ android {
                 storePassword = properties.getProperty("storePassword")
                 keyAlias = properties.getProperty("keyAlias")
                 keyPassword = properties.getProperty("keyPassword")
+            } else if (System.getenv("RELEASE_KEYSTORE_PATH") != null) {
+                storeFile = rootProject.file(System.getenv("RELEASE_KEYSTORE_PATH"))
+                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
             }
         }
     }
 
     buildTypes {
-        // 1. DEBUG
         getByName("debug") {
-            // Adds .debug to the package name so it can be installed alongside release
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
-            // Debug builds are not minified to speed up compilation
             isMinifyEnabled = false
         }
-        // 2. BETA (New)
         create("beta") {
-            // Inherit all settings from 'release' (minification, optimization, etc.)
             initWith(getByName("release"))
-
-            // Distinct ID so it can exist alongside Debug and Release
             applicationIdSuffix = ".beta"
-
-            // Distinct version name
             versionNameSuffix = "-BETA"
-
-            // Use the release signing key (standard practice for Beta)
             signingConfig = signingConfigs.getByName("release")
-
-            // Fallback: If a library dependency doesn't have a "beta" variant, use "release"
             matchingFallbacks += listOf("release")
         }
-        // 3. RELEASE (Stable)
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true

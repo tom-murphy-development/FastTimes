@@ -30,6 +30,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,7 +38,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddCircle
@@ -51,6 +54,7 @@ import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -208,7 +212,7 @@ fun SettingsScreen(
         .height(64.dp)
         .padding(horizontal = 16.dp)
 
-    val settingsTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+    val settingsTextStyle = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -226,7 +230,10 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
+        Column(modifier = Modifier
+            .padding(paddingValues)
+            .verticalScroll(rememberScrollState())
+        ) {
             // Appearance Section
             SettingsHeader(title = "Appearance")
             Column(
@@ -335,30 +342,42 @@ fun SettingsScreen(
             // Data Management Section
             SettingsHeader(title = "Data Management")
             Column(
-                modifier = sectionModifier
+                modifier = sectionModifier.fillMaxWidth()
             ) {
-            Row(
-                modifier = settingsRowModifier.clickable { exportLauncher.launch("fasts.json") },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(imageVector = Icons.Default.FileDownload, contentDescription = null)
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(text = "Export Data", style = settingsTextStyle)
-                Spacer(modifier = Modifier.weight(1f))
+                FlowRow(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val buttonColors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+
+                    Button(
+                        onClick = { exportLauncher.launch("fasts.json") },
+                        colors = buttonColors
+                    ) {
+                        Icon(imageVector = Icons.Default.FileDownload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Export Data")
+                    }
+
+                    Button(
+                        onClick = { importLauncher.launch(arrayOf("application/json")) },
+                        colors = buttonColors
+                    ) {
+                        Icon(imageVector = Icons.Default.UploadFile, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Import Data")
+                    }
+                }
             }
-                SettingsDivider()
-            Row(
-                modifier = settingsRowModifier.clickable { importLauncher.launch(arrayOf("application/json")) },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(imageVector = Icons.Default.UploadFile, contentDescription = null)
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(text = "Import Data", style = settingsTextStyle)
-                Spacer(modifier = Modifier.weight(1f))
-            }
-        }}
+            AboutCard(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
 }
 
@@ -366,7 +385,7 @@ fun SettingsScreen(
 private fun SettingsHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.headlineSmall,
+        style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     )
@@ -381,7 +400,7 @@ private fun ThemeSetting(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    val settingsTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+    val settingsTextStyle = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
 
     Box(
         modifier = modifier
@@ -429,7 +448,7 @@ private fun FirstDayOfWeekSetting(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val days = listOf("Sunday", "Monday")
-    val settingsTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+    val settingsTextStyle = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
 
     Box(
         modifier = modifier

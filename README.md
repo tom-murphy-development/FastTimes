@@ -4,7 +4,7 @@ A simple Open Source Android fasting timer and tracking app.
 
 ## Screenshots
 
-<p width="100%">
+<p width="100%" align="center">
   <img src="docs/screenshots/dashboard_light_1.png" width="30%" alt="">
   <img src="docs/screenshots/dashboard_dark_2.png" width="30%" alt="">
   <img src="docs/screenshots/fasting_dark_3.png" width="30%" alt="">

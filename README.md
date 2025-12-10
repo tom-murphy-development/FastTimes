@@ -2,6 +2,19 @@
 
 A simple Open Source Android fasting timer and tracking app.
 
+## Screenshots
+
+<p width="100%">
+  <img src="docs/screenshots/dashboard_light_1.png" width="30%" alt="">
+  <img src="docs/screenshots/dashboard_dark_2.png" width="30%" alt="">
+  <img src="docs/screenshots/fasting_dark_3.png" width="30%" alt="">
+  <img src="docs/screenshots/fasting_complete_light_4.png" width="30%" alt="">
+  <img src="docs/screenshots/fasting_history_dark_5.png" width="30%" alt="">
+  <img src="docs/screenshots/fasting_details_dark_6.png" width="30%" alt="">
+  <img src="docs/screenshots/settings_dark_7.png" width="30%" alt="">
+</p>
+
+
 ## Features
 - **Fasting Timer**: Start and stop fasts with persistent notification support.
 - **Customizable Goals**: Set your fasting duration (e.g., 16:8, 20:4, custom).

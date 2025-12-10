@@ -89,14 +89,14 @@ fun StatisticTile(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null, // Decorative icon
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(24.dp),
                 tint = contentColor
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -107,7 +107,7 @@ fun StatisticTile(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
             if (description != null) {
                 Spacer(modifier = Modifier.height(8.dp))

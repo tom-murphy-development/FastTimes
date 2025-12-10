@@ -89,7 +89,7 @@ import com.fasttimes.ui.theme.FastTimesTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Suppress("UNUSED_ASSIGNMENT")
+@Suppress("UNUSED_ASSIGNMENT", "UNUSED_VALUE")
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
@@ -209,7 +209,7 @@ fun SettingsScreen(
 
     val settingsRowModifier = Modifier
         .fillMaxWidth()
-        .height(64.dp)
+        .height(56.dp)
         .padding(horizontal = 16.dp)
 
     val settingsTextStyle = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
@@ -405,7 +405,7 @@ private fun ThemeSetting(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(56.dp)
             .clickable(onClick = { expanded = true })
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
@@ -453,7 +453,7 @@ private fun FirstDayOfWeekSetting(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(56.dp)
             .clickable(onClick = { expanded = true })
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart

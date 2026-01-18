@@ -72,8 +72,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -83,6 +81,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -226,8 +227,8 @@ fun SettingsScreen(
 
     val sectionModifier = Modifier
         .padding(horizontal = 16.dp, vertical = 8.dp)
-        .clip(MaterialTheme.shapes.extraLarge)
-        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+        .clip(RoundedCornerShape(20.dp))
+        .background(MaterialTheme.colorScheme.surfaceContainer)
 
     val settingsRowModifier = Modifier
         .fillMaxWidth()
@@ -641,48 +642,35 @@ private fun ThemeColorOption(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FirstDayOfWeekSetting(
     selectedFirstDayOfWeek: String,
     onFirstDayOfWeekChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val days = listOf("Sunday", "Monday")
+    val options = listOf("Sunday", "Monday")
     val settingsTextStyle = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
 
-    Box(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
-            .clickable(onClick = { expanded = true })
             .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart
-
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null)
-            Spacer(modifier = Modifier.width(16.dp))
-            Text("First Day of Week", style = settingsTextStyle)
-            Spacer(modifier = Modifier.weight(1f))
-            Text(selectedFirstDayOfWeek)
-        }
+        Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null)
+        Spacer(modifier = Modifier.width(16.dp))
+        Text("First Day of Week", style = settingsTextStyle)
+        Spacer(modifier = Modifier.weight(1f))
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            days.forEach { day ->
-                DropdownMenuItem(
-                    text = { Text(day, style = MaterialTheme.typography.labelLarge) },
-                    onClick = {
-                        onFirstDayOfWeekChanged(day)
-                        expanded = false
-                    }
+        SingleChoiceSegmentedButtonRow {
+            options.forEachIndexed { index, label ->
+                SegmentedButton(
+                    shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                    onClick = { onFirstDayOfWeekChanged(label) },
+                    selected = selectedFirstDayOfWeek == label,
+                    label = { Text(label.take(3)) }
                 )
             }
         }

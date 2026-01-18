@@ -1,6 +1,6 @@
 [versions]
 # Gradle & Kotlin
-agp = "8.13.1"  # Using stable version of AGP
+agp = "8.13.2"  # Using stable version of AGP
 kotlin = "2.2.21"  # Matching Kotlin version with Compose compiler
 composeCompilerVersion = "1.5.3"
 konfetti = "2.0.5"

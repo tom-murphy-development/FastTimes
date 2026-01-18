@@ -25,12 +25,21 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,30 +47,40 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CheckCircleOutline
-import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.Colorize
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -69,6 +88,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -79,17 +99,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.data.AppTheme
-import com.fasttimes.ui.theme.FastTimesTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Suppress("UNUSED_ASSIGNMENT", "UNUSED_VALUE")
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
@@ -202,6 +223,7 @@ fun SettingsScreen(
             }
         )
     }
+
     val sectionModifier = Modifier
         .padding(horizontal = 16.dp, vertical = 8.dp)
         .clip(MaterialTheme.shapes.extraLarge)
@@ -236,29 +258,25 @@ fun SettingsScreen(
         ) {
             // Appearance Section
             SettingsHeader(title = "Appearance")
+
+            ThemeSelectionCard(
+                selectedTheme = uiState.theme,
+                onThemeChanged = viewModel::onThemeChanged,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            ThemeColorCard(
+                useSystemColors = uiState.useSystemColors,
+                selectedSeedColor = uiState.seedColor,
+                onUseSystemColorsChanged = viewModel::onUseSystemColorsChanged,
+                onSeedColorChanged = viewModel::onSeedColorChanged,
+                onCustomColorClick = onAccentColorClick,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
             Column(
                 modifier = sectionModifier
             ) {
-                ThemeSetting(
-                    selectedTheme = uiState.theme,
-                    onThemeChanged = viewModel::onThemeChanged,
-                )
-                SettingsDivider()
-                Row(
-                    modifier = settingsRowModifier.clickable { onAccentColorClick() },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(imageVector = Icons.Default.ColorLens, contentDescription = null)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "Color Scheme", style = settingsTextStyle)
-                    Spacer(modifier = Modifier.weight(1f))
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(color = FastTimesTheme.accentColor, shape = CircleShape)
-                    )
-                }
-                SettingsDivider()
                 FirstDayOfWeekSetting(
                     selectedFirstDayOfWeek = uiState.firstDayOfWeek,
                     onFirstDayOfWeekChanged = viewModel::onFirstDayOfWeekChanged
@@ -393,49 +411,232 @@ private fun SettingsHeader(title: String) {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ThemeSetting(
+private fun ThemeSelectionCard(
     selectedTheme: AppTheme,
     onThemeChanged: (AppTheme) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
-    val settingsTextStyle = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .clickable(onClick = { expanded = true })
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart
-
-    ) {
+    ExpressiveCard(modifier = modifier) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = Icons.Default.Palette, contentDescription = null)
-            Spacer(modifier = Modifier.width(16.dp))
-            Text("Theme", style = settingsTextStyle)
-            Spacer(modifier = Modifier.weight(1f))
-            Text(selectedTheme.name.lowercase().replaceFirstChar { it.uppercase() })
-        }
+            ThemeModeOption(
+                icon = Icons.Default.LightMode,
+                label = "Light",
+                isSelected = selectedTheme == AppTheme.LIGHT,
+                onClick = { onThemeChanged(AppTheme.LIGHT) },
+                modifier = Modifier.weight(1f)
+            )
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            AppTheme.entries.forEach { theme ->
-                DropdownMenuItem(
-                    text = { Text(text = theme.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelLarge) },
-                    onClick = {
-                        onThemeChanged(theme)
-                        expanded = false
+            ThemeModeOption(
+                icon = Icons.Default.DarkMode,
+                label = "Dark",
+                isSelected = selectedTheme == AppTheme.DARK,
+                onClick = { onThemeChanged(AppTheme.DARK) },
+                modifier = Modifier.weight(1f)
+            )
+
+            ThemeModeOption(
+                icon = Icons.Default.Palette,
+                label = "System",
+                isSelected = selectedTheme == AppTheme.SYSTEM,
+                onClick = { onThemeChanged(AppTheme.SYSTEM) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThemeModeOption(
+    icon: ImageVector,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.05f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "ScaleAnimation"
+    )
+
+    Column(
+        modifier = modifier
+            .scale(scale)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surface
+            )
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+            else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+            else MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ThemeColorCard(
+    useSystemColors: Boolean,
+    selectedSeedColor: Long?,
+    onUseSystemColorsChanged: (Boolean) -> Unit,
+    onSeedColorChanged: (Long) -> Unit,
+    onCustomColorClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val presets = listOf(
+        0xFF2196F3, // Blue
+        0xFF4CAF50, // Green
+        0xFFFF9800, // Orange
+        0xFF9C27B0, // Purple
+        0xFFF44336  // Red
+    )
+
+    ExpressiveCard(modifier = modifier) {
+        Column(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)) {
+            Text(
+                text = "Color Scheme",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.Top,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                // Dynamic Color Option
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    item {
+                        ThemeColorOption(
+                            color = null,
+                            icon = Icons.Default.AutoAwesome,
+                            isSelected = useSystemColors,
+                            onClick = { onUseSystemColorsChanged(true) },
+                            label = "Dynamic"
+                        )
                     }
+                }
+
+                // Preset Colors
+                items(presets) { colorLong ->
+                    ThemeColorOption(
+                        color = Color(colorLong),
+                        isSelected = !useSystemColors && selectedSeedColor == colorLong,
+                        onClick = {
+                            onUseSystemColorsChanged(false)
+                            onSeedColorChanged(colorLong)
+                        },
+                        label = "" // Labels handled by icons or omitted for brevity
+                    )
+                }
+
+                // Custom Color Option
+                item {
+                    ThemeColorOption(
+                        color = null,
+                        icon = Icons.Default.Colorize,
+                        isSelected = false,
+                        onClick = onCustomColorClick,
+                        label = "Custom"
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ThemeColorOption(
+    color: Color?,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    icon: ImageVector? = null,
+    label: String = ""
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.1f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "ColorScale"
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .scale(scale)
+                .clip(if (isSelected) MaterialShapes.Cookie9Sided.toShape() else CircleShape)
+                .background(color ?: MaterialTheme.colorScheme.surfaceVariant)
+                .border(
+                    width = 2.dp,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    shape = if (isSelected) MaterialShapes.Cookie9Sided.toShape() else CircleShape
+                )
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isSelected && color != null,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Done,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        if (label.isNotEmpty()) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -491,8 +692,23 @@ private fun FirstDayOfWeekSetting(
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        modifier = Modifier.height(5.dp),
-        color = MaterialTheme.colorScheme.surface,
-        thickness = 2.dp
+        modifier = Modifier.height(1.dp),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+        thickness = 1.dp
+    )
+}
+
+@Composable
+private fun ExpressiveCard(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
+        shape = RoundedCornerShape(20.dp),
+        content = { content() }
     )
 }

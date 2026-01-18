@@ -24,7 +24,14 @@ data class FastingProfile(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val displayName: String,
-    val duration: Long?,
+    val duration: Long?, // Duration in minutes
     val description: String,
     val isFavorite: Boolean = false,
 )
+
+/**
+ * Extension property to get duration in minutes.
+ * Safely handles null values.
+ */
+val FastingProfile.durationMinutes: Long
+    get() = duration ?: 0L

@@ -1,6 +1,6 @@
 [versions]
 # Gradle & Kotlin
-agp = "8.13.2"  # Using stable version of AGP
+agp = "9.0.0"  # Using stable version of AGP
 kotlin = "2.2.21"  # Matching Kotlin version with Compose compiler
 composeCompilerVersion = "1.5.3"
 konfetti = "2.0.5"
@@ -105,7 +105,7 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-ksp = { id = "com.google.devtools.ksp", version = "2.2.20-2.0.4" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.2" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

@@ -70,6 +70,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -79,6 +80,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -105,6 +108,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.R
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.profile.FastingProfile
+import com.fasttimes.data.profile.durationMinutes
 import com.fasttimes.ui.components.StatisticTile
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
@@ -269,7 +273,6 @@ fun DashboardScreen(
                 // Skeleton Loading UI
                 SkeletonLoader()
             } else {
-                // Current Fast Section
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest)
@@ -299,31 +302,11 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(16.dp))
-                                FlowRow(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(
-                                        8.dp,
-                                        Alignment.CenterHorizontally
-                                    ),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    profiles.forEach { profile ->
-                                        Button(
-                                            onClick = { onStartFast(profile) },
-                                            shape = MaterialTheme.shapes.large,
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                                            )
-                                        ) {
-                                            Text(
-                                                profile.displayName,
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                        }
-                                    }
-                                }
+                                GoalSelectionSection(
+                                    profiles = profiles,
+                                    onStartFast = onStartFast,
+                                    onManageProfilesClick = onManageProfilesClick
+                                )
                             }
                         }
 
@@ -1127,6 +1110,140 @@ private fun LastFastItem(
                 }
                 if (fast.rating != null) {
                     RatingBar(rating = fast.rating!!)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Displays fasting profile options with a segmented button row for presets and
+ * elevated cards for detailed profiles. Separates custom profile creation as a distinct action.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GoalSelectionSection(
+    profiles: List<FastingProfile>,
+    onStartFast: (FastingProfile) -> Unit,
+    onManageProfilesClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Separate preset profiles from custom ones
+    val presetProfiles = profiles.filter { it.displayName in listOf("16:8", "18:6", "20:4") }
+    val customProfiles = profiles.filterNot { it.displayName in listOf("16:8", "18:6", "20:4") }
+
+    var selectedPresetIndex by remember { mutableStateOf<Int?>(null) }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Segmented Buttons for Preset Fasting Windows
+        if (presetProfiles.isNotEmpty()) {
+            Text(
+                text = "Quick Select",
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth(),
+                space = 8.dp
+            ) {
+                presetProfiles.forEachIndexed { index, profile ->
+                    SegmentedButton(
+                        selected = selectedPresetIndex == index,
+                        onClick = {
+                            selectedPresetIndex = index
+                            onStartFast(profile)
+                        },
+                        shape = MaterialTheme.shapes.large,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = profile.displayName,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
+            }
+        }
+
+        // Elevated Cards for Detailed Fasting Profiles
+        if (customProfiles.isNotEmpty() || profiles.isEmpty()) {
+            if (presetProfiles.isNotEmpty()) {
+                Text(
+                    text = "More Options",
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                maxItemsInEachRow = 2
+            ) {
+                customProfiles.forEach { profile ->
+                    ElevatedCard(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onStartFast(profile) },
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                if (profile.durationMinutes == 0L) {
+                                    // Display infinity symbol for 'No Goal' profile
+                                    Text(
+                                        text = "∞",
+                                        style = MaterialTheme.typography.displaySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                } else {
+                                    // Convert from milliseconds to hours
+                                    val hours = profile.durationMinutes / 3_600_000
+                                    Text(
+                                        text = "${hours}h",
+                                        style = MaterialTheme.typography.displaySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = profile.displayName,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+
+                            // Favorite star indicator
+                            if (profile.isFavorite) {
+                                Icon(
+                                    imageVector = Icons.Filled.Star,
+                                    contentDescription = "Favorite",
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(20.dp),
+                                    tint = FastTimesTheme.accentColor
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

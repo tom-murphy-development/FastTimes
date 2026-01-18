@@ -22,12 +22,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -148,14 +150,19 @@ private fun MonthlyStats(
 ) {
     val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM", Locale.getDefault()) }
 
-    Card(modifier = Modifier.padding(top = 16.dp)) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = "${uiState.displayedMonth.format(monthFormatter)} Statistics",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.headlineSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -164,18 +171,14 @@ private fun MonthlyStats(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.BarChart,
                     label = "Total Fasts",
-                    value = uiState.totalFastsInMonth.toString(),
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    value = uiState.totalFastsInMonth.toString()
                 )
                 StatisticTile(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.Star,
                     label = "Longest Fast",
                     value = uiState.longestFastInMonth?.let { formatDuration(it.duration().milliseconds) } ?: "-",
-                    onClick = { uiState.longestFastInMonth?.id?.let(onViewFastDetails) },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    onClick = { uiState.longestFastInMonth?.id?.let(onViewFastDetails) }
                 )
             }
         }

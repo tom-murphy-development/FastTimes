@@ -32,14 +32,17 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,11 +56,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AvTimer
-import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Timer
@@ -95,6 +100,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -103,15 +109,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.fasttimes.R
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.profile.FastingProfile
 import com.fasttimes.data.profile.durationMinutes
-import com.fasttimes.ui.components.StatisticTile
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
+import com.fasttimes.ui.dashboard.DayProgress
 import com.fasttimes.ui.dashboard.FastingSummaryModal
 import com.fasttimes.ui.editfast.EditFastRoute
 import com.fasttimes.ui.theme.FastTimesTheme
@@ -126,10 +134,10 @@ import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.milliseconds
 
 
 private val confettiParty = listOf(
@@ -159,6 +167,7 @@ private data class FabButtonItem(
 @Composable
 fun DashboardScreen(
     onHistoryClick: () -> Unit,
+    onStatisticsClick: () -> Unit,
     onViewFastDetails: (Long) -> Unit,
     onManageProfilesClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -598,155 +607,184 @@ fun DashboardScreen(
                     }
                 }
 
+                // Streak Card - only shown if streak is 2 or more
+                if (stats.streak.daysInARow >= 2) {
+                    StreakCard(
+                        streakDays = stats.streak.daysInARow,
+                        weeklyProgress = stats.weeklyProgress,
+                        onHistoryClick = onHistoryClick
+                    )
+                }
+
                 // Statistics Section
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Statistics",
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                        )
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                StatisticTile(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.BarChart,
-                                    label = "Total Fasts",
-                                    value = stats.totalFasts.toString()
-                                )
-                                StatisticTile(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Timer,
-                                    label = "Total Time",
-                                    value = formatDuration(stats.totalFastingTime)
-                                )
-                            }
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                StatisticTile(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Star,
-                                    label = "Longest Fast",
-                                    value = stats.longestFast?.let { fast ->
-                                        fast.endTime?.let { endTime ->
-                                            formatDuration((endTime - fast.startTime).milliseconds)
-                                        }
-                                    } ?: "-",
-                                    onClick = { stats.longestFast?.id?.let(onViewFastDetails) }
-                                )
-                                StatisticTile(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.AvTimer,
-                                    label = "Average Fast",
-                                    value = formatDuration(stats.averageFast)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // History Section
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 320.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onHistoryClick() }
+                                .clickable { onStatisticsClick() }
                                 .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "History",
+                                "Statistics",
                                 style = MaterialTheme.typography.headlineSmall,
                                 modifier = Modifier.weight(1f)
                             )
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Go to History"
+                                contentDescription = "Go to Statistics"
                             )
                         }
-
-                        if (state is DashboardUiState.NoFast) {
-                            if (state.thisWeekFasts.isEmpty() && state.lastWeekFasts.isEmpty()) {
-                                Box(
-                                    modifier = Modifier
-                                        .padding(16.dp)
-                                        .fillMaxWidth(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "No recent fasts to show.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Max)
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Trend Tile
+                            val trendValue = if (stats.trend.percentageChange != 0f) {
+                                val sign = if (stats.trend.percentageChange > 0) "+" else ""
+                                "$sign${String.format(Locale.getDefault(), "%.0f", stats.trend.percentageChange)}%"
                             } else {
-                                Column(
-                                    modifier = Modifier
-                                        .verticalScroll(rememberScrollState())
-                                        .padding(horizontal = 16.dp)
-                                        .padding(bottom = 16.dp)
-                                ) {
-                                    if (state.thisWeekFasts.isNotEmpty()) {
+                                "No change"
+                            }
+                            StatisticTileLeftAligned(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                description = "Trend",
+                                value = trendValue,
+                                trendIcon = if (stats.trend.isUpward) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                                trendIconColor = if (stats.trend.isUpward) {
+                                    MaterialTheme.colorScheme.tertiary
+                                } else {
+                                    MaterialTheme.colorScheme.error
+                                },
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+
+                            // Streak Tile
+                            StatisticTileLeftAligned(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                description = "Streak",
+                                value = "${stats.streak.daysInARow} days",
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+                }
+
+                // History Section - only shown if streak is less than 2
+                if (stats.streak.daysInARow < 2) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 320.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onHistoryClick() }
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "History",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = "Go to History"
+                                )
+                            }
+
+                            if (state is DashboardUiState.NoFast) {
+                                if (state.thisWeekFasts.isEmpty() && state.lastWeekFasts.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
                                         Text(
-                                            "This Week",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            modifier = Modifier.padding(bottom = 8.dp)
+                                            text = "No recent fasts to show.",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
-                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            state.thisWeekFasts.forEachIndexed { index, fast ->
-                                                LastFastItem(
-                                                    fast = fast,
-                                                    modifier = Modifier.clickable { onViewFastDetails(fast.id) })
-                                                if (index < state.thisWeekFasts.lastIndex) {
-                                                    HorizontalDivider(
-                                                        modifier = Modifier.padding(
-                                                            vertical = 8.dp
+                                    }
+                                } else {
+                                    Column(
+                                        modifier = Modifier
+                                            .verticalScroll(rememberScrollState())
+                                            .padding(horizontal = 16.dp)
+                                            .padding(bottom = 16.dp)
+                                    ) {
+                                        if (state.thisWeekFasts.isNotEmpty()) {
+                                            Text(
+                                                "This Week",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                state.thisWeekFasts.forEachIndexed { index, fast ->
+                                                    LastFastItem(
+                                                        fast = fast,
+                                                        modifier = Modifier.clickable {
+                                                            onViewFastDetails(
+                                                                fast.id
+                                                            )
+                                                        })
+                                                    if (index < state.thisWeekFasts.lastIndex) {
+                                                        HorizontalDivider(
+                                                            modifier = Modifier.padding(
+                                                                vertical = 8.dp
+                                                            )
                                                         )
-                                                    )
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
 
-                                    if (state.lastWeekFasts.isNotEmpty()) {
-                                        if (state.thisWeekFasts.isNotEmpty()) {
-                                            Spacer(Modifier.height(16.dp))
-                                        }
-                                        Text(
-                                            "Last Week",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            modifier = Modifier.padding(bottom = 8.dp)
-                                        )
-                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            state.lastWeekFasts.forEachIndexed { index, fast ->
-                                                LastFastItem(
-                                                    fast = fast,
-                                                    modifier = Modifier.clickable { onViewFastDetails(fast.id) })
-                                                if (index < state.lastWeekFasts.lastIndex) {
-                                                    HorizontalDivider(
-                                                        modifier = Modifier.padding(
-                                                            vertical = 8.dp
+                                        if (state.lastWeekFasts.isNotEmpty()) {
+                                            if (state.thisWeekFasts.isNotEmpty()) {
+                                                Spacer(Modifier.height(16.dp))
+                                            }
+                                            Text(
+                                                "Last Week",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                state.lastWeekFasts.forEachIndexed { index, fast ->
+                                                    LastFastItem(
+                                                        fast = fast,
+                                                        modifier = Modifier.clickable {
+                                                            onViewFastDetails(
+                                                                fast.id
+                                                            )
+                                                        })
+                                                    if (index < state.lastWeekFasts.lastIndex) {
+                                                        HorizontalDivider(
+                                                            modifier = Modifier.padding(
+                                                                vertical = 8.dp
+                                                            )
                                                         )
-                                                    )
+                                                    }
                                                 }
                                             }
                                         }
@@ -810,6 +848,127 @@ fun DashboardScreen(
                     .padding(16.dp),
                 items = fabItems
             )
+        }
+    }
+}
+
+@Composable
+fun StreakCard(
+    streakDays: Int,
+    weeklyProgress: List<DayProgress>,
+    onHistoryClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            // Navigation link in top right
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .clickable { onHistoryClick() }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "History",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Go to History",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocalFireDepartment,
+                        contentDescription = "Streak",
+                        modifier = Modifier.size(48.dp),
+                        tint = Color(0xFFFF5722) // Orange streak color
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = streakDays.toString(),
+                            style = MaterialTheme.typography.displaySmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                lineHeight = 32.sp
+                            )
+                        )
+                        Text(
+                            text = "day streak",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    weeklyProgress.forEach { day ->
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (day.isCompleted) Color(0xFF4CAF50)
+                                        else if (day.isFuture) Color.Transparent
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .then(
+                                        if (day.isFuture) Modifier.border(
+                                            1.dp,
+                                            MaterialTheme.colorScheme.outlineVariant,
+                                            CircleShape
+                                        ) else Modifier
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (day.isCompleted) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = day.date.dayOfWeek.getDisplayName(
+                                    TextStyle.NARROW,
+                                    Locale.getDefault()
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -1243,6 +1402,98 @@ private fun GoalSelectionSection(
                                 )
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A composable that displays a statistic in a compact tile with left-aligned layout.
+ *
+ * The tile shows a description label (small text, top-left), the main value (large bold text,
+ * bottom-left), and an optional sub-value with a trend icon.
+ *
+ * @param modifier The modifier to be applied to the tile
+ * @param description The label describing the statistic (displayed in small text)
+ * @param value The main value to display (displayed in large bold text)
+ * @param subValue Optional secondary value (e.g., percentage change)
+ * @param trendIcon Optional icon for displaying trend direction
+ * @param trendIconColor Color for the trend icon
+ * @param containerColor Background color of the tile
+ * @param contentColor Text color of the tile
+ */
+@Composable
+private fun StatisticTileLeftAligned(
+    modifier: Modifier = Modifier,
+    description: String,
+    value: String,
+    subValue: String? = null,
+    trendIcon: ImageVector? = null,
+    trendIconColor: Color = MaterialTheme.colorScheme.onSurface,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(16.dp)
+        ) {
+            // Trend icon (top-right)
+            if (trendIcon != null) {
+                Icon(
+                    imageVector = trendIcon,
+                    contentDescription = "Trend indicator",
+                    tint = trendIconColor,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(16.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Description (top-left)
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = contentColor.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                // Value and subValue (bottom)
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = contentColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    if (subValue != null) {
+                        Text(
+                            text = subValue,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = contentColor.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }

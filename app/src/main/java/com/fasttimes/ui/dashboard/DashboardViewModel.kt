@@ -34,6 +34,8 @@ import com.fasttimes.data.profile.FastingProfileRepository
 import com.fasttimes.data.settings.SettingsRepository
 import com.fasttimes.data.settings.UserData
 import com.fasttimes.service.FastTimerService
+import com.fasttimes.ui.statistics.FastingStreak
+import com.fasttimes.ui.statistics.FastingTrend
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -51,18 +53,30 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
+data class DayProgress(
+    val date: LocalDate,
+    val isCompleted: Boolean,
+    val isFuture: Boolean
+)
+
 // Placeholder for stats data class
 data class DashboardStats(
     val totalFasts: Int = 0,
     val longestFast: Fast? = null,
     val totalFastingTime: Duration = Duration.ZERO,
-    val averageFast: Duration = Duration.ZERO
+    val averageFast: Duration = Duration.ZERO,
+    val streak: FastingStreak = FastingStreak(),
+    val trend: FastingTrend = FastingTrend(),
+    val weeklyProgress: List<DayProgress> = emptyList()
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -103,7 +117,10 @@ class DashboardViewModel @Inject constructor(
                     totalFastingTime / completedFastsCount
                 } else {
                     Duration.ZERO
-                }
+                },
+                streak = calculateStreak(completedFasts),
+                trend = calculateTrend(completedFasts),
+                weeklyProgress = calculateWeeklyProgress(completedFasts)
             )
         }
         .stateIn(
@@ -388,6 +405,123 @@ class DashboardViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             // Ignore for tests or if service cannot be started
+        }
+    }
+
+    private fun calculateStreak(completedFasts: List<Fast>): FastingStreak {
+        if (completedFasts.isEmpty()) return FastingStreak()
+
+        val fastDates = completedFasts
+            .mapNotNull { it.end?.toLocalDate() }
+            .distinct()
+            .sorted()
+
+        if (fastDates.isEmpty()) return FastingStreak()
+
+        val today = LocalDate.now()
+        var currentDate = today
+        var streakDays = 0
+
+        while (true) {
+            when {
+                currentDate in fastDates -> {
+                    streakDays++
+                    currentDate = currentDate.minusDays(1)
+                }
+                currentDate == today && fastDates.isNotEmpty() -> {
+                    currentDate = currentDate.minusDays(1)
+                }
+                else -> {
+                    break
+                }
+            }
+        }
+
+        if (streakDays == 0 && fastDates.isNotEmpty()) {
+            for (date in fastDates.reversed()) {
+                currentDate = date
+                streakDays = 1
+
+                var checkDate = date.minusDays(1)
+                while (checkDate in fastDates) {
+                    streakDays++
+                    checkDate = checkDate.minusDays(1)
+                }
+                break
+            }
+        }
+
+        val lastFastDate = fastDates.lastOrNull()
+        val streakStartDate = if (streakDays > 0) {
+            lastFastDate?.minusDays((streakDays - 1).toLong())
+        } else {
+            null
+        }
+
+        return FastingStreak(
+            daysInARow = streakDays,
+            startDate = streakStartDate,
+            lastFastDate = lastFastDate
+        )
+    }
+
+    private fun calculateTrend(completedFasts: List<Fast>): FastingTrend {
+        val currentMonth = YearMonth.now()
+        val previousMonth = currentMonth.minusMonths(1)
+
+        val systemZone = ZoneId.systemDefault()
+        val currentMonthStart = currentMonth.atDay(1)
+            .atStartOfDay(systemZone)
+        val currentMonthEnd = currentMonth.atEndOfMonth()
+            .plusDays(1)
+            .atStartOfDay(systemZone)
+
+        val previousMonthStart = previousMonth.atDay(1)
+            .atStartOfDay(systemZone)
+        val previousMonthEnd = previousMonth.atEndOfMonth()
+            .plusDays(1)
+            .atStartOfDay(systemZone)
+
+        val currentMonthFasts = completedFasts.count { fast ->
+            fast.end?.isBefore(currentMonthEnd) == true &&
+                    fast.end?.isAfter(currentMonthStart) == true
+        }
+
+        val previousMonthFasts = completedFasts.count { fast ->
+            fast.end?.isBefore(previousMonthEnd) == true &&
+                    fast.end?.isAfter(previousMonthStart) == true
+        }
+
+        val percentageChange = when {
+            previousMonthFasts > 0 -> {
+                ((currentMonthFasts - previousMonthFasts).toFloat() / previousMonthFasts) * 100
+            }
+            currentMonthFasts > 0 -> 100f
+            else -> 0f
+        }
+
+        val isUpward = currentMonthFasts >= previousMonthFasts
+
+        return FastingTrend(
+            currentMonthFasts = currentMonthFasts,
+            previousMonthFasts = previousMonthFasts,
+            percentageChange = percentageChange,
+            isUpward = isUpward
+        )
+    }
+
+    private fun calculateWeeklyProgress(completedFasts: List<Fast>): List<DayProgress> {
+        val today = LocalDate.now()
+        val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val fastDates = completedFasts.mapNotNull { it.end?.toLocalDate() }.toSet()
+
+        return (0..6).map { i ->
+            val date = startOfWeek.plusDays(i.toLong())
+            DayProgress(
+                date = date,
+                isCompleted = date in fastDates,
+                isFuture = date.isAfter(today)
+            )
         }
     }
 }

@@ -74,6 +74,7 @@ class DashboardScreenTest {
             ) {
                 DashboardScreen(
                     onHistoryClick = {},
+                    onStatisticsClick = {},
                     onViewFastDetails = {},
                     onManageProfilesClick = {},
                     viewModel = mockViewModel
@@ -115,6 +116,7 @@ class DashboardScreenTest {
             ) {
                 DashboardScreen(
                     onHistoryClick = {},
+                    onStatisticsClick = {},
                     onViewFastDetails = {},
                     onManageProfilesClick = {},
                     viewModel = mockViewModel
@@ -148,6 +150,7 @@ class DashboardScreenTest {
             ) {
                 DashboardScreen(
                     onHistoryClick = {},
+                    onStatisticsClick = {},
                     onViewFastDetails = {},
                     onManageProfilesClick = {},
                     viewModel = mockViewModel

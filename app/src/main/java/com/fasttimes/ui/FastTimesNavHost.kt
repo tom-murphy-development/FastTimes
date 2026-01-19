@@ -42,6 +42,7 @@ import com.fasttimes.ui.profile.navigateToProfileManagement
 import com.fasttimes.ui.profile.profileManagementScreen
 import com.fasttimes.ui.settings.AccentColorScreen
 import com.fasttimes.ui.settings.SettingsScreen
+import com.fasttimes.ui.statistics.StatisticsScreen
 import com.fasttimes.ui.theme.FastTimesTheme
 import kotlinx.coroutines.launch
 
@@ -102,6 +103,7 @@ fun FastTimesNavHost() {
                     dashboardContent = {
                         DashboardScreen(
                             onHistoryClick = { scope.launch { draggableState.openHistory() } },
+                            onStatisticsClick = { navController.navigate("statistics") },
                             onViewFastDetails = { fastId ->
                                 navController.navigate("history/$fastId")
                             },
@@ -128,6 +130,14 @@ fun FastTimesNavHost() {
         }
         composable("settings/accent-color") {
             AccentColorScreen(onNavigateUp = { navController.navigateUp() })
+        }
+        composable("statistics") {
+            StatisticsScreen(
+                onBackClick = { navController.navigateUp() },
+                onViewFastDetails = { fastId ->
+                    navController.navigate("history/$fastId")
+                }
+            )
         }
         composable(
             route = "history/{fastId}",

@@ -1,94 +1,116 @@
 /*
  * Copyright (C) 2025 tom-murphy-development
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.fasttimes.ui.statistics
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.AvTimer
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.graphics.shapes.RoundedPolygon
+import androidx.graphics.shapes.toPath
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.fasttimes.ui.components.StatisticTile
 import com.fasttimes.ui.formatDuration
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.util.Locale
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.random.Random
+import kotlin.time.Duration
 
 /**
- * Statistics screen displaying key fasting metrics.
+ * Statistics screen displaying key fasting metrics with Material 3 Expressive elements.
  *
- * Displays three main statistics in a single row of tiles:
- * 1. **Streak**: The number of consecutive days with fasts
- * 2. **Average Fast**: The average duration of completed fasts
- * 3. **Trend**: Month-over-month fasting activity comparison
+ * This version uses dynamic [RoundedPolygon] shapes for stat cards, ensuring organic
+ * proportions and centered content fit. Shapes are randomized each time the screen loads.
  *
- * @param onBackClick Callback invoked when the back button is pressed
- * @param onViewFastDetails Callback to navigate to fast details
- * @param viewModel The [StatisticsViewModel] for accessing statistics (injected via Hilt)
+ * @param onBackClick Callback for the navigation back button.
+ * @param onHistoryClick Callback to navigate to the history screen.
+ * @param viewModel The statistics view model.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun StatisticsScreen(
     onBackClick: () -> Unit,
-    onViewFastDetails: (Long) -> Unit,
+    onHistoryClick: () -> Unit,
     viewModel: StatisticsViewModel = hiltViewModel()
 ) {
     val state by viewModel.statisticsState.collectAsState()
 
+    // Generate random stable expressive shapes for the summary cards.
+    // By using remember { Random.nextInt() }, we get a new seed only when the screen
+    // is initially composed (i.e., every time it "loads").
+    val streakShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
+    val trendShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
+    val weeklyShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Statistics") },
+                title = { Text("Performance", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -96,250 +118,311 @@ fun StatisticsScreen(
                             contentDescription = "Back"
                         )
                     }
-                }
+                },
+                actions = {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     ) { paddingValues ->
         if (state.isLoading) {
-            // Loading state: centered progress indicator
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(paddingValues),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
-            // Content state: display statistics
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Title
-                Text(
-                    text = "Your Fasting Statistics",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                // Hero Header Section with Navigation
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "This week",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        IconButton(onClick = onHistoryClick, modifier = Modifier.size(32.dp)) {
+                            Icon(
+                                Icons.Default.CalendarToday,
+                                contentDescription = "History",
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = formatHoursOnly(state.averageFast),
+                            style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = " avg hrs",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = "Goal met on ${state.weeklyActivity.count { it.isGoalMet }} days. Great progress!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Weekly Activity Chart with Dynamic Goal Lines
+                WeeklyActivityChart(
+                    activity = state.weeklyActivity,
+                    goals = state.weeklyGoals,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
                 )
 
-                // Statistics tiles in a row with uniform height
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Max),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Streak tile
-                    StatisticTileLeftAligned(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        description = "Streak",
-                        value = "${state.streak.daysInARow} days",
+                // Expressive Asymmetrical Summary Cards with Randomized Material Polygons
+                Column {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Trends",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(1.dp)
+                    )
+                {
+                    ExpressiveStatCard(
+                        modifier = Modifier.weight(1f),
+                        label = "Streak",
+                        value = "${state.streak.daysInARow}",
+                        unit = "days",
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        shape = streakShape
                     )
-
-                    // Average Fast tile
-                    StatisticTileLeftAligned(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        description = "Average Fast",
-                        value = formatDuration(state.averageFast),
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-
-                    // Trend tile
-                    StatisticTileLeftAligned(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        description = "Trend",
-                        value = "${state.trend.currentMonthFasts} fasts",
-                        subValue = formatTrendSubValue(state.trend),
-                        trendIcon = if (state.trend.isUpward) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                        trendIconColor = if (state.trend.isUpward) {
-                            MaterialTheme.colorScheme.tertiary
-                        } else {
-                            MaterialTheme.colorScheme.error
-                        },
+                    ExpressiveStatCard(
+                        modifier = Modifier.weight(1f),
+                        label = "Trend",
+                        value = "${state.fastsPerWeek}",
+                        unit = "vs last month",
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        shape = trendShape
                     )
-                }
-
-                // Statistics Section
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Statistics",
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                        )
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                StatisticTile(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.BarChart,
-                                    label = "Total Fasts",
-                                    value = state.totalFasts.toString()
-                                )
-                                StatisticTile(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Timer,
-                                    label = "Total Time",
-                                    value = formatDuration(state.totalFastingTime)
-                                )
-                            }
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                StatisticTile(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Star,
-                                    label = "Longest Fast",
-                                    value = state.longestFast?.let { fast ->
-                                        fast.endTime?.let { endTime ->
-                                            formatDuration((endTime - fast.startTime).milliseconds)
-                                        }
-                                    } ?: "-",
-                                    onClick = { state.longestFast?.id?.let(onViewFastDetails) }
-                                )
-                                StatisticTile(
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.AvTimer,
-                                    label = "Average Fast",
-                                    value = formatDuration(state.averageFast)
-                                )
-                            }
-                        }
+                    ExpressiveStatCard(
+                        modifier = Modifier.weight(1f),
+                        label = "Weekly Fasts",
+                        value = formatTrendPercentage(state.trend),
+                        unit = "days",
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        shape = weeklyShape
+                    )
                     }
                 }
 
-                // Additional details section
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
+                // All-time Metrics Section
+                Column {
                     Text(
-                        text = "Additional Metrics",
+                        text = "All-time statistics",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        ) {
-                            val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-                            val timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            DetailRow("Total Fasts", state.totalFasts.toString())
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            
+                            DetailRow("Total Duration", formatDuration(state.totalFastingTime))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
-                            // Total Fasts
+                            DetailRow("Fasts Per Week", "%.1f".format(state.fastsPerWeek))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            
                             DetailRow(
-                                label = "Total Fasts",
-                                value = state.totalFasts.toString()
+                                "Common Day", 
+                                state.mostFrequentDay?.getDisplayName(TextStyle.FULL, Locale.getDefault()) ?: "-"
                             )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                            // Total Fasting Time
-                            DetailRow(
-                                label = "Total Fasting Time",
-                                value = formatDuration(state.totalFastingTime)
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                            // Longest Fast
-                            DetailRow(
-                                label = "Longest Fast",
-                                value = state.longestFast?.let { fast ->
-                                    fast.endTime?.let { endTime ->
-                                        formatDuration((endTime - fast.startTime).milliseconds)
-                                    }
-                                } ?: "-"
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                            // Average Fasts Per Week
-                            DetailRow(
-                                label = "Avg. Fasts Per Week",
-                                value = "%.1f".format(state.fastsPerWeek)
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                            // Typical Start Time
-                            DetailRow(
-                                label = "Typical Start Time",
-                                value = state.averageStartTime?.format(timeFormatter) ?: "-"
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                            // Most Common Day
-                            DetailRow(
-                                label = "Most Common Day",
-                                value = state.mostFrequentDay?.getDisplayName(TextStyle.FULL, Locale.getDefault()) ?: "-"
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                            // First Fast Date
-                            DetailRow(
-                                label = "First Fast Date",
-                                value = state.firstFastDate?.format(dateFormatter) ?: "-"
-                            )
-
-                            // Streak Details
-                            if (state.streak.daysInARow > 0) {
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                                DetailRow(
-                                    label = "Streak Start Date",
-                                    value = state.streak.startDate?.format(dateFormatter) ?: "-"
-                                )
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                                DetailRow(
-                                    label = "Last Fast Date",
-                                    value = state.streak.lastFastDate?.format(dateFormatter) ?: "-"
-                                )
+                            
+                            state.firstFastDate?.let { date ->
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                                DetailRow("Journey Started", date.format(dateFormatter))
                             }
-
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                            // Trend Details
-                            DetailRow(
-                                label = "Previous Month Fasts",
-                                value = state.trend.previousMonthFasts.toString()
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                            DetailRow(
-                                label = "Month-over-Month Change",
-                                value = formatTrendPercentage(state.trend),
-                                valueColor = if (state.trend.isUpward) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
-                            )
                         }
                     }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+/**
+ * Creates a [Shape] from a [RoundedPolygon], scaled uniformly to 90% and centered.
+ */
+@ExperimentalMaterial3ExpressiveApi
+@Composable
+fun rememberPolygonShape(polygon: RoundedPolygon): Shape {
+    return remember(polygon) {
+        object : Shape {
+            override fun createOutline(
+                size: Size,
+                layoutDirection: LayoutDirection,
+                density: Density
+            ): Outline {
+                val path = polygon.toPath().asComposePath()
+                val bounds = path.getBounds()
+                val matrix = Matrix()
+                
+                // Use uniform scaling to 90% of original size to prevent stretching
+                val scale = minOf(size.width / bounds.width, size.height / bounds.height) * 0.95f
+
+                // Center and scale to fit destination box
+                matrix.translate(size.width / 2f, size.height / 2f)
+                matrix.scale(scale, scale)
+                matrix.translate(-(bounds.left + bounds.width / 2f), -(bounds.top + bounds.height / 2f))
+                
+                path.transform(matrix)
+                return Outline.Generic(path)
+            }
+        }
+    }
+}
+
+/**
+ * Returns a random expressive shape from the [MaterialShapes] collection.
+ */
+@ExperimentalMaterial3ExpressiveApi
+@Composable
+fun rememberRandomExpressiveShape(seed: Int): Shape {
+    val shapes = remember {
+        listOf(
+            MaterialShapes.Pentagon,
+            MaterialShapes.Clover8Leaf,
+            MaterialShapes.Sunny,
+            MaterialShapes.Cookie9Sided,
+            MaterialShapes.Ghostish,
+            MaterialShapes.Slanted,
+            MaterialShapes.Gem,
+            MaterialShapes.Clover4Leaf
+        )
+    }
+    // Using Math.abs to handle potential negative Random.nextInt() results
+    val polygon = shapes[Math.abs(seed) % shapes.size]
+    return rememberPolygonShape(polygon)
+}
+
+/**
+ * A custom chart displaying weekly fasting activity with pill-shaped bars and success indicators.
+ */
+@Composable
+fun WeeklyActivityChart(
+    activity: List<DailyActivity>,
+    goals: Set<Float>,
+    modifier: Modifier = Modifier
+) {
+    val maxHours = activity.maxOfOrNull { it.durationHours }?.coerceAtLeast(24f) ?: 24f
+    val goalHours = 16f
+    
+    Box(modifier = modifier) {
+        goals.forEach { goalVal ->
+            val goalYRatio = 1f - (goalVal / maxHours)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp)
+                    .fillMaxHeight(goalYRatio)
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.align(Alignment.BottomStart),
+                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f),
+                    thickness = 1.dp
+                )
+                Text(
+                    text = "${goalVal.toInt()}h",
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 4.dp),
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            activity.forEach { daily ->
+                val barHeightWeight = (daily.durationHours / maxHours).coerceIn(0.06f, 1f)
+                
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f, fill = false)
+                            .fillMaxHeight(barHeightWeight)
+                            .clip(CircleShape) // Rounded pill shape
+                            .background(
+                                if (daily.isGoalMet) MaterialTheme.colorScheme.tertiary 
+                                else MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                            ),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        if (daily.isGoalMet) {
+                            Surface(
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.9f),
+                                modifier = Modifier.padding(4.dp).size(20.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.padding(2.dp)
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = daily.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
@@ -347,21 +430,24 @@ fun StatisticsScreen(
 }
 
 /**
- * A composable that displays a statistic in a compact tile with left-aligned layout.
+ * An expressive summary card with a custom [Shape].
+ * Content is centered and sized to fit comfortably with flexible sizing.
  */
 @Composable
-private fun StatisticTileLeftAligned(
-    modifier: Modifier = Modifier,
-    description: String,
+fun ExpressiveStatCard(
+    label: String,
     value: String,
-    subValue: String? = null,
-    trendIcon: ImageVector? = null,
-    trendIconColor: Color = MaterialTheme.colorScheme.onSurface,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onSurface
+    unit: String,
+    containerColor: Color,
+    contentColor: Color,
+    shape: Shape,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(240.dp),
+        shape = shape,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor
@@ -369,114 +455,68 @@ private fun StatisticTileLeftAligned(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Description (top-left)
             Text(
-                text = description,
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor.copy(alpha = 0.7f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                text = label, 
+                style = MaterialTheme.typography.labelLarge,
+                color = contentColor.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center,
+                maxLines = 1
             )
-
-            // Value (bottom-left) with optional trend indicator
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = value,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = contentColor,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    if (subValue != null) {
-                        Text(
-                            text = subValue,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = contentColor.copy(alpha = 0.7f),
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-
-                // Trend icon (if provided)
-                if (trendIcon != null) {
-                    Icon(
-                        imageVector = trendIcon,
-                        contentDescription = "Trend indicator",
-                        tint = trendIconColor,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value, 
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    fontSize = 40.sp,
+                    lineHeight = 44.sp
+                ),
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = unit, 
+                style = MaterialTheme.typography.bodyMedium,
+                color = contentColor.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center,
+                maxLines = 2
+            )
         }
     }
 }
 
 /**
- * A composable that displays a detail row with a label and value pair.
+ * A detail row for secondary statistics.
  */
 @Composable
-private fun DetailRow(
-    label: String,
-    value: String,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface
-) {
+private fun DetailRow(label: String, value: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = valueColor
-        )
+        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
     }
 }
 
 /**
- * Formats the trend sub-value as a readable string.
+ * Helper to format duration as a decimal number of hours.
  */
-private fun formatTrendSubValue(trend: FastingTrend): String {
-    return if (trend.percentageChange != 0f) {
-        val sign = if (trend.percentageChange > 0) "+" else ""
-        "$sign${String.format("%.0f", trend.percentageChange)}%"
-    } else {
-        "No change"
-    }
+private fun formatHoursOnly(duration: Duration): String {
+    val totalHours = duration.inWholeMinutes / 60f
+    return String.format(Locale.getDefault(), "%.1f", totalHours)
 }
 
 /**
- * Formats the trend percentage for the additional details section.
+ * Helper to format trend percentage with a sign.
  */
 private fun formatTrendPercentage(trend: FastingTrend): String {
-    return if (trend.percentageChange != 0f) {
-        val sign = if (trend.percentageChange > 0) "+" else ""
-        "$sign${String.format("%.1f", trend.percentageChange)}% vs last month"
-    } else {
-        "No change vs last month"
-    }
+    val sign = if (trend.percentageChange > 0) "+" else ""
+    return "$sign${String.format(Locale.getDefault(), "%.0f", trend.percentageChange)}%"
 }

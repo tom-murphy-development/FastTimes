@@ -55,12 +55,23 @@ data class FastingTrend(
 )
 
 /**
+ * Data class representing daily fasting activity for the chart.
+ */
+data class DailyActivity(
+    val dayOfWeek: DayOfWeek,
+    val durationHours: Float,
+    val isGoalMet: Boolean
+)
+
+/**
  * UI state data class containing all statistics for the Statistics screen.
  */
 data class StatisticsUiState(
     val streak: FastingStreak = FastingStreak(),
     val averageFast: Duration = Duration.ZERO,
     val trend: FastingTrend = FastingTrend(),
+    val weeklyActivity: List<DailyActivity> = emptyList(),
+    val weeklyGoals: Set<Float> = emptySet(),
     val totalFasts: Int = 0,
     val totalFastingTime: Duration = Duration.ZERO,
     val longestFast: Fast? = null,
@@ -85,6 +96,15 @@ class StatisticsViewModel @Inject constructor(
             val streak = calculateStreak(completedFasts)
             val averageFast = calculateAverageFast(completedFasts)
             val trend = calculateTrend(completedFasts)
+            val weeklyActivity = calculateWeeklyActivity(completedFasts)
+            
+            // Extract unique goals from fasts in the current week
+            val today = LocalDate.now()
+            val startOfWeek = today.minusDays(6)
+            val weeklyGoals = completedFasts
+                .filter { it.start.toLocalDate() >= startOfWeek }
+                .mapNotNull { it.targetDuration?.let { target -> target.toFloat() / 3600000f } }
+                .toSet()
 
             val totalFastingTime = completedFasts.sumOf { it.duration() }.milliseconds
             val longestFast = fasts.maxByOrNull { it.duration() }
@@ -104,6 +124,8 @@ class StatisticsViewModel @Inject constructor(
                 streak = streak,
                 averageFast = averageFast,
                 trend = trend,
+                weeklyActivity = weeklyActivity,
+                weeklyGoals = weeklyGoals,
                 totalFasts = fasts.size,
                 totalFastingTime = totalFastingTime,
                 longestFast = longestFast,
@@ -185,14 +207,14 @@ class StatisticsViewModel @Inject constructor(
         val systemZone = ZoneId.systemDefault()
         val currentMonthStart = currentMonth.atDay(1).atStartOfDay(systemZone)
         val currentMonthEnd = currentMonth.atEndOfMonth().plusDays(1).atStartOfDay(systemZone)
-        val previousMonthStart = previousMonth.atDay(1).atStartOfDay(systemZone)
+        previousMonth.atDay(1).atStartOfDay(systemZone)
         val previousMonthEnd = previousMonth.atEndOfMonth().plusDays(1).atStartOfDay(systemZone)
 
         val currentMonthFasts = completedFasts.count { fast ->
             fast.end?.isBefore(currentMonthEnd) == true && fast.end?.isAfter(currentMonthStart) == true
         }
         val previousMonthFasts = completedFasts.count { fast ->
-            fast.end?.isBefore(previousMonthEnd) == true && fast.end?.isAfter(previousMonthStart) == true
+            fast.end?.isBefore(previousMonthEnd) == true && fast.end?.isAfter(currentMonthStart.minusMonths(1)) == true
         }
 
         val percentageChange = when {
@@ -207,6 +229,26 @@ class StatisticsViewModel @Inject constructor(
             percentageChange = percentageChange,
             isUpward = currentMonthFasts >= previousMonthFasts
         )
+    }
+
+    private fun calculateWeeklyActivity(completedFasts: List<Fast>): List<DailyActivity> {
+        val today = LocalDate.now()
+        val startOfWeek = today.minusDays(6)
+        
+        return (0..6).map { i ->
+            val date = startOfWeek.plusDays(i.toLong())
+            val fastsOnDate = completedFasts.filter { it.start.toLocalDate() == date }
+            val totalDurationHours = fastsOnDate.sumOf { it.duration() }.toFloat() / 3600000f
+            
+            // Check if any fast on this date met its target goal
+            val goalMet = fastsOnDate.any { it.goalMet() }
+            
+            DailyActivity(
+                dayOfWeek = date.dayOfWeek,
+                durationHours = totalDurationHours,
+                isGoalMet = goalMet
+            )
+        }
     }
 
     private fun calculateAverageStartTime(completedFasts: List<Fast>): LocalTime? {

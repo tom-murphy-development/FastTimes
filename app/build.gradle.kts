@@ -142,6 +142,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.kotlinx.serialization.json)
     implementation("androidx.compose.material3:material3:1.5.0-alpha08")
+    implementation("androidx.graphics:graphics-shapes:1.0.1")
     implementation("com.materialkolor:material-kolor:5.0.0-alpha01")
     implementation(libs.compose.runtime)
 

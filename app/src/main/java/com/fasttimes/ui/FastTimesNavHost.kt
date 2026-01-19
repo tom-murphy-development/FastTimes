@@ -50,12 +50,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun FastTimesNavHost() {
     val navController = rememberNavController()
+    val draggableState = rememberDraggableScreenState()
+    val scope = rememberCoroutineScope()
 
     NavHost(navController = navController, startDestination = "main") {
         composable("main") {
-            val draggableState = rememberDraggableScreenState()
-            val scope = rememberCoroutineScope()
-
             val currentTitle = when (draggableState.state.currentValue) {
                 DragAnchors.Dashboard -> "Fast Times"
                 DragAnchors.History -> "History"
@@ -134,8 +133,11 @@ fun FastTimesNavHost() {
         composable("statistics") {
             StatisticsScreen(
                 onBackClick = { navController.navigateUp() },
-                onViewFastDetails = { fastId ->
-                    navController.navigate("history/$fastId")
+                onHistoryClick = {
+                    navController.popBackStack("main", inclusive = false)
+                    scope.launch {
+                        draggableState.openHistory()
+                    }
                 }
             )
         }

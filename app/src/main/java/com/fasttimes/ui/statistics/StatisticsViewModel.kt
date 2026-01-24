@@ -68,6 +68,7 @@ data class DailyActivity(
 data class StatisticsUiState(
     val streak: FastingStreak = FastingStreak(),
     val averageFast: Duration = Duration.ZERO,
+    val weeklyAverageFast: Duration = Duration.ZERO,
     val trend: FastingTrend = FastingTrend(),
     val weeklyActivity: List<DailyActivity> = emptyList(),
     val weeklyGoals: Set<Float> = emptySet(),
@@ -112,6 +113,7 @@ class StatisticsViewModel @Inject constructor(
             // Calculate total fasting time for the current week
             val weeklyFasts = completedFasts.filter { it.start.toLocalDate() >= startOfWeek }
             val weeklyFastingTime = weeklyFasts.sumOf { it.duration() }.milliseconds
+            val weeklyAverageFast = calculateAverageFast(weeklyFasts)
 
             val longestFast = fasts.maxByOrNull { it.duration() }
             
@@ -129,6 +131,7 @@ class StatisticsViewModel @Inject constructor(
             StatisticsUiState(
                 streak = streak,
                 averageFast = averageFast,
+                weeklyAverageFast = weeklyAverageFast,
                 trend = trend,
                 weeklyActivity = weeklyActivity,
                 weeklyGoals = weeklyGoals,

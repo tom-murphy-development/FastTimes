@@ -95,7 +95,7 @@ fun ExpressiveStatCard(
                 text = value, 
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Black,
-                    fontSize = 28.sp,
+                    fontSize = 30.sp,
                     lineHeight = 26.sp
                 ),
                 textAlign = TextAlign.Center,

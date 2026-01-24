@@ -926,7 +926,7 @@ fun StreakCard(
                                     .size(32.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        if (day.isCompleted) Color(0xFF4CAF50)
+                                        if (day.isCompleted) FastTimesTheme.accentColor
                                         else if (day.isFuture) Color.Transparent
                                         else MaterialTheme.colorScheme.surfaceVariant
                                     )

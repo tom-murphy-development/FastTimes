@@ -154,13 +154,13 @@ fun StatisticsScreen(
 
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = formatHoursOnly(state.averageFast),
+                            text = formatHoursOnly(state.weeklyAverageFast),
                             style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = " avg hrs",
+                            text = " avg",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -211,7 +211,7 @@ fun StatisticsScreen(
                             modifier = Modifier.weight(1f),
                             label = "Weekly",
                             value = formatHoursOnly(state.weeklyFastingTime),
-                            unit = "hours total",
+                            unit = "total",
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             shape = streakShape,
@@ -220,9 +220,9 @@ fun StatisticsScreen(
                     }
                     ExpressiveStatCard(
                         modifier = Modifier.weight(1f),
-                        label = "Average",
-                        value = formatHoursOnly(state.averageFast),
-                        unit = "hours",
+                        label = "Average Fast",
+                        value = formatHoursOnly(state.weeklyAverageFast),
+                        unit = "this week",
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                         shape = averageShape,
@@ -393,7 +393,7 @@ private fun DetailRow(label: String, value: String) {
  */
 private fun formatHoursOnly(duration: Duration): String {
     val totalHours = duration.inWholeMinutes / 60f
-    return String.format(Locale.getDefault(), "%.1f", totalHours)
+    return String.format(Locale.getDefault(), "%.1fh", totalHours)
 }
 
 /**

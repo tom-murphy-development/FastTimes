@@ -19,11 +19,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastsRepository
+import com.fasttimes.data.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -65,7 +67,7 @@ data class FastingTrend(
  * Data class representing daily fasting activity for the chart.
  */
 data class DailyActivity(
-    val dayOfWeek: DayOfWeek,
+    val date: LocalDate,
     val durationHours: Float,
     val isGoalMet: Boolean
 )
@@ -75,6 +77,7 @@ data class DailyActivity(
  */
 data class StatisticsUiState(
     val selectedPeriod: StatisticsPeriod = StatisticsPeriod.WEEKLY,
+    val chartPeriod: StatisticsPeriod = StatisticsPeriod.WEEKLY,
     val streak: FastingStreak = FastingStreak(),
     val periodStreakValue: Int = 0,
     val periodAverageFast: Duration = Duration.ZERO,
@@ -85,8 +88,9 @@ data class StatisticsUiState(
     val averageFast: Duration = Duration.ZERO,
     val weeklyAverageFast: Duration = Duration.ZERO,
     val trend: FastingTrend = FastingTrend(),
-    val weeklyActivity: List<DailyActivity> = emptyList(),
-    val weeklyGoals: Set<Float> = emptySet(),
+    val chartActivity: List<DailyActivity> = emptyList(),
+    val chartGoals: Set<Float> = emptySet(),
+    val chartAverageHours: Float = 0f,
     val totalFasts: Int = 0,
     val totalFastingTime: Duration = Duration.ZERO,
     val weeklyFastingTime: Duration = Duration.ZERO,
@@ -95,6 +99,7 @@ data class StatisticsUiState(
     val firstFastDate: LocalDate? = null,
     val averageStartTime: LocalTime? = null,
     val mostFrequentDay: DayOfWeek? = null,
+    val firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY,
     val isLoading: Boolean = true
 )
 
@@ -103,31 +108,48 @@ data class StatisticsUiState(
  */
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
-    private val fastsRepository: FastsRepository
+    private val fastsRepository: FastsRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _selectedPeriod = MutableStateFlow(StatisticsPeriod.WEEKLY)
+    private val _chartPeriod = MutableStateFlow(StatisticsPeriod.WEEKLY)
 
     val statisticsState: StateFlow<StatisticsUiState> = combine(
         fastsRepository.getFasts(),
-        _selectedPeriod
-    ) { fasts, period ->
+        _selectedPeriod,
+        _chartPeriod,
+        settingsRepository.firstDayOfWeek.map { 
+            try { DayOfWeek.valueOf(it.uppercase()) } catch (e: Exception) { DayOfWeek.MONDAY }
+        }
+    ) { fasts, period, chartPeriod, firstDayOfWeek ->
         val completedFasts = fasts.filter { it.endTime != null }
         
         // Base stats (always calculated for the top section/all-time)
         val currentStreak = calculateCurrentStreak(completedFasts)
         val averageFast = calculateAverageFast(completedFasts)
         val velocity = calculateVelocity(completedFasts, StatisticsPeriod.WEEKLY)
-        val weeklyActivity = calculateWeeklyActivity(completedFasts)
         
+        // Calculate chart data based on selected chart period
+        val chartActivity = calculateActivity(completedFasts, chartPeriod)
+        val chartDays = when (chartPeriod) {
+            StatisticsPeriod.WEEKLY -> 7
+            StatisticsPeriod.MONTHLY -> 30
+            else -> 7
+        }
+        val chartStartDate = LocalDate.now().minusDays((chartDays - 1).toLong())
+        val chartFasts = completedFasts.filter { it.start.toLocalDate() >= chartStartDate }
+        
+        val chartGoals = chartFasts
+            .mapNotNull { it.targetDuration?.let { target -> target.toFloat() / 3600000f } }
+            .toSet()
+        
+        val chartAverageDuration = calculateAverageFast(chartFasts)
+        val chartAverageHours = chartAverageDuration.inWholeMinutes / 60f
+
         val today = LocalDate.now()
         val startOfSevenDays = today.minusDays(6)
         
-        val weeklyGoals = completedFasts
-            .filter { it.start.toLocalDate() >= startOfSevenDays }
-            .mapNotNull { it.targetDuration?.let { target -> target.toFloat() / 3600000f } }
-            .toSet()
-
         val totalFastingTime = completedFasts.sumOf { it.duration() }.milliseconds
         val weeklyFasts = completedFasts.filter { it.start.toLocalDate() >= startOfSevenDays }
         val weeklyFastingTime = weeklyFasts.sumOf { it.duration() }.milliseconds
@@ -162,6 +184,7 @@ class StatisticsViewModel @Inject constructor(
 
         StatisticsUiState(
             selectedPeriod = period,
+            chartPeriod = chartPeriod,
             streak = currentStreak,
             periodStreakValue = periodStreakValue,
             periodAverageFast = periodAverageFast,
@@ -172,8 +195,9 @@ class StatisticsViewModel @Inject constructor(
             averageFast = averageFast,
             weeklyAverageFast = weeklyAverageFast,
             trend = velocity,
-            weeklyActivity = weeklyActivity,
-            weeklyGoals = weeklyGoals,
+            chartActivity = chartActivity,
+            chartGoals = chartGoals,
+            chartAverageHours = chartAverageHours,
             totalFasts = fasts.size,
             totalFastingTime = totalFastingTime,
             weeklyFastingTime = weeklyFastingTime,
@@ -182,6 +206,7 @@ class StatisticsViewModel @Inject constructor(
             firstFastDate = firstFastDate,
             averageStartTime = averageStartTime,
             mostFrequentDay = mostFrequentDay,
+            firstDayOfWeek = firstDayOfWeek,
             isLoading = false
         )
     }.stateIn(
@@ -192,6 +217,10 @@ class StatisticsViewModel @Inject constructor(
 
     fun onPeriodSelected(period: StatisticsPeriod) {
         _selectedPeriod.value = period
+    }
+
+    fun onChartPeriodSelected(period: StatisticsPeriod) {
+        _chartPeriod.value = period
     }
 
     private fun filterFastsForPeriod(fasts: List<Fast>, period: StatisticsPeriod): Pair<List<Fast>, List<Fast>> {
@@ -362,19 +391,24 @@ class StatisticsViewModel @Inject constructor(
         return (goalsMet.toFloat() / fasts.size) * 100f
     }
 
-    private fun calculateWeeklyActivity(completedFasts: List<Fast>): List<DailyActivity> {
+    private fun calculateActivity(completedFasts: List<Fast>, period: StatisticsPeriod): List<DailyActivity> {
+        val days = when (period) {
+            StatisticsPeriod.WEEKLY -> 7
+            StatisticsPeriod.MONTHLY -> 30
+            else -> 7
+        }
         val today = LocalDate.now()
-        val startOfWeek = today.minusDays(6)
+        val start = today.minusDays((days - 1).toLong())
         
-        return (0..6).map { i ->
-            val date = startOfWeek.plusDays(i.toLong())
+        return (0 until days).map { i ->
+            val date = start.plusDays(i.toLong())
             val fastsOnDate = completedFasts.filter { it.start.toLocalDate() == date }
             val totalDurationHours = fastsOnDate.sumOf { it.duration() }.toFloat() / 3600000f
             
             val goalMet = fastsOnDate.any { it.goalMet() }
             
             DailyActivity(
-                dayOfWeek = date.dayOfWeek,
+                date = date,
                 durationHours = totalDurationHours,
                 isGoalMet = goalMet
             )

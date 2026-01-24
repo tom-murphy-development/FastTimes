@@ -136,6 +136,12 @@ class HistoryViewModel @Inject constructor(
             emptyList()
         }
 
+        val averageDuration = if (month.fastsInMonth.isNotEmpty()) {
+            month.fastsInMonth.map { it.duration() }.average().toLong()
+        } else {
+            0L
+        }
+
         HistoryUiState(
             displayedMonth = displayedMonth,
             selectedDate = displayedMonth.atDay(1).withDayOfMonth(selectedDay ?: 1),
@@ -145,6 +151,7 @@ class HistoryViewModel @Inject constructor(
             selectedDayFasts = fastsForSelectedDay,
             totalFastsInMonth = month.fastsInMonth.size,
             longestFastInMonth = month.fastsInMonth.maxByOrNull { it.duration() },
+            averageFastDurationInMonth = averageDuration,
             editingFastId = editingFastId,
             firstDayOfWeek = firstDayOfWeek
         )

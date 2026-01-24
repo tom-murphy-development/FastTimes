@@ -26,11 +26,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,16 +42,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.fasttimes.ui.components.StatisticTile
+import com.fasttimes.ui.components.ExpressiveStatCard
+import com.fasttimes.ui.components.rememberRandomExpressiveShape
 import com.fasttimes.ui.editfast.EditFastRoute
-import com.fasttimes.ui.formatDuration
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,7 +93,7 @@ fun HistoryScreen(
                 onDayClick = viewModel::onDayClick,
             )
 
-            MonthlyStats(uiState = uiState, onViewFastDetails = onViewFastDetails)
+            MonthlyStats(uiState = uiState)
         }
 
         if (uiState.selectedDay != null) {
@@ -143,44 +139,71 @@ fun HistoryScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MonthlyStats(
-    uiState: HistoryUiState,
-    onViewFastDetails: (Long) -> Unit
+    uiState: HistoryUiState
 ) {
     val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM", Locale.getDefault()) }
+    
+    // Stable random seeds for shapes based on the displayed month
+    val monthSeed = remember(uiState.displayedMonth) { 
+        uiState.displayedMonth.year * 12 + uiState.displayedMonth.monthValue 
+    }
+    
+    val shape1 = rememberRandomExpressiveShape(seed = monthSeed)
+    val shape2 = rememberRandomExpressiveShape(seed = monthSeed + 1)
+    val shape3 = rememberRandomExpressiveShape(seed = monthSeed + 2)
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "${uiState.displayedMonth.format(monthFormatter)} Statistics",
-                style = MaterialTheme.typography.headlineSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(bottom = 8.dp)
+    Column(modifier = Modifier.padding(top = 24.dp)) {
+        Text(
+            text = "${uiState.displayedMonth.format(monthFormatter)} Summary",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ExpressiveStatCard(
+                modifier = Modifier.weight(1f),
+                label = "Total Fasts",
+                value = uiState.totalFastsInMonth.toString(),
+                unit = "completed",
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                shape = shape1,
+                height = 140.dp
             )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                StatisticTile(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.BarChart,
-                    label = "Total Fasts",
-                    value = uiState.totalFastsInMonth.toString()
-                )
-                StatisticTile(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.Star,
-                    label = "Longest Fast",
-                    value = uiState.longestFastInMonth?.let { formatDuration(it.duration().milliseconds) } ?: "-",
-                    onClick = { uiState.longestFastInMonth?.id?.let(onViewFastDetails) }
-                )
-            }
+            
+            ExpressiveStatCard(
+                modifier = Modifier.weight(1f),
+                label = "Longest Fast",
+                value = uiState.longestFastInMonth?.let { formatHoursOnly(it.duration()) } ?: "-",
+                unit = "this month",
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                shape = shape2,
+                height = 140.dp
+            )
+            
+            ExpressiveStatCard(
+                modifier = Modifier.weight(1f),
+                label = "Average",
+                value = formatHoursOnly(uiState.averageFastDurationInMonth),
+                unit = "duration",
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                shape = shape3,
+                height = 140.dp
+            )
         }
     }
+}
+
+private fun formatHoursOnly(durationMillis: Long): String {
+    val totalHours = durationMillis / (1000f * 60 * 60)
+    return String.format(Locale.getDefault(), "%.1fh", totalHours)
 }

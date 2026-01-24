@@ -15,7 +15,9 @@
  */
 package com.fasttimes.ui.statistics
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +37,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,7 +58,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,6 +79,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.random.Random
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Statistics screen displaying key fasting metrics with Material 3 Expressive elements.
@@ -93,6 +101,8 @@ fun StatisticsScreen(
     val streakShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
     val averageShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
     val consistencyShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
+    
+    var allTimeExpanded by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -283,36 +293,69 @@ fun StatisticsScreen(
 
                 // All-time Metrics Section
                 Column {
-                    Text(
-                        text = "All-time statistics",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier.fillMaxWidth()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { allTimeExpanded = !allTimeExpanded }
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            DetailRow("Total Fasts", state.totalFasts.toString())
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                            
-                            DetailRow("Total Duration", formatDuration(state.totalFastingTime))
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-
-                            DetailRow("Fasts Per Week", "%.1f".format(state.fastsPerWeek))
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                            
-                            DetailRow(
-                                "Common Day", 
-                                state.mostFrequentDay?.getDisplayName(TextStyle.FULL, Locale.getDefault()) ?: "-"
-                            )
-                            
-                            state.firstFastDate?.let { date ->
+                        Text(
+                            text = "All-time statistics",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Icon(
+                            imageVector = if (allTimeExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (allTimeExpanded) "Collapse" else "Expand",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    AnimatedVisibility(visible = allTimeExpanded) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(24.dp)) {
+                                DetailRow("Total Fasts", state.totalFasts.toString())
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                                val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-                                DetailRow("Journey Started", date.format(dateFormatter))
+                                
+                                DetailRow("Total Duration", formatDuration(state.totalFastingTime))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+                                DetailRow("Average Fast", formatDuration(state.averageFast))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+                                state.longestFast?.let { fast ->
+                                    DetailRow("Longest Fast", formatDuration(fast.duration().milliseconds))
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                }
+
+                                DetailRow("Avg. Fasts Per Week", "%.1f".format(state.fastsPerWeek))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                
+                                DetailRow(
+                                    "Most Common Day",
+                                    state.mostFrequentDay?.getDisplayName(TextStyle.FULL, Locale.getDefault()) ?: "-"
+                                )
+
+                                state.averageStartTime?.let { time ->
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    val timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+                                    DetailRow("Average Start Time", time.format(timeFormatter))
+                                }
+                                
+                                state.firstFastDate?.let { date ->
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                                    DetailRow("Journey Started", date.format(dateFormatter))
+                                }
                             }
                         }
                     }
@@ -427,7 +470,7 @@ fun WeeklyActivityChart(
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onTertiaryFixedVariant,
+                                    tint = MaterialTheme.colorScheme.onTertiary,
                                     modifier = Modifier.padding(2.dp)
                                 )
                             }

@@ -44,6 +44,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -55,7 +58,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,6 +65,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.fasttimes.ui.components.ExpressiveStatCard
 import com.fasttimes.ui.components.rememberRandomExpressiveShape
 import com.fasttimes.ui.formatDuration
+import com.fasttimes.ui.theme.FastTimesTheme
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
@@ -89,7 +92,7 @@ fun StatisticsScreen(
     // Generate random stable expressive shapes for the summary cards.
     val streakShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
     val averageShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
-    val velocityShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
+    val consistencyShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
 
     Scaffold(
         topBar = {
@@ -160,7 +163,7 @@ fun StatisticsScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = " avg",
+                            text = "avg",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -177,6 +180,7 @@ fun StatisticsScreen(
                 WeeklyActivityChart(
                     activity = state.weeklyActivity,
                     goals = state.weeklyGoals,
+                    averageHours = state.weeklyAverageFast.inWholeMinutes / 60f,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
@@ -185,59 +189,95 @@ fun StatisticsScreen(
                 // Expressive Asymmetrical Summary Cards
                 Column {
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text(
-                        text = "Trends",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Trends",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        SingleChoiceSegmentedButtonRow {
+                            StatisticsPeriod.entries.forEachIndexed { index, period ->
+                                SegmentedButton(
+                                    selected = state.selectedPeriod == period,
+                                    onClick = { viewModel.onPeriodSelected(period) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = index, count = StatisticsPeriod.entries.size)
+                                ) {
+                                    Text(
+                                        text = when (period) {
+                                            StatisticsPeriod.WEEKLY -> "Weekly"
+                                            StatisticsPeriod.MONTHLY -> "Monthly"
+                                            StatisticsPeriod.ALL_TIME -> "All Time"
+                                        },
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(1.dp)
-                    )
-                {
-                    if (state.streak.daysInARow > 1) {
+                    ) {
+                        val streakLabel = if (state.selectedPeriod == StatisticsPeriod.WEEKLY) "Streak" else "Longest Streak"
+                        val showStreak = state.periodStreakValue > 2
+                        
+                        if (showStreak) {
+                            ExpressiveStatCard(
+                                modifier = Modifier.weight(1f),
+                                label = streakLabel,
+                                value = "${state.periodStreakValue}",
+                                unit = "days",
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                shape = streakShape,
+                                height = 160.dp
+                            )
+                        } else {
+                            ExpressiveStatCard(
+                                modifier = Modifier.weight(1f),
+                                label = "Total Fasts",
+                                value = "${state.periodTotalFasts}",
+                                unit = "completed",
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                shape = streakShape,
+                                height = 160.dp
+                            )
+                        }
+                        
                         ExpressiveStatCard(
                             modifier = Modifier.weight(1f),
-                            label = "Streak",
-                            value = "${state.streak.daysInARow}",
-                            unit = "days",
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            shape = streakShape,
+                            label = "Average Fast",
+                            value = formatHoursOnly(state.periodAverageFast),
+                            unit = when(state.selectedPeriod) {
+                                StatisticsPeriod.WEEKLY -> "this week"
+                                StatisticsPeriod.MONTHLY -> "this month"
+                                StatisticsPeriod.ALL_TIME -> "overall"
+                            },
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            shape = averageShape,
                             height = 160.dp
                         )
-                    } else {
+                        
                         ExpressiveStatCard(
                             modifier = Modifier.weight(1f),
-                            label = "Weekly",
-                            value = formatHoursOnly(state.weeklyFastingTime),
-                            unit = "total",
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            shape = streakShape,
+                            label = "Consistency",
+                            value = "${state.periodConsistency.toInt()}%",
+                            unit = "goals met",
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            shape = consistencyShape,
                             height = 160.dp
                         )
-                    }
-                    ExpressiveStatCard(
-                        modifier = Modifier.weight(1f),
-                        label = "Average Fast",
-                        value = formatHoursOnly(state.weeklyAverageFast),
-                        unit = "this week",
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                        shape = averageShape,
-                        height = 160.dp
-                    )
-                    ExpressiveStatCard(
-                        modifier = Modifier.weight(1f),
-                        label = "Velocity",
-                        value = formatTrendPercentage(state.trend),
-                        unit = "vs. last week",
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        shape = velocityShape,
-                        height = 160.dp
-                    )
                     }
                 }
 
@@ -291,13 +331,14 @@ fun StatisticsScreen(
 fun WeeklyActivityChart(
     activity: List<DailyActivity>,
     goals: Set<Float>,
+    averageHours: Float,
     modifier: Modifier = Modifier
 ) {
     val maxHours = activity.maxOfOrNull { it.durationHours }?.coerceAtLeast(24f) ?: 24f
     
     Box(modifier = modifier) {
-        goals.forEach { goalVal ->
-            val goalYRatio = 1f - (goalVal / maxHours)
+        goals.filter { it > 0.1f }.forEach { goalVal ->
+            val goalYRatio = 1f - (goalVal / maxHours).coerceIn(0f, 1f)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -317,6 +358,38 @@ fun WeeklyActivityChart(
                         .padding(bottom = 4.dp),
                     color = MaterialTheme.colorScheme.tertiary
                 )
+            }
+        }
+
+        // Weekly average line - rendered AFTER goals to be on top
+        if (averageHours > 0) {
+            val averageYRatio = 1f - (averageHours / maxHours).coerceIn(0f, 1f)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp)
+                    .fillMaxHeight(averageYRatio)
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.align(Alignment.BottomStart),
+                    color = FastTimesTheme.accentColor.copy(alpha = 0.6f),
+                    thickness = 1.dp
+                )
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(bottom = 2.dp)
+                ) {
+                    Text(
+                        text = "avg",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                        color = FastTimesTheme.accentColor,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 
@@ -348,13 +421,13 @@ fun WeeklyActivityChart(
                         if (daily.isGoalMet) {
                             Surface(
                                 shape = CircleShape,
-                                color = Color.White.copy(alpha = 0.9f),
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.padding(4.dp).size(20.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    tint = MaterialTheme.colorScheme.onTertiaryFixedVariant,
                                     modifier = Modifier.padding(2.dp)
                                 )
                             }
@@ -394,12 +467,4 @@ private fun DetailRow(label: String, value: String) {
 private fun formatHoursOnly(duration: Duration): String {
     val totalHours = duration.inWholeMinutes / 60f
     return String.format(Locale.getDefault(), "%.1fh", totalHours)
-}
-
-/**
- * Helper to format trend percentage with a sign and % symbol.
- */
-private fun formatTrendPercentage(trend: FastingTrend): String {
-    val sign = if (trend.percentageChange > 0) "+" else ""
-    return "$sign${String.format(Locale.getDefault(), "%.0f", trend.percentageChange)}%"
 }

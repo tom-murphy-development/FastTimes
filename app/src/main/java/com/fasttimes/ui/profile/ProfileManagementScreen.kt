@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -280,7 +279,7 @@ fun ProfileManagementScreen(
                     items(items = otherProfiles, key = { it.id }) { profile ->
                         val isSelected = selectedProfile == profile
                         StatisticTile(
-                            modifier = Modifier.aspectRatio(1f),
+                            modifier = Modifier.fillMaxWidth(),
                             icon = Icons.Filled.Star,
                             label = profile.displayName,
                             value = formatDuration(profile.duration),

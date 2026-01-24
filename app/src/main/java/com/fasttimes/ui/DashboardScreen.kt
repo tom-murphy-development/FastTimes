@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -84,6 +85,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -301,10 +303,19 @@ fun DashboardScreen(
                                         style = MaterialTheme.typography.headlineMedium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     )
-                                    IconButton(onClick = onManageProfilesClick) {
+                                    TextButton(
+                                        onClick = onManageProfilesClick,
+                                        contentPadding = PaddingValues(horizontal = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = "Manage Profiles",
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                        Spacer(Modifier.width(4.dp))
                                         Icon(
                                             imageVector = Icons.Default.Add,
-                                            contentDescription = "Manage Profiles"
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
                                         )
                                     }
                                 }

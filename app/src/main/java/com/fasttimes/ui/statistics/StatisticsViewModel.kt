@@ -1,18 +1,17 @@
 /*
  * Copyright (C) 2025 tom-murphy-development
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.fasttimes.ui.statistics
 
@@ -28,9 +27,9 @@ import kotlinx.coroutines.flow.stateIn
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.YearMonth
-import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -48,8 +47,8 @@ data class FastingStreak(
  * Data class representing the trend in fasting activity.
  */
 data class FastingTrend(
-    val currentMonthFasts: Int = 0,
-    val previousMonthFasts: Int = 0,
+    val currentCount: Int = 0,
+    val previousCount: Int = 0,
     val percentageChange: Float = 0f,
     val isUpward: Boolean = false
 )
@@ -74,6 +73,7 @@ data class StatisticsUiState(
     val weeklyGoals: Set<Float> = emptySet(),
     val totalFasts: Int = 0,
     val totalFastingTime: Duration = Duration.ZERO,
+    val weeklyFastingTime: Duration = Duration.ZERO,
     val longestFast: Fast? = null,
     val fastsPerWeek: Float = 0f,
     val firstFastDate: LocalDate? = null,
@@ -95,18 +95,24 @@ class StatisticsViewModel @Inject constructor(
             val completedFasts = fasts.filter { it.endTime != null }
             val streak = calculateStreak(completedFasts)
             val averageFast = calculateAverageFast(completedFasts)
-            val trend = calculateTrend(completedFasts)
+            val trend = calculateVelocity(completedFasts)
             val weeklyActivity = calculateWeeklyActivity(completedFasts)
             
-            // Extract unique goals from fasts in the current week
             val today = LocalDate.now()
             val startOfWeek = today.minusDays(6)
+            
+            // Extract unique goals from fasts in the current week
             val weeklyGoals = completedFasts
                 .filter { it.start.toLocalDate() >= startOfWeek }
                 .mapNotNull { it.targetDuration?.let { target -> target.toFloat() / 3600000f } }
                 .toSet()
 
             val totalFastingTime = completedFasts.sumOf { it.duration() }.milliseconds
+            
+            // Calculate total fasting time for the current week
+            val weeklyFasts = completedFasts.filter { it.start.toLocalDate() >= startOfWeek }
+            val weeklyFastingTime = weeklyFasts.sumOf { it.duration() }.milliseconds
+
             val longestFast = fasts.maxByOrNull { it.duration() }
             
             val firstFast = completedFasts.minByOrNull { it.startTime }
@@ -128,6 +134,7 @@ class StatisticsViewModel @Inject constructor(
                 weeklyGoals = weeklyGoals,
                 totalFasts = fasts.size,
                 totalFastingTime = totalFastingTime,
+                weeklyFastingTime = weeklyFastingTime,
                 longestFast = longestFast,
                 fastsPerWeek = fastsPerWeek,
                 firstFastDate = firstFastDate,
@@ -200,34 +207,25 @@ class StatisticsViewModel @Inject constructor(
         return (totalDuration / completedFasts.size).milliseconds
     }
 
-    private fun calculateTrend(completedFasts: List<Fast>): FastingTrend {
-        val currentMonth = YearMonth.now()
-        val previousMonth = currentMonth.minusMonths(1)
+    private fun calculateVelocity(completedFasts: List<Fast>): FastingTrend {
+        val now = ZonedDateTime.now()
+        val startOfThisWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate().atStartOfDay(now.zone)
+        val startOfLastWeek = startOfThisWeek.minusWeeks(1)
 
-        val systemZone = ZoneId.systemDefault()
-        val currentMonthStart = currentMonth.atDay(1).atStartOfDay(systemZone)
-        val currentMonthEnd = currentMonth.atEndOfMonth().plusDays(1).atStartOfDay(systemZone)
-        previousMonth.atDay(1).atStartOfDay(systemZone)
-        val previousMonthEnd = previousMonth.atEndOfMonth().plusDays(1).atStartOfDay(systemZone)
-
-        val currentMonthFasts = completedFasts.count { fast ->
-            fast.end?.isBefore(currentMonthEnd) == true && fast.end?.isAfter(currentMonthStart) == true
-        }
-        val previousMonthFasts = completedFasts.count { fast ->
-            fast.end?.isBefore(previousMonthEnd) == true && fast.end?.isAfter(currentMonthStart.minusMonths(1)) == true
-        }
+        val thisWeekCount = completedFasts.count { it.start.isAfter(startOfThisWeek) }
+        val lastWeekCount = completedFasts.count { it.start.isAfter(startOfLastWeek) && it.start.isBefore(startOfThisWeek) }
 
         val percentageChange = when {
-            previousMonthFasts > 0 -> ((currentMonthFasts - previousMonthFasts).toFloat() / previousMonthFasts) * 100
-            currentMonthFasts > 0 -> 100f
+            lastWeekCount > 0 -> ((thisWeekCount - lastWeekCount).toFloat() / lastWeekCount) * 100
+            thisWeekCount > 0 -> 100f
             else -> 0f
         }
 
         return FastingTrend(
-            currentMonthFasts = currentMonthFasts,
-            previousMonthFasts = previousMonthFasts,
+            currentCount = thisWeekCount,
+            previousCount = lastWeekCount,
             percentageChange = percentageChange,
-            isUpward = currentMonthFasts >= previousMonthFasts
+            isUpward = thisWeekCount >= lastWeekCount
         )
     }
 
@@ -240,7 +238,6 @@ class StatisticsViewModel @Inject constructor(
             val fastsOnDate = completedFasts.filter { it.start.toLocalDate() == date }
             val totalDurationHours = fastsOnDate.sumOf { it.duration() }.toFloat() / 3600000f
             
-            // Check if any fast on this date met its target goal
             val goalMet = fastsOnDate.any { it.goalMet() }
             
             DailyActivity(
@@ -253,19 +250,15 @@ class StatisticsViewModel @Inject constructor(
 
     private fun calculateAverageStartTime(completedFasts: List<Fast>): LocalTime? {
         if (completedFasts.isEmpty()) return null
-        
         val totalSeconds = completedFasts.sumOf { fast ->
-            val startTime = fast.start.toLocalTime()
-            startTime.toSecondOfDay().toLong()
+            fast.start.toLocalTime().toSecondOfDay().toLong()
         }
-        
         val averageSeconds = totalSeconds / completedFasts.size
         return LocalTime.ofSecondOfDay(averageSeconds)
     }
 
     private fun calculateMostFrequentDay(completedFasts: List<Fast>): DayOfWeek? {
         if (completedFasts.isEmpty()) return null
-        
         return completedFasts
             .map { it.start.dayOfWeek }
             .groupBy { it }

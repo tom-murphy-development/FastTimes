@@ -76,7 +76,9 @@ data class DashboardStats(
     val averageFast: Duration = Duration.ZERO,
     val streak: FastingStreak = FastingStreak(),
     val trend: FastingTrend = FastingTrend(),
-    val weeklyProgress: List<DayProgress> = emptyList()
+    val weeklyProgress: List<DayProgress> = emptyList(),
+    val fastsThisMonth: Int = 0,
+    val longestFastThisMonth: Fast? = null
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -109,6 +111,16 @@ class DashboardViewModel @Inject constructor(
             val totalFastingTime = completedFasts.sumOf { it.duration() }.milliseconds
             val completedFastsCount = completedFasts.size
 
+            val currentMonth = YearMonth.now()
+            val systemZone = ZoneId.systemDefault()
+            val currentMonthStart = currentMonth.atDay(1).atStartOfDay(systemZone)
+            val currentMonthEnd = currentMonth.atEndOfMonth().plusDays(1).atStartOfDay(systemZone)
+            
+            val thisMonthFasts = completedFasts.filter { fast ->
+                fast.end?.isBefore(currentMonthEnd) == true &&
+                        fast.end?.isAfter(currentMonthStart) == true
+            }
+
             DashboardStats(
                 totalFasts = fasts.size,
                 longestFast = fasts.maxByOrNull { it.duration() },
@@ -120,7 +132,9 @@ class DashboardViewModel @Inject constructor(
                 },
                 streak = calculateStreak(completedFasts),
                 trend = calculateTrend(completedFasts),
-                weeklyProgress = calculateWeeklyProgress(completedFasts)
+                weeklyProgress = calculateWeeklyProgress(completedFasts),
+                fastsThisMonth = thisMonthFasts.size,
+                longestFastThisMonth = thisMonthFasts.maxByOrNull { it.duration() }
             )
         }
         .stateIn(
@@ -503,8 +517,8 @@ class DashboardViewModel @Inject constructor(
         val isUpward = currentMonthFasts >= previousMonthFasts
 
         return FastingTrend(
-            currentMonthFasts = currentMonthFasts,
-            previousMonthFasts = previousMonthFasts,
+            currentCount = currentMonthFasts,
+            previousCount = previousMonthFasts,
             percentageChange = percentageChange,
             isUpward = isUpward
         )

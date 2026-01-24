@@ -39,10 +39,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,8 +54,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
@@ -109,7 +105,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -117,6 +112,8 @@ import com.fasttimes.R
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.profile.FastingProfile
 import com.fasttimes.data.profile.durationMinutes
+import com.fasttimes.ui.components.ExpressiveStatCard
+import com.fasttimes.ui.components.rememberRandomExpressiveShape
 import com.fasttimes.ui.dashboard.DashboardUiState
 import com.fasttimes.ui.dashboard.DashboardViewModel
 import com.fasttimes.ui.dashboard.DayProgress
@@ -138,6 +135,7 @@ import java.time.format.TextStyle
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 
 private val confettiParty = listOf(
@@ -617,71 +615,64 @@ fun DashboardScreen(
                 }
 
                 // Statistics Section
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onStatisticsClick() }
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "Statistics",
-                                style = MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Go to Statistics"
-                            )
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(IntrinsicSize.Max)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Trend Tile
-                            val trendValue = if (stats.trend.percentageChange != 0f) {
-                                val sign = if (stats.trend.percentageChange > 0) "+" else ""
-                                "$sign${String.format(Locale.getDefault(), "%.0f", stats.trend.percentageChange)}%"
-                            } else {
-                                "No change"
-                            }
-                            StatisticTileLeftAligned(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                                description = "Trend",
-                                value = trendValue,
-                                trendIcon = if (stats.trend.isUpward) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                                trendIconColor = if (stats.trend.isUpward) {
-                                    MaterialTheme.colorScheme.tertiary
-                                } else {
-                                    MaterialTheme.colorScheme.error
-                                },
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-
-                            // Streak Tile
-                            StatisticTileLeftAligned(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                                description = "Streak",
-                                value = "${stats.streak.daysInARow} days",
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                        Spacer(Modifier.height(8.dp))
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onStatisticsClick() }
+                            .padding(vertical = 12.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Performance",
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.weight(1f),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Go to Statistics"
+                        )
                     }
+
+                    val fastsMonthShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
+                    val longestFastMonthShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(1.dp)
+                    ) {
+                        // Fasts this month Card
+                        ExpressiveStatCard(
+                            modifier = Modifier.weight(1f),
+                            label = "Fasts",
+                            value = "${stats.fastsThisMonth}",
+                            unit = "this month",
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            shape = fastsMonthShape,
+                            height = 140.dp
+                        )
+
+                        // Longest fast this month Card
+                        val longestFastDuration = stats.longestFastThisMonth?.let { 
+                             val durationMillis = it.duration()
+                             val hours = durationMillis / 3600000L
+                             "${hours}h"
+                        } ?: "0h"
+
+                        ExpressiveStatCard(
+                            modifier = Modifier.weight(1f),
+                            label = "Longest Fast",
+                            value = longestFastDuration,
+                            unit = "this month",
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            shape = longestFastMonthShape,
+                            height = 140.dp
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
                 }
 
                 // History Section - only shown if streak is less than 2
@@ -1402,98 +1393,6 @@ private fun GoalSelectionSection(
                                 )
                             }
                         }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * A composable that displays a statistic in a compact tile with left-aligned layout.
- *
- * The tile shows a description label (small text, top-left), the main value (large bold text,
- * bottom-left), and an optional sub-value with a trend icon.
- *
- * @param modifier The modifier to be applied to the tile
- * @param description The label describing the statistic (displayed in small text)
- * @param value The main value to display (displayed in large bold text)
- * @param subValue Optional secondary value (e.g., percentage change)
- * @param trendIcon Optional icon for displaying trend direction
- * @param trendIconColor Color for the trend icon
- * @param containerColor Background color of the tile
- * @param contentColor Text color of the tile
- */
-@Composable
-private fun StatisticTileLeftAligned(
-    modifier: Modifier = Modifier,
-    description: String,
-    value: String,
-    subValue: String? = null,
-    trendIcon: ImageVector? = null,
-    trendIconColor: Color = MaterialTheme.colorScheme.onSurface,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onSurface
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(16.dp)
-        ) {
-            // Trend icon (top-right)
-            if (trendIcon != null) {
-                Icon(
-                    imageVector = trendIcon,
-                    contentDescription = "Trend indicator",
-                    tint = trendIconColor,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(16.dp)
-                )
-            }
-
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Description (top-left)
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = contentColor.copy(alpha = 0.7f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                // Value and subValue (bottom)
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = value,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = contentColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    if (subValue != null) {
-                        Text(
-                            text = subValue,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = contentColor.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
                     }
                 }
             }

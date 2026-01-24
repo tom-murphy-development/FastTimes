@@ -36,15 +36,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -58,21 +55,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.graphics.shapes.RoundedPolygon
-import androidx.graphics.shapes.toPath
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fasttimes.ui.components.ExpressiveStatCard
+import com.fasttimes.ui.components.rememberRandomExpressiveShape
 import com.fasttimes.ui.formatDuration
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -83,9 +72,6 @@ import kotlin.time.Duration
 
 /**
  * Statistics screen displaying key fasting metrics with Material 3 Expressive elements.
- *
- * This version uses dynamic [RoundedPolygon] shapes for stat cards, ensuring organic
- * proportions and centered content fit. Shapes are randomized each time the screen loads.
  *
  * @param onBackClick Callback for the navigation back button.
  * @param onHistoryClick Callback to navigate to the history screen.
@@ -101,11 +87,9 @@ fun StatisticsScreen(
     val state by viewModel.statisticsState.collectAsState()
 
     // Generate random stable expressive shapes for the summary cards.
-    // By using remember { Random.nextInt() }, we get a new seed only when the screen
-    // is initially composed (i.e., every time it "loads").
     val streakShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
-    val trendShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
-    val weeklyShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
+    val averageShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
+    val velocityShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
 
     Scaffold(
         topBar = {
@@ -198,7 +182,7 @@ fun StatisticsScreen(
                         .height(200.dp)
                 )
 
-                // Expressive Asymmetrical Summary Cards with Randomized Material Polygons
+                // Expressive Asymmetrical Summary Cards
                 Column {
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(
@@ -211,32 +195,48 @@ fun StatisticsScreen(
                         horizontalArrangement = Arrangement.spacedBy(1.dp)
                     )
                 {
+                    if (state.streak.daysInARow > 1) {
+                        ExpressiveStatCard(
+                            modifier = Modifier.weight(1f),
+                            label = "Streak",
+                            value = "${state.streak.daysInARow}",
+                            unit = "days",
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            shape = streakShape,
+                            height = 160.dp
+                        )
+                    } else {
+                        ExpressiveStatCard(
+                            modifier = Modifier.weight(1f),
+                            label = "Weekly",
+                            value = formatHoursOnly(state.weeklyFastingTime),
+                            unit = "hours total",
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            shape = streakShape,
+                            height = 160.dp
+                        )
+                    }
                     ExpressiveStatCard(
                         modifier = Modifier.weight(1f),
-                        label = "Streak",
-                        value = "${state.streak.daysInARow}",
-                        unit = "days",
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        shape = streakShape
-                    )
-                    ExpressiveStatCard(
-                        modifier = Modifier.weight(1f),
-                        label = "Trend",
-                        value = "${state.fastsPerWeek}",
-                        unit = "vs last month",
+                        label = "Average",
+                        value = formatHoursOnly(state.averageFast),
+                        unit = "hours",
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                        shape = trendShape
+                        shape = averageShape,
+                        height = 160.dp
                     )
                     ExpressiveStatCard(
                         modifier = Modifier.weight(1f),
-                        label = "Weekly Fasts",
+                        label = "Velocity",
                         value = formatTrendPercentage(state.trend),
-                        unit = "days",
+                        unit = "vs. last week",
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        shape = weeklyShape
+                        shape = velocityShape,
+                        height = 160.dp
                     )
                     }
                 }
@@ -285,61 +285,6 @@ fun StatisticsScreen(
 }
 
 /**
- * Creates a [Shape] from a [RoundedPolygon], scaled uniformly to 90% and centered.
- */
-@ExperimentalMaterial3ExpressiveApi
-@Composable
-fun rememberPolygonShape(polygon: RoundedPolygon): Shape {
-    return remember(polygon) {
-        object : Shape {
-            override fun createOutline(
-                size: Size,
-                layoutDirection: LayoutDirection,
-                density: Density
-            ): Outline {
-                val path = polygon.toPath().asComposePath()
-                val bounds = path.getBounds()
-                val matrix = Matrix()
-                
-                // Use uniform scaling to 90% of original size to prevent stretching
-                val scale = minOf(size.width / bounds.width, size.height / bounds.height) * 0.95f
-
-                // Center and scale to fit destination box
-                matrix.translate(size.width / 2f, size.height / 2f)
-                matrix.scale(scale, scale)
-                matrix.translate(-(bounds.left + bounds.width / 2f), -(bounds.top + bounds.height / 2f))
-                
-                path.transform(matrix)
-                return Outline.Generic(path)
-            }
-        }
-    }
-}
-
-/**
- * Returns a random expressive shape from the [MaterialShapes] collection.
- */
-@ExperimentalMaterial3ExpressiveApi
-@Composable
-fun rememberRandomExpressiveShape(seed: Int): Shape {
-    val shapes = remember {
-        listOf(
-            MaterialShapes.Pentagon,
-            MaterialShapes.Clover8Leaf,
-            MaterialShapes.Sunny,
-            MaterialShapes.Cookie9Sided,
-            MaterialShapes.Ghostish,
-            MaterialShapes.Slanted,
-            MaterialShapes.Gem,
-            MaterialShapes.Clover4Leaf
-        )
-    }
-    // Using Math.abs to handle potential negative Random.nextInt() results
-    val polygon = shapes[Math.abs(seed) % shapes.size]
-    return rememberPolygonShape(polygon)
-}
-
-/**
  * A custom chart displaying weekly fasting activity with pill-shaped bars and success indicators.
  */
 @Composable
@@ -349,7 +294,6 @@ fun WeeklyActivityChart(
     modifier: Modifier = Modifier
 ) {
     val maxHours = activity.maxOfOrNull { it.durationHours }?.coerceAtLeast(24f) ?: 24f
-    val goalHours = 16f
     
     Box(modifier = modifier) {
         goals.forEach { goalVal ->
@@ -430,67 +374,6 @@ fun WeeklyActivityChart(
 }
 
 /**
- * An expressive summary card with a custom [Shape].
- * Content is centered and sized to fit comfortably with flexible sizing.
- */
-@Composable
-fun ExpressiveStatCard(
-    label: String,
-    value: String,
-    unit: String,
-    containerColor: Color,
-    contentColor: Color,
-    shape: Shape,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(240.dp),
-        shape = shape,
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = label, 
-                style = MaterialTheme.typography.labelLarge,
-                color = contentColor.copy(alpha = 0.8f),
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = value, 
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    fontSize = 40.sp,
-                    lineHeight = 44.sp
-                ),
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = unit, 
-                style = MaterialTheme.typography.bodyMedium,
-                color = contentColor.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center,
-                maxLines = 2
-            )
-        }
-    }
-}
-
-/**
  * A detail row for secondary statistics.
  */
 @Composable
@@ -514,7 +397,7 @@ private fun formatHoursOnly(duration: Duration): String {
 }
 
 /**
- * Helper to format trend percentage with a sign.
+ * Helper to format trend percentage with a sign and % symbol.
  */
 private fun formatTrendPercentage(trend: FastingTrend): String {
     val sign = if (trend.percentageChange > 0) "+" else ""

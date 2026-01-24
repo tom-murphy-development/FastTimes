@@ -41,7 +41,6 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -122,11 +121,6 @@ fun StatisticsScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -212,8 +206,14 @@ fun StatisticsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                    
+                    val goalsMetCount = state.chartActivity.count { it.isGoalMet }
                     Text(
-                        text = "Goal met on ${state.chartActivity.count { it.isGoalMet }} days. Great progress!",
+                        text = if (goalsMetCount >= 2) {
+                            "Goal met on $goalsMetCount days. Great progress!"
+                        } else {
+                            "Keep going to build a habit!"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -125,19 +125,21 @@ class HistoryViewModel @Inject constructor(
 
     val uiState: StateFlow<HistoryUiState> = combine(
         historyMonth,
-        _displayedMonth,
         _selectedDay,
         _editingFastId,
         settingsRepository.firstDayOfWeek
-    ) { month, displayedMonth, selectedDay, editingFastId, firstDayOfWeek ->
+    ) { month, selectedDay, editingFastId, firstDayOfWeek ->
+        val displayedMonth = month.yearMonth
+        val fastsInMonth = month.fastsInMonth
+        
         val fastsForSelectedDay = if (selectedDay != null) {
             month.fastsByDay[selectedDay] ?: emptyList()
         } else {
             emptyList()
         }
 
-        val averageDuration = if (month.fastsInMonth.isNotEmpty()) {
-            month.fastsInMonth.map { it.duration() }.average().toLong()
+        val averageDuration = if (fastsInMonth.isNotEmpty()) {
+            fastsInMonth.map { it.duration() }.average().toLong()
         } else {
             0L
         }
@@ -149,8 +151,8 @@ class HistoryViewModel @Inject constructor(
             dayStatusByDayOfMonth = month.dayStatusByDayOfMonth.toImmutableMap(),
             dailyTimelineSegments = month.dailyTimelineSegments.toImmutableMap(),
             selectedDayFasts = fastsForSelectedDay,
-            totalFastsInMonth = month.fastsInMonth.size,
-            longestFastInMonth = month.fastsInMonth.maxByOrNull { it.duration() },
+            totalFastsInMonth = fastsInMonth.size,
+            longestFastInMonth = fastsInMonth.maxByOrNull { it.duration() },
             averageFastDurationInMonth = averageDuration,
             editingFastId = editingFastId,
             firstDayOfWeek = firstDayOfWeek
@@ -206,12 +208,7 @@ class HistoryViewModel @Inject constructor(
     }
 
     fun onDayClick(day: Int) {
-        if (_selectedDay.value == day) {
-            _selectedDay.value = null
-        } else {
-            _selectedDay.value = day
-            _displayedMonth.value = YearMonth.from(uiState.value.displayedMonth.atDay(day))
-        }
+        _selectedDay.value = if (_selectedDay.value == day) null else day
     }
 
     fun onDismissDetails() {

@@ -66,16 +66,20 @@ class StatisticsViewModelTest {
         val today = LocalDate.now()
         val yesterday = today.minusDays(1)
 
+        // Create fasts that clearly end on yesterday and today
         val fasts = listOf(
-            createFast(1, yesterday.atStartOfDay(zoneId).toInstant().toEpochMilli() + 16.hours.inWholeMilliseconds),
-            createFast(2, today.atStartOfDay(zoneId).toInstant().toEpochMilli() + 16.hours.inWholeMilliseconds)
+            createFast(1, yesterday.atTime(8, 0).atZone(zoneId).toInstant().toEpochMilli(), 16.hours.inWholeMilliseconds, 8.hours.inWholeMilliseconds),
+            createFast(2, today.atTime(8, 0).atZone(zoneId).toInstant().toEpochMilli(), 16.hours.inWholeMilliseconds, 8.hours.inWholeMilliseconds)
         )
 
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
 
         viewModel.statisticsState.test {
-            val state = awaitItem().let { if (it.isLoading) awaitItem() else it }
+            // Skip initial loading state
+            var state = awaitItem()
+            if (state.isLoading) state = awaitItem()
+            
             assertEquals(2, state.streak.daysInARow)
             assertEquals(yesterday, state.streak.startDate)
             assertEquals(today, state.streak.lastFastDate)
@@ -89,9 +93,9 @@ class StatisticsViewModelTest {
         
         // 2 fasts in current week, 1 in previous week
         val fasts = listOf(
-            createFast(1, today.minusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()),
-            createFast(2, today.minusDays(2).atStartOfDay(zoneId).toInstant().toEpochMilli()),
-            createFast(3, today.minusDays(8).atStartOfDay(zoneId).toInstant().toEpochMilli())
+            createFast(1, today.minusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli(), 16.hours.inWholeMilliseconds, 8.hours.inWholeMilliseconds),
+            createFast(2, today.minusDays(2).atStartOfDay(zoneId).toInstant().toEpochMilli(), 16.hours.inWholeMilliseconds, 8.hours.inWholeMilliseconds),
+            createFast(3, today.minusDays(8).atStartOfDay(zoneId).toInstant().toEpochMilli(), 16.hours.inWholeMilliseconds, 8.hours.inWholeMilliseconds)
         )
 
         every { fastsRepository.getFasts() } returns flowOf(fasts)
@@ -99,7 +103,9 @@ class StatisticsViewModelTest {
         viewModel.onPeriodSelected(StatisticsPeriod.WEEKLY)
 
         viewModel.statisticsState.test {
-            val state = awaitItem().let { if (it.periodTotalFasts == 0) awaitItem() else it }
+            var state = awaitItem()
+            if (state.isLoading || state.periodTotalFasts == 0) state = awaitItem()
+            
             assertEquals(2, state.periodTrend.currentCount)
             assertEquals(1, state.periodTrend.previousCount)
             assertEquals(100f, state.periodTrend.percentageChange)
@@ -111,22 +117,20 @@ class StatisticsViewModelTest {
     fun `consistency is calculated as percentage of goals met`() = runTest {
         val fasts = listOf(
             // Goal: 16h, Actual: 17h (Met)
-            createFast(1, System.currentTimeMillis(), 16.hours.inWholeMilliseconds, 17.hours.inWholeMilliseconds),
+            createFast(1, System.currentTimeMillis() - 24.hours.inWholeMilliseconds, 16.hours.inWholeMilliseconds, 17.hours.inWholeMilliseconds),
             // Goal: 16h, Actual: 10h (Not Met)
-            createFast(2, System.currentTimeMillis() - 24.hours.inWholeMilliseconds, 16.hours.inWholeMilliseconds, 10.hours.inWholeMilliseconds)
+            createFast(2, System.currentTimeMillis() - 48.hours.inWholeMilliseconds, 16.hours.inWholeMilliseconds, 10.hours.inWholeMilliseconds)
         )
 
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
 
         viewModel.statisticsState.test {
-            val state = awaitItem().let { if (it.periodConsistency == 0f) awaitItem() else it }
+            var state = awaitItem()
+            if (state.isLoading || state.periodTotalFasts == 0) state = awaitItem()
+            
             assertEquals(50f, state.periodConsistency)
         }
-    }
-
-    private fun createFast(id: Long, endTime: Long): Fast {
-        return createFast(id, endTime, 16.hours.inWholeMilliseconds, 16.hours.inWholeMilliseconds)
     }
 
     private fun createFast(id: Long, startTime: Long, target: Long, actual: Long): Fast {

@@ -34,7 +34,6 @@ import org.junit.Rule
 import org.junit.Test
 import java.time.YearMonth
 import java.time.ZoneId
-import java.time.ZonedDateTime
 
 @ExperimentalCoroutinesApi
 class HistoryViewModelTest {
@@ -61,11 +60,24 @@ class HistoryViewModelTest {
         viewModel = HistoryViewModel(fastsRepository, settingsRepository, savedStateHandle)
         val initialMonth = YearMonth.now()
         
-        viewModel.onPreviousMonth()
-        assertEquals(initialMonth.minusMonths(1), viewModel.uiState.value.displayedMonth)
-        
-        viewModel.onNextMonth()
-        assertEquals(initialMonth, viewModel.uiState.value.displayedMonth)
+        viewModel.uiState.test {
+            var state = expectMostRecentItem()
+            assertEquals(initialMonth, state.displayedMonth)
+            
+            viewModel.onPreviousMonth()
+            state = awaitItem()
+            while(state.displayedMonth != initialMonth.minusMonths(1)) {
+                state = awaitItem()
+            }
+            assertEquals(initialMonth.minusMonths(1), state.displayedMonth)
+            
+            viewModel.onNextMonth()
+            state = awaitItem()
+            while(state.displayedMonth != initialMonth) {
+                state = awaitItem()
+            }
+            assertEquals(initialMonth, state.displayedMonth)
+        }
     }
 
     @Test
@@ -79,22 +91,53 @@ class HistoryViewModelTest {
 
     @Test
     fun `fasts are correctly grouped by month`() = runTest {
-        val now = ZonedDateTime.now(ZoneId.systemDefault())
-        val fastInThisMonth = Fast(id = 1, startTime = now.toInstant().toEpochMilli(), endTime = now.plusHours(16).toInstant().toEpochMilli(), profileName = "16:8", targetDuration = 16 * 3600000L, notes = null)
-        val fastInLastMonth = Fast(id = 2, startTime = now.minusMonths(1).toInstant().toEpochMilli(), endTime = now.minusMonths(1).plusHours(16).toInstant().toEpochMilli(), profileName = "16:8", targetDuration = 16 * 3600000L, notes = null)
+        val zone = ZoneId.systemDefault()
+        val thisMonth = YearMonth.now()
+        val lastMonth = thisMonth.minusMonths(1)
+        
+        val startOfThisMonth = thisMonth.atDay(1).atStartOfDay(zone)
+        val startOfLastMonth = lastMonth.atDay(1).atStartOfDay(zone)
+
+        // Create fasts 12 hours into each month to avoid boundary issues
+        val fastInThisMonth = Fast(
+            id = 1, 
+            startTime = startOfThisMonth.plusHours(12).toInstant().toEpochMilli(), 
+            endTime = startOfThisMonth.plusHours(28).toInstant().toEpochMilli(), 
+            profileName = "16:8", 
+            targetDuration = 16 * 3600000L, 
+            notes = null
+        )
+        val fastInLastMonth = Fast(
+            id = 2, 
+            startTime = startOfLastMonth.plusHours(12).toInstant().toEpochMilli(), 
+            endTime = startOfLastMonth.plusHours(28).toInstant().toEpochMilli(), 
+            profileName = "16:8", 
+            targetDuration = 16 * 3600000L, 
+            notes = null
+        )
         
         every { fastsRepository.getFasts() } returns flowOf(listOf(fastInThisMonth, fastInLastMonth))
         
         viewModel = HistoryViewModel(fastsRepository, settingsRepository, savedStateHandle)
         
         viewModel.uiState.test {
-            val state = awaitItem()
+            // Wait for the state that includes the fast for this month
+            var state = awaitItem()
+            while (state.totalFastsInMonth != 1) {
+                state = awaitItem()
+            }
             assertEquals(1, state.totalFastsInMonth)
             
             viewModel.onPreviousMonth()
-            val prevState = awaitItem()
-            assertEquals(1, prevState.totalFastsInMonth)
-            assertEquals(fastInLastMonth.id, prevState.longestFastInMonth?.id)
+            
+            // Wait for the state that reflects the previous month's data
+            state = awaitItem()
+            while (state.displayedMonth != lastMonth || state.totalFastsInMonth != 1) {
+                state = awaitItem()
+            }
+            
+            assertEquals(1, state.totalFastsInMonth)
+            assertEquals(fastInLastMonth.id, state.longestFastInMonth?.id)
         }
     }
 
@@ -102,10 +145,22 @@ class HistoryViewModelTest {
     fun `onDayClick toggles selection`() = runTest {
         viewModel = HistoryViewModel(fastsRepository, settingsRepository, savedStateHandle)
         
-        viewModel.onDayClick(15)
-        assertEquals(15, viewModel.uiState.value.selectedDay)
-        
-        viewModel.onDayClick(15)
-        assertNull(viewModel.uiState.value.selectedDay)
+        viewModel.uiState.test {
+            expectMostRecentItem()
+            
+            viewModel.onDayClick(15)
+            var state = awaitItem()
+            while (state.selectedDay != 15) {
+                state = awaitItem()
+            }
+            assertEquals(15, state.selectedDay)
+            
+            viewModel.onDayClick(15)
+            state = awaitItem()
+            while (state.selectedDay != null) {
+                state = awaitItem()
+            }
+            assertNull(state.selectedDay)
+        }
     }
 }

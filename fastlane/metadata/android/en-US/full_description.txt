@@ -1,0 +1,12 @@
+Fast Times is a simple, lightweight, and completely open-source intermittent fasting tracker designed with your privacy in mind.
+
+Features:
+- **Material 3 Expressive Design**: Experience a modern, bold, and intuitive interface built with the latest Material 3 Expressive design language.
+- **Privacy First**: No accounts, no cloud sync, and no trackers. All your data stays securely on your device.
+- **Detailed Fasting History**: Keep a comprehensive log of every fast. Review, edit, and manage your past entries with ease.
+- **Performance Statistics**: Visualize your progress with in-depth statistics. Track your streaks, total fasting time, and trends to stay motivated.
+- **Material You Customization**: Personalize your experience with dynamic color support that matches your wallpaper and flexible fasting profiles tailored to your lifestyle.
+- **Local Notifications**: Stay on track with timely alerts when your fast begins or ends, handled entirely on-device.
+- **Open Source**: Licensed under GNU GPL v3.0, ensuring transparency and community-driven development.
+
+Whether you're just starting your intermittent fasting journey or are a seasoned pro, Fast Times provides powerful, professional tools to track your health without the bloat or the surveillance.

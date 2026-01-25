@@ -1,18 +1,17 @@
 # FastTimes
 
-A simple Open Source Android fasting timer and tracking app.
+Simple, private, open-source Android intermittent fasting tracker.
 
 ## Screenshots
 
 <p width="100%" align="center">
-  <img src="docs/screenshots/dashboard_light_dark_1.png" width="30%" alt="">
-  <img src="docs/screenshots/dashboard_light_1.png" width="30%" alt="">
-  <img src="docs/screenshots/dashboard_dark_2.png" width="30%" alt="">
-  <img src="docs/screenshots/fasting_dark_3.png" width="30%" alt="">
-  <img src="docs/screenshots/fasting_complete_light_4.png" width="30%" alt="">
-  <img src="docs/screenshots/fasting_history_dark_5.png" width="30%" alt="">
-  <img src="docs/screenshots/fasting_details_dark_6.png" width="30%" alt="">
-  <img src="docs/screenshots/settings_dark_7.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/images/phoneScreenshots/1_DashboardFastDark.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/images/phoneScreenshots/2_DashboardFastLight.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/images/phoneScreenshots/3_PerformanceLight.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/images/phoneScreenshots/4_DashboardNoFastDark.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/images/phoneScreenshots/5_HistoryDark.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/images/phoneScreenshots/6_SettingsDark.png" width="30%" alt="">
+
 </p>
 
 ## Download

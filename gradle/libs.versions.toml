@@ -12,6 +12,7 @@ material3 = "material3-*:1.5.0-alpha07"
 serialization = "1.9.0"
 materialKolor = "4.0.3"
 spotless = "6.23.3"
+leakcanary = "2.14"
 
 
 # AndroidX Core Libraries
@@ -89,6 +90,8 @@ material = { group = "com.google.android.material", name = "material", version.r
 # Themeing
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 
+# Debug
+leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

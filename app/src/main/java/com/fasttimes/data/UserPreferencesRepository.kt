@@ -37,7 +37,7 @@ enum class Theme {
 data class UserData(
     val fastingGoal: Duration,
     val theme: Theme,
-    val accentColor: Long?, // Changed to nullable
+    val accentColor: Long?,
     val useWavyIndicator: Boolean
 )
 

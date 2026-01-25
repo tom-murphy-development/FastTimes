@@ -22,7 +22,7 @@ android {
         minSdk = 30
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -43,6 +43,19 @@ android {
                 keyAlias = System.getenv("RELEASE_KEY_ALIAS")
                 keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
             }
+        }
+    }
+
+    flavorDimensions += "distribution"
+
+    productFlavors {
+        create("foss") {
+            dimension = "distribution"
+            // This is the F-Droid and GitHub release version
+        }
+        create("playstore") {
+            dimension = "distribution"
+            // This version can include Google Play Billing or other Play-specific services
         }
     }
 
@@ -145,6 +158,9 @@ dependencies {
     implementation("androidx.graphics:graphics-shapes:1.0.1")
     implementation("com.materialkolor:material-kolor:5.0.0-alpha01")
     implementation(libs.compose.runtime)
+
+    // Debug
+    debugImplementation(libs.leakcanary.android)
 
     // Testing
     testImplementation(libs.junit)

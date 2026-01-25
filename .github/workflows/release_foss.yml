@@ -1,4 +1,4 @@
-name: Android Release
+name: Release FOSS
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ on:
 
 jobs:
   release:
-    name: Build and Release APK
+    name: Build and Release FOSS APK
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -44,12 +44,12 @@ jobs:
         run: |
           echo $ENCODED_STRING | base64 -di > release-keystore.jks
 
-      - name: Build Signed APK
+      - name: Build Signed FOSS APK
         run: |
           if [ "${{ github.event.inputs.release_type }}" == "stable" ]; then
-            ./gradlew assembleRelease
+            ./gradlew assembleFossRelease
           else
-            ./gradlew assembleBeta
+            ./gradlew assembleFossBeta
           fi
         env:
           RELEASE_KEYSTORE_PATH: release-keystore.jks
@@ -74,13 +74,13 @@ jobs:
         with:
           tag_name: >-
             ${{ (github.event.inputs.release_type == 'stable') && 
-                format('v{0}', steps.get_version.outputs.VERSION_NAME) || 
-                format('v{0}-beta.{1}', steps.get_version.outputs.VERSION_NAME, github.run_number) 
+                format('v{0}-foss', steps.get_version.outputs.VERSION_NAME) || 
+                format('v{0}-foss-beta.{1}', steps.get_version.outputs.VERSION_NAME, github.run_number) 
             }}
           name: >-
             ${{ (github.event.inputs.release_type == 'stable') && 
-                format('Release v{0}', steps.get_version.outputs.VERSION_NAME) || 
-                format('Beta v{0} (Build {1})', steps.get_version.outputs.VERSION_NAME, github.run_number) 
+                format('FOSS Release v{0}', steps.get_version.outputs.VERSION_NAME) || 
+                format('FOSS Beta v{0} (Build {1})', steps.get_version.outputs.VERSION_NAME, github.run_number) 
             }}
           files: app/build/outputs/apk/**/*.apk
           prerelease: ${{ github.event.inputs.release_type != 'stable' }}

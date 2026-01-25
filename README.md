@@ -84,7 +84,7 @@ app/src/main/java/com/fasttimes/
    ```
 2. **Open in Android Studio**: Use **Ladybug (2024.2.1)** or newer for full support of the latest Compose features.
 3. **JDK Configuration**: Ensure **JDK 17** is selected in *Settings > Build, Execution, Deployment > Build Tools > Gradle*.
-4. **Build**: Run `./gradlew assembleDebug` or use the Play button in Android Studio.
+4. **Build**: Run `./gradlew assembleFossDebug` or use the **fossDebug** build variant in Android Studio.
 5. **Run**: Deploy to an emulator or physical device running **Android 11 (API 30)** or higher.
 
 ## Contribution Guidelines

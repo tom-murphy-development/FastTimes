@@ -220,7 +220,7 @@ class DashboardViewModel @Inject constructor(
 
                 if (activeFast.targetDuration == null) {
                     val elapsedTime = (now - startTime).milliseconds
-                    DashboardUiState.ManualFasting(
+                    DashboardUiState.OpenFasting(
                         activeFast,
                         elapsedTime,
                         data.isEditing,
@@ -295,7 +295,7 @@ class DashboardViewModel @Inject constructor(
         _isEditing.value = false
     }
 
-    fun startManualFast() {
+    fun startOpenFast() {
         viewModelScope.launch {
             val showLiveProgress = settingsRepository.showLiveProgress.first()
 
@@ -315,7 +315,7 @@ class DashboardViewModel @Inject constructor(
 
             val fast = Fast(
                 startTime = System.currentTimeMillis(),
-                profileName = DefaultFastingProfile.MANUAL.displayName,
+                profileName = DefaultFastingProfile.OPEN.displayName,
                 targetDuration = null,
                 endTime = null,
                 notes = null
@@ -368,7 +368,7 @@ class DashboardViewModel @Inject constructor(
         val fastToEnd = when (uiValue) {
             is DashboardUiState.FastingInProgress -> uiValue.activeFast
             is DashboardUiState.FastingGoalReached -> uiValue.activeFast
-            is DashboardUiState.ManualFasting -> uiValue.activeFast
+            is DashboardUiState.OpenFasting -> uiValue.activeFast
             else -> null
         }
 
@@ -377,7 +377,7 @@ class DashboardViewModel @Inject constructor(
             alarmScheduler.cancel(fast)
 
             val endTime = System.currentTimeMillis()
-            if (fast.profileName == "Manual") {
+            if (fast.profileName == DefaultFastingProfile.OPEN.displayName) {
                 val elapsedTime = endTime - fast.startTime
                 fastsRepository.updateFast(fast.copy(targetDuration = elapsedTime))
             }

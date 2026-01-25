@@ -29,7 +29,7 @@ import com.fasttimes.data.profile.FastingProfileDao
 
 @Database(
     entities = [Fast::class, FastingProfile::class],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -48,7 +48,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "fasttimes-db"
                 )
                     .addCallback(callback)
-                    .addMigrations(MIGRATION_4_5)
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
                     .build()
                 INSTANCE = instance
                 instance
@@ -58,6 +58,15 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE fasting_profiles ADD COLUMN isFavorite INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Rebrand "No Goal" to "Open Fast" in profiles
+                db.execSQL("UPDATE fasting_profiles SET displayName = 'Open Fast' WHERE displayName = 'No Goal'")
+                // Also update history records that used the old names
+                db.execSQL("UPDATE fasts SET profileName = 'Open Fast' WHERE profileName = 'No Goal' OR profileName = 'Manual'")
             }
         }
     }

@@ -81,14 +81,14 @@ sealed class DashboardUiState {
     ) : DashboardUiState()
 
     /**
-     * The state where a manual fast is in progress.
+     * The state where an open fast is in progress.
      *
      * @param activeFast The currently active fast.
      * @param elapsedTime The time elapsed since the fast started.
      * @param isEditing Whether the user is currently editing the fast.
      * @param useWavyIndicator Whether to use the wavy progress indicator.
      */
-    data class ManualFasting(
+    data class OpenFasting(
         val activeFast: Fast,
         val elapsedTime: Duration,
         val isEditing: Boolean = false,

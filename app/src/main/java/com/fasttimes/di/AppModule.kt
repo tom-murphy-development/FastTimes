@@ -25,6 +25,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.fasttimes.data.AppDatabase
 import com.fasttimes.data.AppDatabase.Companion.MIGRATION_4_5
+import com.fasttimes.data.AppDatabase.Companion.MIGRATION_5_6
 import com.fasttimes.data.AppDatabaseCallback
 import com.fasttimes.data.fast.FastDao
 import com.fasttimes.data.profile.FastingProfileDao
@@ -78,7 +79,7 @@ object AppModule {
         context,
         AppDatabase::class.java,
         "fasttimes-db"
-    ).addCallback(callback).addMigrations(MIGRATION_4_5).build()
+    ).addCallback(callback).addMigrations(MIGRATION_4_5, MIGRATION_5_6).build()
 
     @Provides
     fun provideFastDao(db: AppDatabase): FastDao = db.fastDao()

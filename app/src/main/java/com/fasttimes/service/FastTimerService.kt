@@ -95,19 +95,23 @@ class FastTimerService : LifecycleService() {
                     // If state is valid, start foreground and run the update loop
                     startForeground(NOTIFICATION_ID, buildNotification(activeFast))
 
-                    // This loop will be automatically cancelled by collectLatest when the state changes
-                    while (isActive) {
-                        val remainingTime = activeFast.targetDuration?.let { (activeFast.startTime + it) - System.currentTimeMillis() }
-                        if (remainingTime != null && remainingTime <= 0) {
-                            // Goal reached. The goal-reached alarm will handle the final notification.
-                            // We can just stop the live progress notification here.
-                            stopForeground(STOP_FOREGROUND_REMOVE)
-                            break // Exit loop; collector will wait for the next state change
+                    // Only run the update loop if there is a target duration (not an "Open Fast")
+                    if (activeFast.targetDuration != null) {
+                        while (isActive) {
+                            val remainingTime = (activeFast.startTime + activeFast.targetDuration) - System.currentTimeMillis()
+                            if (remainingTime <= 0) {
+                                // Goal reached. The goal-reached alarm will handle the final notification.
+                                // We can just stop the live progress notification here.
+                                stopForeground(STOP_FOREGROUND_REMOVE)
+                                break // Exit loop; collector will wait for the next state change
+                            }
+                            
+                            delay(1000) // Update every second
+                            notificationManager.notify(NOTIFICATION_ID, buildNotification(activeFast))
                         }
-                        
-                        delay(1000) // Update every second
-                        notificationManager.notify(NOTIFICATION_ID, buildNotification(activeFast))
                     }
+                    // For Open Fasts, we just show the static notification once via startForeground.
+                    // collectLatest will handle cleanup when the fast ends.
                 } else {
                     // If the fast is null or the setting is off, just remove the notification.
                     // The service itself continues running, waiting for a valid state.
@@ -177,15 +181,15 @@ class FastTimerService : LifecycleService() {
             isIndeterminate = false
         } else {
             progress = 0
-            contentText = "Elapsed: ${formatDuration(elapsedTime)}"
-            isIndeterminate = true
+            contentText = "Tap to view progress"
+            isIndeterminate = false // We don't want a spinning bar for a static notification
         }
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(contentText)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm) // Placeholder icon
-            .setProgress(100, progress, isIndeterminate)
+            .setProgress(if (totalDuration != null) 100 else 0, progress, isIndeterminate)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setContentIntent(openAppIntent)

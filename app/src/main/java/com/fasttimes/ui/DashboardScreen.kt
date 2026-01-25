@@ -212,7 +212,7 @@ fun DashboardScreen(
     val isEditing = when (uiState) {
         is DashboardUiState.FastingInProgress -> (uiState as DashboardUiState.FastingInProgress).isEditing
         is DashboardUiState.FastingGoalReached -> (uiState as DashboardUiState.FastingGoalReached).isEditing
-        is DashboardUiState.ManualFasting -> (uiState as DashboardUiState.ManualFasting).isEditing
+        is DashboardUiState.OpenFasting -> (uiState as DashboardUiState.OpenFasting).isEditing
         else -> false
     }
 
@@ -430,7 +430,7 @@ fun DashboardScreen(
                             }
                         }
 
-                        is DashboardUiState.ManualFasting -> {
+                        is DashboardUiState.OpenFasting -> {
                             val infiniteTransition =
                                 rememberInfiniteTransition(label = "pulsating_ring")
                             val scale by infiniteTransition.animateFloat(
@@ -455,7 +455,7 @@ fun DashboardScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        "Manual Fast",
+                                        "Open Fast",
                                         style = MaterialTheme.typography.titleLarge.copy(
                                             fontWeight = FontWeight.Bold
                                         )
@@ -832,8 +832,8 @@ fun DashboardScreen(
             fabItems.add(
                 FabButtonItem(
                     icon = Icons.Default.Timer,
-                    label = "Start Manual Fast",
-                    action = viewModel::startManualFast
+                    label = "Start Open Fast",
+                    action = viewModel::startOpenFast
                 )
             )
             fabItems.add(
@@ -1366,7 +1366,7 @@ private fun GoalSelectionSection(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 if (profile.durationMinutes == 0L) {
-                                    // Display infinity symbol for 'No Goal' profile
+                                    // Display infinity symbol for 'Open Fast' profile
                                     Text(
                                         text = "∞",
                                         style = MaterialTheme.typography.displaySmall,

@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.fasttimes.data.DefaultFastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.theme.FastTimesTheme
 import java.time.Duration
@@ -82,7 +83,7 @@ fun FastingSummaryModal(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    if (fast.profileName != "Manual") {
+                    if (fast.profileName != DefaultFastingProfile.OPEN.displayName) {
                         Surface(
                             shape = MaterialTheme.shapes.small,
                             color = MaterialTheme.colorScheme.secondaryContainer,

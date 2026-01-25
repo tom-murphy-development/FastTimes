@@ -301,16 +301,26 @@ fun ProfileManagementScreen(
 
 private fun formatDuration(duration: Long?): String {
     if (duration == null || duration <= 0) {
-        return "Manual"
+        return "Open"
     }
     val d = duration.milliseconds
     return d.toComponents { hours, minutes, seconds, _ ->
         if (hours > 0) {
             val hourText = if (hours == 1L) "Hour" else "Hours"
-            "$hours $hourText, $minutes min"
+            if (minutes > 0) {
+                val minuteText = if (minutes == 1) "Minute" else "Minutes"
+                "$hours $hourText, $minutes $minuteText"
+            } else {
+                "$hours $hourText"
+            }
         } else if (minutes > 0) {
             val minuteText = if (minutes == 1) "Minute" else "Minutes"
-            "$minutes $minuteText, $seconds sec"
+            if (seconds > 0) {
+                val secondText = if (seconds == 1) "Second" else "Seconds"
+                "$minutes $minuteText, $seconds $secondText"
+            } else {
+                "$minutes $minuteText"
+            }
         } else {
             val secondText = if (seconds == 1) "Second" else "Seconds"
             "$seconds $secondText"

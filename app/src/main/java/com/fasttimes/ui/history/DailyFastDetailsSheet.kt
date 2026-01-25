@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.fasttimes.data.DefaultFastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.ui.theme.FastTimesPreviewTheme
 import com.fasttimes.ui.theme.FastTimesTheme
@@ -166,7 +167,7 @@ private fun FastDetailItem(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
-                if (fast.profileName != "Manual") {
+                if (fast.profileName != DefaultFastingProfile.OPEN.displayName) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Surface(
                         shape = MaterialTheme.shapes.small,

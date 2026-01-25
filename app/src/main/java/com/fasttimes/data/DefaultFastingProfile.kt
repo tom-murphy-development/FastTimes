@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.hours
 /**
  * Represents the different types of fasting profiles available in the app.
  *
- * @param duration The target duration of the fast. Null for manual (count-up) mode.
+ * @param duration The target duration of the fast. Null for open (count-up) mode.
  * @param displayName A user-friendly name for the profile.
  * @param description A detailed explanation of the fasting profile.
  */
@@ -33,9 +33,9 @@ enum class DefaultFastingProfile(
     val displayName: String,
     val description: String
 ) {
-    MANUAL(
+    OPEN(
         duration = null,
-        displayName = "No Goal",
+        displayName = "Open Fast",
         description = "Start a fast and let it run until you manually stop it. Counts up from zero."
     ),
     SIXTEEN_EIGHT(

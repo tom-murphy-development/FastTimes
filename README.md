@@ -77,16 +77,6 @@ app/src/main/java/com/fasttimes/
   └── FastTimesApp.kt
 ```
 
-## Build Instructions
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/tom-murphy-development/fasttimes.git
-   ```
-2. **Open in Android Studio**: Use **Ladybug (2024.2.1)** or newer for full support of the latest Compose features.
-3. **JDK Configuration**: Ensure **JDK 17** is selected in *Settings > Build, Execution, Deployment > Build Tools > Gradle*.
-4. **Build**: Run `./gradlew assembleFossDebug` or use the **fossDebug** build variant in Android Studio.
-5. **Run**: Deploy to an emulator or physical device running **Android 11 (API 30)** or higher.
-
 ## Contribution Guidelines
 We welcome contributions! To keep the codebase clean and consistent:
 - **Branching**: Fork the repository and create a descriptive feature branch (e.g., `feature/add-reminders`).

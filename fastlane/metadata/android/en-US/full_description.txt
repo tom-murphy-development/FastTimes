@@ -1,4 +1,4 @@
-Fast Times is a simple, lightweight, and completely open-source intermittent fasting tracker designed with your privacy in mind.
+FastTimes is a simple, lightweight, and completely open-source intermittent fasting tracker designed with your privacy in mind.
 
 Features:
 - **Material 3 Expressive Design**: Experience a modern, bold, and intuitive interface built with the latest Material 3 Expressive design language.

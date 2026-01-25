@@ -191,7 +191,7 @@ fun EditFastScreen(
                         onClick = { showPicker = PickerType.Rating }
                     ) {
                         if (fast.rating != null) {
-                            StarRatingDisplay(rating = fast.rating!!)
+                            StarRatingDisplay(rating = fast.rating)
                         } else {
                             Text("Not set")
                         }

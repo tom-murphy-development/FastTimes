@@ -246,7 +246,7 @@ private fun FastDetailItem(
                     )
                 }
                 if (fast.rating != null) {
-                    RatingBar(rating = fast.rating!!)
+                    RatingBar(rating = fast.rating)
                 }
             }
         }

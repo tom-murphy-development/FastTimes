@@ -1270,7 +1270,7 @@ private fun LastFastItem(
                     )
                 }
                 if (fast.rating != null) {
-                    RatingBar(rating = fast.rating!!)
+                    RatingBar(rating = fast.rating)
                 }
             }
         }

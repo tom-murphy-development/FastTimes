@@ -24,6 +24,7 @@ import com.fasttimes.data.AppTheme
 import com.fasttimes.data.DefaultFastingProfile
 import com.fasttimes.data.fast.Fast
 import com.fasttimes.data.fast.FastsRepository
+import com.fasttimes.data.profile.FastingProfile
 import com.fasttimes.data.profile.FastingProfileRepository
 import com.fasttimes.data.settings.SettingsRepository
 import com.fasttimes.data.settings.UserData
@@ -40,10 +41,15 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.time.Duration
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
 import kotlin.time.Duration.Companion.hours
 
 @ExperimentalCoroutinesApi
@@ -72,8 +78,9 @@ class DashboardViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(emptyList())
         coEvery { fastsRepository.insertFast(any()) } returns 1L
         every { settingsRepository.showLiveProgress } returns flowOf(true)
-        every { settingsRepository.confettiShownForFastId } returns flowOf(0)
+        every { settingsRepository.confettiShownForFastId } returns flowOf(0L)
         every { settingsRepository.showFab } returns flowOf(true)
+        every { settingsRepository.showGoalReachedNotification } returns flowOf(true)
         every { settingsRepository.userData } returns flowOf(
             UserData(
                 fastingGoal = Duration.ofHours(16),
@@ -87,7 +94,6 @@ class DashboardViewModelTest {
         )
         every { fastingProfileRepository.getProfiles() } returns flowOf(emptyList())
 
-
         viewModel = DashboardViewModel(
             fastsRepository,
             settingsRepository,
@@ -100,11 +106,24 @@ class DashboardViewModelTest {
 
     @Test
     fun `startManualFast inserts new fast`() = runTest {
-        every { settingsRepository.showLiveProgress } returns flowOf(false) // Disable service start to avoid Intent mock issue
+        every { settingsRepository.showLiveProgress } returns flowOf(false)
 
         viewModel.startManualFast()
         advanceUntilIdle()
         coVerify { fastsRepository.insertFast(any()) }
+    }
+
+    @Test
+    fun `startProfileFast schedules alarm and inserts fast`() = runTest {
+        val profile = FastingProfile(id = 1, displayName = "16:8", duration = 16.hours.inWholeMilliseconds, description = "", isFavorite = true)
+        every { settingsRepository.showLiveProgress } returns flowOf(false)
+        every { settingsRepository.showGoalReachedNotification } returns flowOf(false)
+
+        viewModel.startProfileFast(profile)
+        advanceUntilIdle()
+
+        coVerify { fastsRepository.insertFast(match { it.profileName == "16:8" }) }
+        coVerify { alarmScheduler.schedule(any()) }
     }
 
     @Test
@@ -118,7 +137,7 @@ class DashboardViewModelTest {
             notes = null
         )
         every { fastsRepository.getFasts() } returns flowOf(listOf(fast))
-        every { settingsRepository.showLiveProgress } returns flowOf(false) // Disable service start
+        every { settingsRepository.showLiveProgress } returns flowOf(false)
 
         viewModel = DashboardViewModel(
             fastsRepository,
@@ -129,19 +148,12 @@ class DashboardViewModelTest {
             application
         )
 
-        // Collect in backgroundScope to keep the subscription active but cancel it automatically at end of test.
-        // Use UnconfinedTestDispatcher to eagerly emit the first value.
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiState.collect()
         }
         
-        // Ensure the UI state has emitted its initial value derived from the flow
-        // (runCurrent works because Unconfined executes eagerly, but this ensures safety)
         runCurrent()
-
         viewModel.endCurrentFast()
-
-        // Execute the viewModelScope.launch block triggered by endCurrentFast
         runCurrent()
 
         coVerify { fastsRepository.endFast(fast.id, any()) }
@@ -149,12 +161,12 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun `stats are calculated correctly`() = runTest {
+    fun `stats calculated correctly for multiple fasts`() = runTest {
         val now = System.currentTimeMillis()
         val hour = 3_600_000L
         val fasts = listOf(
-            Fast(id = 1, startTime = now - (4 * hour), endTime = now - (2 * hour), profileName = DefaultFastingProfile.MANUAL.displayName, targetDuration = 1000L, notes = null),
-            Fast(id = 2, startTime = now - (10 * hour), endTime = now - (6 * hour), profileName = DefaultFastingProfile.MANUAL.displayName, targetDuration = 2000L, notes = null)
+            Fast(id = 1, startTime = now - (4 * hour), endTime = now - (2 * hour), profileName = "Manual", targetDuration = 2 * hour, notes = null),
+            Fast(id = 2, startTime = now - (10 * hour), endTime = now - (6 * hour), profileName = "Manual", targetDuration = 4 * hour, notes = null)
         )
 
         every { fastsRepository.getFasts() } returns flowOf(fasts)
@@ -167,18 +179,122 @@ class DashboardViewModelTest {
             application
         )
 
-        // Note: no need to advanceUntilIdle() here because turbine subscribes and triggers the flow
-
         viewModel.stats.test {
-            // The StateFlow will emit its initial value (default/empty) immediately upon subscription.
-            // We need to check if the first item is the one we want, or wait for the next one.
-            val firstItem = awaitItem()
-            val stats = if (firstItem.totalFasts == 0) awaitItem() else firstItem
-
+            val stats = awaitItem().let { if (it.totalFasts == 0) awaitItem() else it }
             assertEquals(2, stats.totalFasts)
             assertEquals(6.hours, stats.totalFastingTime)
-            assertEquals(fasts[1], stats.longestFast)
-            cancelAndIgnoreRemainingEvents()
+            assertEquals(3.hours, stats.averageFast)
+            assertEquals(fasts[1].id, stats.longestFast?.id)
         }
+    }
+
+    @Test
+    fun `trend calculation handles percentage correctly`() = runTest {
+        val systemZone = ZoneId.systemDefault()
+        val currentMonth = YearMonth.now()
+        val previousMonth = currentMonth.minusMonths(1)
+        
+        val currentMonthTime = currentMonth.atDay(15).atStartOfDay(systemZone).toInstant().toEpochMilli()
+        val previousMonthTime = previousMonth.atDay(15).atStartOfDay(systemZone).toInstant().toEpochMilli()
+
+        // 2 fasts this month, 1 fast last month = 100% increase
+        val fasts = listOf(
+            createCompletedFast(1, currentMonthTime),
+            createCompletedFast(2, currentMonthTime + 1000),
+            createCompletedFast(3, previousMonthTime)
+        )
+
+        every { fastsRepository.getFasts() } returns flowOf(fasts)
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        viewModel.stats.test {
+            val stats = awaitItem().let { if (it.totalFasts == 0) awaitItem() else it }
+            assertEquals(2, stats.trend.currentCount)
+            assertEquals(1, stats.trend.previousCount)
+            assertEquals(100f, stats.trend.percentageChange)
+            assertTrue(stats.trend.isUpward)
+        }
+    }
+
+    @Test
+    fun `streak calculation includes today`() = runTest {
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val yesterday = today.minusDays(1)
+        val twoDaysAgo = today.minusDays(2)
+
+        val fasts = listOf(
+            createCompletedFast(1, twoDaysAgo.atStartOfDay(zoneId).toInstant().toEpochMilli()),
+            createCompletedFast(2, yesterday.atStartOfDay(zoneId).toInstant().toEpochMilli()),
+            createCompletedFast(3, today.atStartOfDay(zoneId).toInstant().toEpochMilli())
+        )
+
+        every { fastsRepository.getFasts() } returns flowOf(fasts)
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        viewModel.stats.test {
+            val stats = awaitItem().let { if (it.streak.daysInARow == 0) awaitItem() else it }
+            assertEquals(3, stats.streak.daysInARow)
+        }
+    }
+
+    @Test
+    fun `uiState transitions to FastingGoalReached when time is up`() = runTest {
+        val startTime = System.currentTimeMillis() - 17.hours.inWholeMilliseconds
+        val activeFast = Fast(id = 1, startTime = startTime, endTime = null, profileName = "16:8", targetDuration = 16.hours.inWholeMilliseconds)
+        
+        every { fastsRepository.getFasts() } returns flowOf(listOf(activeFast))
+        every { settingsRepository.confettiShownForFastId } returns flowOf(0L) // Confetti not yet shown for this ID
+        
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        viewModel.uiState.test {
+            val state = awaitItem().let { if (it is DashboardUiState.Loading) awaitItem() else it }
+            assertTrue("State should be FastingGoalReached but was $state", state is DashboardUiState.FastingGoalReached)
+            val reachedState = state as DashboardUiState.FastingGoalReached
+            assertTrue(reachedState.showConfetti)
+        }
+    }
+
+    @Test
+    fun `showConfetti is false when already recorded in settings`() = runTest {
+        val startTime = System.currentTimeMillis() - 17.hours.inWholeMilliseconds
+        val activeFast = Fast(id = 99, startTime = startTime, endTime = null, profileName = "16:8", targetDuration = 16.hours.inWholeMilliseconds)
+        
+        every { fastsRepository.getFasts() } returns flowOf(listOf(activeFast))
+        every { settingsRepository.confettiShownForFastId } returns flowOf(99L) // Match the fast ID
+        
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        viewModel.uiState.test {
+            val state = awaitItem().let { if (it is DashboardUiState.Loading) awaitItem() else it }
+            val reachedState = state as DashboardUiState.FastingGoalReached
+            assertFalse(reachedState.showConfetti)
+        }
+    }
+
+    @Test
+    fun `saveFastRating updates repository`() = runTest {
+        viewModel.saveFastRating(123L, 5)
+        advanceUntilIdle()
+        coVerify { fastsRepository.updateRating(123L, 5) }
+    }
+
+    @Test
+    fun `onConfettiShown updates settings`() = runTest {
+        viewModel.onConfettiShown(456L)
+        advanceUntilIdle()
+        coVerify { settingsRepository.setConfettiShownForFastId(456L) }
+    }
+
+    private fun createCompletedFast(id: Long, endTime: Long): Fast {
+        return Fast(
+            id = id,
+            startTime = endTime - 16.hours.inWholeMilliseconds,
+            endTime = endTime,
+            profileName = "16:8",
+            targetDuration = 16.hours.inWholeMilliseconds,
+            notes = null
+        )
     }
 }

@@ -11,6 +11,10 @@ on:
         options:
           - beta
           - stable
+      changelog:
+        description: 'Custom Changelog (What’s new in this version?)'
+        required: false
+        type: string
 
 jobs:
   release:
@@ -63,10 +67,8 @@ jobs:
           find app/build/outputs/apk/ -name "*.apk" | while read -r file; do
             dir=$(dirname "$file")
             name=$(basename "$file")
-            # Replaces 'app' prefix with 'FastTimes-v{version}'
             new_name=$(echo "$name" | sed "s/^app/FastTimes-v$VERSION_NAME/")
             mv "$file" "$dir/$new_name"
-            echo "Renamed $name to $new_name"
           done
 
       - name: Create GitHub Release
@@ -82,6 +84,7 @@ jobs:
                 format('Playstore Release v{0}', steps.get_version.outputs.VERSION_NAME) || 
                 format('Playstore Beta v{0} (Build {1})', steps.get_version.outputs.VERSION_NAME, github.run_number) 
             }}
+          body: ${{ github.event.inputs.changelog }}
           files: app/build/outputs/apk/**/*.apk
           prerelease: ${{ github.event.inputs.release_type != 'stable' }}
           generate_release_notes: true

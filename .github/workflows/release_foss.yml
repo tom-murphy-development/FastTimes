@@ -11,8 +11,8 @@ on:
         options:
           - beta
           - stable
-      changelog:
-        description: 'Custom Changelog (What’s new in this version?)'
+      manual_changelog:
+        description: 'Additional Manual Notes'
         required: false
         type: string
 
@@ -41,6 +41,74 @@ jobs:
         run: |
           VERSION_NAME=$(grep "versionName =" app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
+
+      - name: Generate and Update Changelog
+        id: changelog
+        run: |
+          # 1. Get the last tag to find the commit range
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          echo "Last tag found: $LAST_TAG"
+          
+          # 2. Get commits since last tag and categorize them
+          # Formatting into a temp file to avoid shell escaping issues
+          git log $LAST_TAG..HEAD --pretty=format:"%s" > commits.txt
+          
+          AUTO_ADDED=""
+          AUTO_CHANGED=""
+          AUTO_FIXED=""
+          
+          while IFS= read -r line; do
+            if [[ $line =~ ^feat(\(.*\))?!?:[[:space:]](.*) ]]; then
+              AUTO_ADDED+="- ${BASH_REMATCH[2]}\n"
+            elif [[ $line =~ ^fix(\(.*\))?!?:[[:space:]](.*) ]]; then
+              AUTO_FIXED+="- ${BASH_REMATCH[2]}\n"
+            elif [[ $line =~ ^(refactor|perf|style|chore)(\(.*\))?!?:[[:space:]](.*) ]]; then
+              AUTO_CHANGED+="- ${BASH_REMATCH[3]}\n"
+            fi
+          done < commits.txt
+
+          # 3. Extract existing manual entries from [Unreleased]
+          MANUAL_CONTENT=$(sed -n '/## \[Unreleased\]/,/## \[/p' CHANGELOG.md | sed '1d;$d')
+          
+          # 4. Construct the Final Changelog for the release
+          # Combine auto-generated and manual content
+          {
+            echo "### Added"
+            [ -n "$AUTO_ADDED" ] && echo -e "$AUTO_ADDED"
+            echo "### Changed"
+            [ -n "$AUTO_CHANGED" ] && echo -e "$AUTO_CHANGED"
+            echo "### Fixed"
+            [ -n "$AUTO_FIXED" ] && echo -e "$AUTO_FIXED"
+            [ -n "${{ github.event.inputs.manual_changelog }}" ] && echo -e "\n### Other\n- ${{ github.event.inputs.manual_changelog }}"
+          } > final_release_notes.md
+          
+          # Clean up empty sections and placeholder bullets
+          sed -i '/### \(Added\|Changed\|Fixed\)$/{N;s/.*\n-$//;d}' final_release_notes.md
+          
+          FINAL_CONTENT=$(cat final_release_notes.md)
+          
+          # 5. Update CHANGELOG.md file
+          DATE=$(date +%Y-%m-%d)
+          sed -i "s/## \[Unreleased\]/## [$VERSION_NAME] - $DATE/" CHANGELOG.md
+          # Insert the new content (optional: if you want the actual notes in the file too)
+          # For now, we replace [Unreleased] with the versioned header and keep the history
+          
+          # Prepend new [Unreleased] section for next time
+          sed -i '3i ## [Unreleased]\n### Added\n-\n### Changed\n-\n### Fixed\n-\n' CHANGELOG.md
+          
+          # Commit updates
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update CHANGELOG.md for $VERSION_NAME" || echo "No changes to commit"
+          git push || echo "No changes to push"
+          
+          # Set output for the Release body
+          echo "final_changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$FINAL_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          VERSION_NAME: ${{ steps.get_version.outputs.VERSION_NAME }}
 
       - name: Decode Keystore
         env:
@@ -84,7 +152,7 @@ jobs:
                 format('FOSS Release v{0}', steps.get_version.outputs.VERSION_NAME) || 
                 format('FOSS Beta v{0} (Build {1})', steps.get_version.outputs.VERSION_NAME, github.run_number) 
             }}
-          body: ${{ github.event.inputs.changelog }}
+          body: ${{ steps.changelog.outputs.final_changelog }}
           files: app/build/outputs/apk/**/*.apk
           prerelease: ${{ github.event.inputs.release_type != 'stable' }}
           generate_release_notes: true

@@ -50,6 +50,7 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.hours
 
 @ExperimentalCoroutinesApi
@@ -105,10 +106,10 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun `startManualFast inserts new fast`() = runTest {
+    fun `startOpenFast inserts new fast`() = runTest {
         every { settingsRepository.showLiveProgress } returns flowOf(false)
 
-        viewModel.startManualFast()
+        viewModel.startOpenFast()
         advanceUntilIdle()
         coVerify { fastsRepository.insertFast(any()) }
     }
@@ -132,7 +133,7 @@ class DashboardViewModelTest {
             id = 1,
             startTime = System.currentTimeMillis() - 1000L,
             endTime = null,
-            profileName = DefaultFastingProfile.MANUAL.displayName,
+            profileName = DefaultFastingProfile.OPEN.displayName,
             targetDuration = 1000L,
             notes = null
         )
@@ -165,8 +166,8 @@ class DashboardViewModelTest {
         val now = System.currentTimeMillis()
         val hour = 3_600_000L
         val fasts = listOf(
-            Fast(id = 1, startTime = now - (4 * hour), endTime = now - (2 * hour), profileName = "Manual", targetDuration = 2 * hour, notes = null),
-            Fast(id = 2, startTime = now - (10 * hour), endTime = now - (6 * hour), profileName = "Manual", targetDuration = 4 * hour, notes = null)
+            Fast(id = 1, startTime = now - (4 * hour), endTime = now - (2 * hour), profileName = DefaultFastingProfile.OPEN.displayName, targetDuration = 2 * hour, notes = null),
+            Fast(id = 2, startTime = now - (10 * hour), endTime = now - (6 * hour), profileName = DefaultFastingProfile.OPEN.displayName, targetDuration = 4 * hour, notes = null)
         )
 
         every { fastsRepository.getFasts() } returns flowOf(fasts)
@@ -200,7 +201,7 @@ class DashboardViewModelTest {
         // 2 fasts this month, 1 fast last month = 100% increase
         val fasts = listOf(
             createCompletedFast(1, currentMonthTime),
-            createCompletedFast(2, currentMonthTime + 1000),
+            createCompletedFast(2, currentMonthTime),
             createCompletedFast(3, previousMonthTime)
         )
 
@@ -235,6 +236,50 @@ class DashboardViewModelTest {
         viewModel.stats.test {
             val stats = awaitItem().let { if (it.streak.daysInARow == 0) awaitItem() else it }
             assertEquals(3, stats.streak.daysInARow)
+        }
+    }
+
+    @Test
+    fun `streak calculation counts back from yesterday if no fast today`() = runTest {
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val yesterday = today.minusDays(1)
+        val twoDaysAgo = today.minusDays(2)
+
+        val fasts = listOf(
+            createCompletedFast(1, twoDaysAgo.atStartOfDay(zoneId).toInstant().toEpochMilli()),
+            createCompletedFast(2, yesterday.atStartOfDay(zoneId).toInstant().toEpochMilli())
+        )
+
+        every { fastsRepository.getFasts() } returns flowOf(fasts)
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        viewModel.stats.test {
+            val stats = awaitItem().let { if (it.streak.daysInARow == 0) awaitItem() else it }
+            assertEquals(2, stats.streak.daysInARow)
+        }
+    }
+
+    @Test
+    fun `streak calculation returns most recent streak if there is a gap`() = runTest {
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val fourDaysAgo = today.minusDays(4)
+        val fiveDaysAgo = today.minusDays(5)
+
+        // Gap of 2 days between 4 days ago and today
+        val fasts = listOf(
+            createCompletedFast(1, fiveDaysAgo.atStartOfDay(zoneId).toInstant().toEpochMilli()),
+            createCompletedFast(2, fourDaysAgo.atStartOfDay(zoneId).toInstant().toEpochMilli())
+        )
+
+        every { fastsRepository.getFasts() } returns flowOf(fasts)
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        viewModel.stats.test {
+            val stats = awaitItem().let { if (it.streak.daysInARow == 0) awaitItem() else it }
+            assertEquals(2, stats.streak.daysInARow)
+            assertEquals(fourDaysAgo, stats.streak.lastFastDate)
         }
     }
 
@@ -287,10 +332,15 @@ class DashboardViewModelTest {
         coVerify { settingsRepository.setConfettiShownForFastId(456L) }
     }
 
-    private fun createCompletedFast(id: Long, endTime: Long): Fast {
+    private fun createCompletedFast(id: Long, dateMillis: Long): Fast {
+        val zdt = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(dateMillis), ZoneId.systemDefault())
+        // Ensure the fast is entirely within the day represented by dateMillis
+        // For example, 4 AM to 8 PM on that same day
+        val startTime = zdt.plusHours(4).toInstant().toEpochMilli()
+        val endTime = zdt.plusHours(20).toInstant().toEpochMilli()
         return Fast(
             id = id,
-            startTime = endTime - 16.hours.inWholeMilliseconds,
+            startTime = startTime,
             endTime = endTime,
             profileName = "16:8",
             targetDuration = 16.hours.inWholeMilliseconds,

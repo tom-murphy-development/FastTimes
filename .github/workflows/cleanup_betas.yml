@@ -1,0 +1,48 @@
+name: Cleanup Old Betas
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Release Playstore", "Release FOSS"]
+    types:
+      - completed
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: write
+    steps:
+      - name: Cleanup Old Beta Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get all pre-release tag names, ordered by date (newest first)
+          beta_tags=$(gh release list --limit 100 --json tagName,isPrerelease | jq -r '.[] | select(.isPrerelease == true) | .tagName')
+          
+          if [ -z "$beta_tags" ]; then
+            echo "No beta releases found."
+            exit 0
+          fi
+
+          echo "Found beta releases:"
+          echo "$beta_tags"
+          
+          # We keep the latest beta for each flavor (Playstore and FOSS)
+          for flavor in "playstore-beta" "foss-beta"; do
+            echo "Processing $flavor..."
+            flavor_tags=$(echo "$beta_tags" | grep "$flavor" || true)
+            
+            if [ -n "$flavor_tags" ]; then
+              # Keep the first one (most recent), delete the rest
+              echo "$flavor_tags" | tail -n +2 | while read -r tag; do
+                if [ -n "$tag" ]; then
+                  echo "Deleting old $flavor release and tag: $tag"
+                  gh release delete "$tag" --yes --cleanup-tag
+                fi
+              done
+            else
+              echo "No releases found for $flavor."
+            fi
+          done

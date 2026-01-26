@@ -14,19 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.data.fast
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
 
-/**
- * FOSS Implementation: All features are unlocked by default.
- */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+interface FastsRepository {
+    fun getFasts(): Flow<List<Fast>>
+
+    fun getFast(id: Long): Flow<Fast?>
+
+    fun getActiveFast(): Flow<Fast?>
+
+    suspend fun insertFast(fast: Fast): Long
+
+    suspend fun updateFast(fast: Fast)
+
+    suspend fun endFast(id: Long, endTime: Long)
+
+    suspend fun updateRating(fastId: Long, rating: Int)
+
+    suspend fun deleteFast(fastId: Long)
+
+    suspend fun replaceAll(fasts: List<Fast>)
 }

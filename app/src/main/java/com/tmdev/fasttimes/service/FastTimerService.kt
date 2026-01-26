@@ -1,0 +1,214 @@
+/*
+ * Copyright (C) 2025 tom-murphy-development
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package com.tmdev.fasttimes.service
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.lifecycleScope
+import com.tmdev.fasttimes.MainActivity
+import com.tmdev.fasttimes.alarms.AlarmScheduler
+import com.tmdev.fasttimes.data.fast.Fast
+import com.tmdev.fasttimes.data.fast.FastsRepository
+import com.tmdev.fasttimes.data.settings.SettingsRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.util.Locale
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+
+@AndroidEntryPoint
+class FastTimerService : LifecycleService() {
+
+    @Inject
+    lateinit var fastsRepository: FastsRepository
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var alarmScheduler: AlarmScheduler
+
+    private lateinit var notificationManager: NotificationManager
+    private var serviceJob: Job? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        createNotificationChannel()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        when (intent?.action) {
+            ACTION_START -> startService()
+            ACTION_STOP -> stopService()
+            ACTION_END_FAST -> endFast()
+        }
+        return START_STICKY
+    }
+
+    private fun startService() {
+        // Prevent multiple service jobs from running
+        if (serviceJob?.isActive == true) return
+
+        serviceJob = lifecycleScope.launch {
+            val activeFastFlow = fastsRepository.getFasts().map { fasts ->
+                fasts.firstOrNull { it.endTime == null }
+            }
+
+            // Combine the active fast with the user's setting.
+            // The service will now reactively show/hide the notification.
+            combine(
+                activeFastFlow,
+                settingsRepository.showLiveProgress
+            ) { activeFast, showProgress ->
+                Pair(activeFast, showProgress)
+            }.collectLatest { (activeFast, showProgress) ->
+                if (activeFast != null && showProgress) {
+                    // If state is valid, start foreground and run the update loop
+                    startForeground(NOTIFICATION_ID, buildNotification(activeFast))
+
+                    // Only run the update loop if there is a target duration (not an "Open Fast")
+                    if (activeFast.targetDuration != null) {
+                        while (isActive) {
+                            val remainingTime = (activeFast.startTime + activeFast.targetDuration) - System.currentTimeMillis()
+                            if (remainingTime <= 0) {
+                                // Goal reached. The goal-reached alarm will handle the final notification.
+                                // We can just stop the live progress notification here.
+                                stopForeground(STOP_FOREGROUND_REMOVE)
+                                break // Exit loop; collector will wait for the next state change
+                            }
+                            
+                            delay(1000) // Update every second
+                            notificationManager.notify(NOTIFICATION_ID, buildNotification(activeFast))
+                        }
+                    }
+                    // For Open Fasts, we just show the static notification once via startForeground.
+                    // collectLatest will handle cleanup when the fast ends.
+                } else {
+                    // If the fast is null or the setting is off, just remove the notification.
+                    // The service itself continues running, waiting for a valid state.
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                }
+            }
+        }
+    }
+
+    private fun endFast() {
+        lifecycleScope.launch {
+            val activeFast = fastsRepository.getFasts().firstOrNull()?.firstOrNull { it.endTime == null }
+            if (activeFast != null) {
+                alarmScheduler.cancel(activeFast)
+                fastsRepository.endFast(activeFast.id, System.currentTimeMillis())
+            }
+            // After ending the fast, the service should fully stop.
+            stopService()
+        }
+    }
+
+    private fun stopService() {
+        serviceJob?.cancel()
+        serviceJob = null
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Fast Progress",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Shows the live progress of your current fast."
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun buildNotification(fast: Fast): Notification {
+        val openAppIntent = PendingIntent.getActivity(
+            this, 0, Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val endFastIntent = PendingIntent.getService(
+            this, 0, Intent(this, FastTimerService::class.java).apply { action = ACTION_END_FAST },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val now = System.currentTimeMillis()
+        val elapsedTime = now - fast.startTime
+        val title = "${fast.profileName} in Progress"
+
+        val progress: Int
+        val contentText: String
+        val isIndeterminate: Boolean
+
+        val totalDuration = fast.targetDuration
+        if (totalDuration != null && totalDuration > 0) {
+            val targetEndTime = fast.startTime + totalDuration
+            val remainingTime = (targetEndTime - now).coerceAtLeast(0)
+            progress = (elapsedTime.toDouble() / totalDuration * 100).toInt().coerceIn(0, 100)
+            contentText = "Remaining: ${formatDuration(remainingTime)}"
+            isIndeterminate = false
+        } else {
+            progress = 0
+            contentText = "Tap to view progress"
+            isIndeterminate = false // We don't want a spinning bar for a static notification
+        }
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(contentText)
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm) // Placeholder icon
+            .setProgress(if (totalDuration != null) 100 else 0, progress, isIndeterminate)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setContentIntent(openAppIntent)
+            .addAction(0, "End Fast", endFastIntent)
+            .build()
+    }
+
+    private fun formatDuration(millis: Long): String {
+        val hours = TimeUnit.MILLISECONDS.toHours(millis)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
+        return String.format(Locale.forLanguageTag("en-AU"), "%02d:%02d:%02d", hours, minutes, seconds)
+    }
+
+    companion object {
+        const val NOTIFICATION_ID = 1234
+        const val CHANNEL_ID = "fast_progress_channel"
+        const val ACTION_START = "com.tmdev.fasttimes.service.ACTION_START"
+        const val ACTION_STOP = "com.tmdev.fasttimes.service.ACTION_STOP"
+        const val ACTION_END_FAST = "com.tmdev.fasttimes.service.ACTION_END_FAST"
+    }
+}

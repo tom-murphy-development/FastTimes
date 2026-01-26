@@ -14,19 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.ui
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import java.util.Locale
+import kotlin.time.Duration
 
 /**
- * FOSS Implementation: All features are unlocked by default.
+ * Formats a duration into a string format (HH:MM:SS).
+ *
+ * @param duration The duration object.
+ * @return A formatted string representing the duration.
  */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+fun formatDuration(duration: Duration): String {
+    val totalSeconds = duration.inWholeSeconds
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return String.format(Locale.forLanguageTag("en-AU"), "%02d:%02d:%02d", hours, minutes, seconds)
 }

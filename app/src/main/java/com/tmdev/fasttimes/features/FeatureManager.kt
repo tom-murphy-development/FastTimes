@@ -16,17 +16,19 @@
  */
 package com.tmdev.fasttimes.features
 
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
- * FOSS Implementation: All features are unlocked by default.
+ * Interface defining the contract for feature availability across different app distributions.
  */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+interface FeatureManager {
+    /**
+     * A flow indicating whether premium themes are unlocked.
+     */
+    val isPremiumThemesUnlocked: StateFlow<Boolean>
+
+    /**
+     * A flow indicating whether advanced statistics are unlocked.
+     */
+    val isAdvancedStatsUnlocked: StateFlow<Boolean>
 }

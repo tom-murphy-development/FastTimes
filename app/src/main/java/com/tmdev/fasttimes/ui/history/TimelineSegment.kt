@@ -14,19 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.ui.history
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import androidx.compose.runtime.Immutable
 
-/**
- * FOSS Implementation: All features are unlocked by default.
- */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+@Immutable
+enum class TimelineSegmentType {
+    Fasting,
+    NonFasting
 }
+
+@Immutable
+data class TimelineSegment(
+    val type: TimelineSegmentType,
+    val weight: Float
+)

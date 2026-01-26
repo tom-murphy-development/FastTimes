@@ -14,19 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.data.profile
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
 
-/**
- * FOSS Implementation: All features are unlocked by default.
- */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+interface FastingProfileRepository {
+    fun getProfiles(): Flow<List<FastingProfile>>
+    suspend fun addProfile(profile: FastingProfile): Long
+    suspend fun updateProfile(profile: FastingProfile)
+    suspend fun deleteProfile(profile: FastingProfile)
+    suspend fun setFavoriteProfile(profile: FastingProfile)
 }

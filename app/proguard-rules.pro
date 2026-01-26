@@ -25,7 +25,7 @@
 # --- Hilt / Dagger ---
 
 # Hilt handles most of this via its gradle plugin, but these ensure generated classes are preserved.
--keep class com.fasttimes.**_HiltModules* { *; }
+-keep class com.tmdev.fasttimes.**_HiltModules* { *; }
 -keep class dagger.hilt.internal.aggregatedroot.codegen.** { *; }
 
 # --- Room ---
@@ -41,10 +41,10 @@
 
 # Keep classes annotated with @Serializable and their Companion serializers.
 -keepattributes *Annotation*, InnerClasses
--keepclassmembers class com.fasttimes.**.Companion {
+-keepclassmembers class com.tmdev.fasttimes.**.Companion {
     *** serializer(...);
 }
--keepclasseswithmembers class com.fasttimes.** {
+-keepclasseswithmembers class com.tmdev.fasttimes.** {
     @kotlinx.serialization.Serializable <fields>;
 }
 
@@ -58,4 +58,4 @@
 # --- App Specific Models ---
 
 # If you use reflection for any models (e.g., passing as NavArgs), keep them here.
-# -keep class com.fasttimes.data.model.** { *; }
+# -keep class com.tmdev.fasttimes.data.model.** { *; }

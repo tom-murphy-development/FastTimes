@@ -23,10 +23,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * FOSS Implementation: All features are unlocked by default.
+ * Play Store Implementation: Features are locked until verified via Billing.
  */
 @Singleton
 class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+    // These would be updated by your Billing logic later
+    private val _isPremiumThemesUnlocked = MutableStateFlow(false)
+    private val _isAdvancedStatsUnlocked = MutableStateFlow(false)
+
+    override val isPremiumThemesUnlocked: StateFlow<Boolean> = _isPremiumThemesUnlocked.asStateFlow()
+    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = _isAdvancedStatsUnlocked.asStateFlow()
 }

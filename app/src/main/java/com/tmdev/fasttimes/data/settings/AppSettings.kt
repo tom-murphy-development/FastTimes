@@ -14,19 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.data.settings
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import java.time.DayOfWeek
 
-/**
- * FOSS Implementation: All features are unlocked by default.
- */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+enum class TimeFormat {
+    TWELVE_HOUR,
+    TWENTY_FOUR_HOUR
 }
+
+data class AppSettings(
+    val defaultFastingProfileId: String = "16/8",
+    val goalMetNotificationEnabled: Boolean = true,
+    val milestoneNotificationsEnabled: Boolean = true,
+    val firstDayOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
+    val timeFormat: TimeFormat = TimeFormat.TWENTY_FOUR_HOUR,
+    val showFab: Boolean = true
+)

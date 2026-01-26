@@ -14,19 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.ui.settings
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import com.tmdev.fasttimes.data.AppTheme
 
-/**
- * FOSS Implementation: All features are unlocked by default.
- */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-}
+data class SettingsUiState(
+    val showLiveProgress: Boolean = false,
+    val showGoalReachedNotification: Boolean = true,
+    val theme: AppTheme = AppTheme.SYSTEM,
+    val seedColor: Long? = null,
+    val accentColor: Long? = null,
+    val firstDayOfWeek: String = "Sunday",
+    val showFab: Boolean = true,
+    val useWavyIndicator: Boolean = true,
+    val useExpressiveTheme: Boolean = false,
+    val useSystemColors: Boolean = false
+)

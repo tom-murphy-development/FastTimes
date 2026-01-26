@@ -14,19 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
 /**
- * FOSS Implementation: All features are unlocked by default.
+ * The main [Application] class for the FastTimes app.
+ *
+ * This class is annotated with [@HiltAndroidApp] to trigger Hilt's code generation,
+ * which creates a dependency injection container that is attached to the application's lifecycle.
  */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-}
+@HiltAndroidApp
+class FastTimesApp : Application()

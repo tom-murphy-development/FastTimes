@@ -14,19 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.ui.theme
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import androidx.compose.ui.graphics.Color
 
-/**
- * FOSS Implementation: All features are unlocked by default.
- */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-}
+internal val accentColors = listOf(
+    Color(0xFF3DDC84),
+    Color(0xFFFFBE0B),
+    Color(0xFFFB5607),
+    Color(0xFFFF006E),
+    Color(0xFF8338EC),
+    Color(0xFF3A86FF)
+)
+
+internal val seedColors = listOf(
+    Color(0xfffeb4a7),
+    Color(0xffffb3c0),
+    Color(0xfffcaaff),
+    Color(0xffb9c3ff),
+    Color(0xff62d3ff),
+    Color(0xff44d9f1),
+    Color(0xff52dbc9),
+    Color(0xff78dd77),
+    Color(0xff9fd75c),
+    Color(0xffc1d02d),
+    Color(0xfffabd00),
+    Color(0xffffb86e),
+)

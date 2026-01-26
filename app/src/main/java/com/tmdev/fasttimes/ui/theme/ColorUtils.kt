@@ -14,19 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.ui.theme
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 
 /**
- * FOSS Implementation: All features are unlocked by default.
+ * Calculates the best content color (black or white) for a given background color.
+ *
+ * @param backgroundColor The color to calculate the content color for.
+ * @return `Color.Black` if the background color is light, `Color.White` otherwise.
  */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+@Composable
+@ReadOnlyComposable
+fun contentColorFor(backgroundColor: Color): Color {
+    return if (backgroundColor.luminance() > 0.5f) Color.Black else Color.White
 }

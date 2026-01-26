@@ -14,11 +14,11 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 android {
-    namespace = "com.fasttimes"
+    namespace = "com.tmdev.fasttimes"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.fasttimes"
+        applicationId = "com.tmdev.fasttimes"
         minSdk = 30
         targetSdk = 36
         versionCode = 1

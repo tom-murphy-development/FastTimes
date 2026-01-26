@@ -14,19 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.ui.profile
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
+import androidx.navigation.navigation
 
-/**
- * FOSS Implementation: All features are unlocked by default.
- */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
+const val profileManagementRoute = "profile_management"
+
+fun NavController.navigateToProfileManagement() {
+    this.navigate(profileManagementRoute)
+}
+
+fun NavGraphBuilder.profileManagementScreen(onBackClick: () -> Unit) {
+    navigation(
+        startDestination = "profile_management_main",
+        route = profileManagementRoute
+    ) {
+        composable("profile_management_main") {
+            ProfileManagementRoute(onBackClick = onBackClick)
+        }
+    }
 }

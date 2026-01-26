@@ -14,19 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.tmdev.fasttimes.features
+package com.tmdev.fasttimes.data.profile
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "fasting_profiles")
+data class FastingProfile(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val displayName: String,
+    val duration: Long?, // Duration in minutes
+    val description: String,
+    val isFavorite: Boolean = false,
+)
 
 /**
- * FOSS Implementation: All features are unlocked by default.
+ * Extension property to get duration in minutes.
+ * Safely handles null values.
  */
-@Singleton
-class FeatureManagerImpl @Inject constructor() : FeatureManager {
-    override val isPremiumThemesUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-    override val isAdvancedStatsUnlocked: StateFlow<Boolean> = MutableStateFlow(true).asStateFlow()
-}
+val FastingProfile.durationMinutes: Long
+    get() = duration ?: 0L

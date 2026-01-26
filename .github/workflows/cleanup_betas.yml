@@ -18,31 +18,45 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get all pre-release tag names, ordered by date (newest first)
-          beta_tags=$(gh release list --limit 100 --json tagName,isPrerelease | jq -r '.[] | select(.isPrerelease == true) | .tagName')
+          echo "Fetching list of all releases..."
+          releases=$(gh release list --limit 100 --json tagName,isPrerelease)
+          
+          # Debug: Show what we found
+          echo "Full release list found:"
+          echo "$releases" | jq -r '.[] | "\(.tagName) (Pre-release: \(.isPrerelease))"'
+          
+          # Filter for pre-releases
+          beta_tags=$(echo "$releases" | jq -r '.[] | select(.isPrerelease == true) | .tagName')
           
           if [ -z "$beta_tags" ]; then
-            echo "No beta releases found."
-            exit 0
+            echo "No pre-releases identified by the 'isPrerelease' flag."
+            # Fallback: check for tags containing '-beta'
+            beta_tags=$(echo "$releases" | jq -r '.[] | .tagName' | grep -- "-beta" || true)
+            if [ -z "$beta_tags" ]; then
+              echo "No releases with '-beta' in the tag name found either."
+              exit 0
+            fi
+            echo "Found beta releases by tag name fallback:"
+            echo "$beta_tags"
           fi
 
-          echo "Found beta releases:"
-          echo "$beta_tags"
-          
-          # We keep the latest beta for each flavor (Playstore and FOSS)
-          for flavor in "playstore-beta" "foss-beta"; do
-            echo "Processing $flavor..."
-            flavor_tags=$(echo "$beta_tags" | grep "$flavor" || true)
+          for flavor in "playstore" "foss"; do
+            echo "Processing $flavor flavor..."
+            # Match tags like v1.0.0-foss-beta.1 or v1.0.0-playstore-beta.1
+            flavor_tags=$(echo "$beta_tags" | grep "$flavor" | grep "beta" || true)
             
             if [ -n "$flavor_tags" ]; then
               # Keep the first one (most recent), delete the rest
+              # 'gh release list' returns them newest-first by default
+              echo "Tags found for $flavor: $(echo $flavor_tags | xargs)"
+              
               echo "$flavor_tags" | tail -n +2 | while read -r tag; do
                 if [ -n "$tag" ]; then
-                  echo "Deleting old $flavor release and tag: $tag"
+                  echo "Deleting old $flavor beta: $tag"
                   gh release delete "$tag" --yes --cleanup-tag
                 fi
               done
             else
-              echo "No releases found for $flavor."
+              echo "No matches for $flavor"
             fi
           done

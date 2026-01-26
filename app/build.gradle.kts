@@ -19,6 +19,7 @@ java {
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
+
 android {
     namespace = "com.tmdev.fasttimes"
     compileSdk = 36
@@ -57,11 +58,9 @@ android {
     productFlavors {
         create("foss") {
             dimension = "distribution"
-            // This is the F-Droid and GitHub release version
         }
         create("playstore") {
             dimension = "distribution"
-            // This version can include Google Play Billing or other Play-specific services
         }
     }
 
@@ -81,7 +80,12 @@ android {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            // Use signing if available, otherwise build unsigned for F-Droid
+            signingConfig = if (signingConfigs.getByName("release").storeFile != null) {
+                signingConfigs.getByName("release")
+            } else {
+                null
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -99,6 +103,7 @@ android {
         compose = true
     }
 
+    @Suppress("UnstableApiUsage")
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompilerVersion.get()
     }
@@ -164,16 +169,13 @@ dependencies {
     implementation("com.materialkolor:material-kolor:5.0.0-alpha05")
     implementation(libs.compose.runtime)
 
-    // Debug
     debugImplementation(libs.leakcanary.android)
 
-    // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.mockk)
 
-    // Android Testing
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso)
     androidTestImplementation(platform(libs.compose.bom.beta))

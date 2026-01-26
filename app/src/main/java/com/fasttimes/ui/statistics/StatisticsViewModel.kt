@@ -257,7 +257,11 @@ class StatisticsViewModel @Inject constructor(
         if (completedFasts.isEmpty()) return FastingStreak()
 
         val fastDates = completedFasts
-            .mapNotNull { it.end?.toLocalDate() }
+            .flatMap { fast ->
+                val startDate = fast.start.toLocalDate()
+                val endDate = fast.end?.toLocalDate() ?: startDate
+                listOf(startDate, endDate)
+            }
             .distinct()
             .sorted()
 
@@ -309,7 +313,11 @@ class StatisticsViewModel @Inject constructor(
     private fun calculateLongestStreak(completedFasts: List<Fast>): Int {
         if (completedFasts.isEmpty()) return 0
         val fastDates = completedFasts
-            .mapNotNull { it.end?.toLocalDate() }
+            .flatMap { fast ->
+                val startDate = fast.start.toLocalDate()
+                val endDate = fast.end?.toLocalDate() ?: startDate
+                listOf(startDate, endDate)
+            }
             .distinct()
             .sorted()
         
@@ -403,7 +411,11 @@ class StatisticsViewModel @Inject constructor(
         
         return (0 until days).map { i ->
             val date = start.plusDays(i.toLong())
-            val fastsOnDate = completedFasts.filter { it.start.toLocalDate() == date }
+            val fastsOnDate = completedFasts.filter { fast ->
+                val startDate = fast.start.toLocalDate()
+                val endDate = fast.end?.toLocalDate() ?: startDate
+                startDate == date || endDate == date
+            }
             val totalDurationHours = fastsOnDate.sumOf { it.duration() }.toFloat() / 3600000f
             
             val goalMet = fastsOnDate.any { it.goalMet() }

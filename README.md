@@ -42,7 +42,9 @@ FastTimes will soon be available on the following stores:
 *   **Flexible Fasting Goals**: Choose from standard intermittent fasting plans (16:8, 20:4, OMAD) or define a custom goal that fits your specific routine.
 *   **Visual Progress**: Stay motivated with Material 3 Expressive countdowns and notifications.
 *   **Comprehensive History**: Review past fasts with detailed logs and edit previous entries to keep your data accurate.
+*   **Streaks**: Stay motivated by building up you fasting streaks, helping you build a habit. 
 *   **Statistics**: Visualize your streaks and habits over time to better understand your progress.
+
 
 ### 🎨 Personalization
 *   **Material 3 & Dynamic Colors**: A modern Material 3 interface (using Material 3 Expressive components) that supports "Material You," automatically adapting to your system wallpaper colors.
@@ -62,7 +64,6 @@ Built with the latest Android standards to ensure a high-performance, resilient 
 *   **Room & DataStore**: Robust local-first persistence; Room handles complex fasting logs while DataStore manages user preferences.
 *   **Hilt DI**: Clean dependency injection for a modular, maintainable, and testable architecture.
 *   **Clean Architecture (MVVM)**: Ensure the app is scalable and robust.
-
 
 
 ## Project Structure

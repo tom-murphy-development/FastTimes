@@ -426,7 +426,11 @@ class DashboardViewModel @Inject constructor(
         if (completedFasts.isEmpty()) return FastingStreak()
 
         val fastDates = completedFasts
-            .mapNotNull { it.end?.toLocalDate() }
+            .flatMap { fast ->
+                val startDate = fast.start.toLocalDate()
+                val endDate = fast.end?.toLocalDate() ?: startDate
+                listOf(startDate, endDate)
+            }
             .distinct()
             .sorted()
 
@@ -526,11 +530,16 @@ class DashboardViewModel @Inject constructor(
 
     private fun calculateWeeklyProgress(completedFasts: List<Fast>): List<DayProgress> {
         val today = LocalDate.now()
-        val startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-        val fastDates = completedFasts.mapNotNull { it.end?.toLocalDate() }.toSet()
+        // Rolling 7 days ending today
+        val startDate = today.minusDays(6)
+        val fastDates = completedFasts.flatMap { fast ->
+            val start = fast.start.toLocalDate()
+            val end = fast.end?.toLocalDate() ?: start
+            listOf(start, end)
+        }.toSet()
 
         return (0..6).map { i ->
-            val date = startOfWeek.plusDays(i.toLong())
+            val date = startDate.plusDays(i.toLong())
             DayProgress(
                 date = date,
                 isCompleted = date in fastDates,

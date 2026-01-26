@@ -59,6 +59,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
@@ -107,6 +108,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -131,6 +133,7 @@ import nl.dionsegijn.konfetti.core.Position
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import java.text.SimpleDateFormat
 import java.time.Duration
+import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -186,6 +189,7 @@ fun DashboardScreen(
     val context = LocalContext.current
 
     var parties by remember { mutableStateOf(emptyList<Party>()) }
+    var showStreakInfo by remember { mutableStateOf(false) }
 
     val onStartFast: (FastingProfile) -> Unit = {
         viewModel.startProfileFast(it)
@@ -229,7 +233,8 @@ fun DashboardScreen(
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         AlertDialog(
-            onDismissRequest = onDismissAlarmPermissionRationale,            title = { Text("Permission Required") },
+            onDismissRequest = onDismissAlarmPermissionRationale,
+            title = { Text("Permission Required") },
             text = { Text("To ensure you're notified when your fast is complete, the app needs permission to post notifications and schedule exact alarms. This is only used to show a notification when the timer ends.") },
             confirmButton = {
                 Button(onClick = {
@@ -266,6 +271,15 @@ fun DashboardScreen(
             onDismiss = viewModel::onFastingSummaryDismissed,
             onSaveRating = { rating -> viewModel.saveFastRating(it.id, rating) }
         )
+    }
+
+    if (showStreakInfo) {
+        ModalBottomSheet(
+            onDismissRequest = { showStreakInfo = false },
+            sheetState = rememberModalBottomSheetState()
+        ) {
+            StreakInfoContent(onDismiss = { showStreakInfo = false })
+        }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -621,7 +635,8 @@ fun DashboardScreen(
                     StreakCard(
                         streakDays = stats.streak.daysInARow,
                         weeklyProgress = stats.weeklyProgress,
-                        onHistoryClick = onHistoryClick
+                        onHistoryClick = onHistoryClick,
+                        onInfoClick = { showStreakInfo = true }
                     )
                 }
 
@@ -666,7 +681,7 @@ fun DashboardScreen(
                         )
 
                         // Longest fast this month Card
-                        val longestFastDuration = stats.longestFastThisMonth?.let { 
+                        val longestFastDuration = stats.longestFastThisMonth?.let {
                              val durationMillis = it.duration()
                              val hours = durationMillis / 3600000L
                              "${hours}h"
@@ -859,6 +874,7 @@ fun StreakCard(
     streakDays: Int,
     weeklyProgress: List<DayProgress>,
     onHistoryClick: () -> Unit,
+    onInfoClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -906,15 +922,36 @@ fun StreakCard(
                     )
                     Spacer(Modifier.width(16.dp))
                     Column {
-                        Text(
-                            text = streakDays.toString(),
-                            style = MaterialTheme.typography.displaySmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 32.sp
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                text = streakDays.toString(),
+                                style = MaterialTheme.typography.displaySmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 32.sp
+                                )
                             )
-                        )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "day streak",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            IconButton(
+                                onClick = onInfoClick,
+                                modifier = Modifier.size(24.dp).padding(bottom = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "Streak Info",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
                         Text(
-                            text = "day streak",
+                            text = "You've logged a fast for the past $streakDays days.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -927,7 +964,18 @@ fun StreakCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    weeklyProgress.forEach { day ->
+                    val today = LocalDate.now()
+                    weeklyProgress.forEachIndexed { index, day ->
+                        val isToday = day.date == today
+                        val showPlusIndicator = streakDays > 6 && index == 0
+                        
+                        val backgroundColor = if (day.isCompleted || showPlusIndicator) FastTimesTheme.accentColor
+                                              else if (day.isFuture) Color.Transparent
+                                              else MaterialTheme.colorScheme.surfaceVariant
+                        
+                        val contentColor = if (day.isFuture) MaterialTheme.colorScheme.outlineVariant 
+                                           else contentColorFor(backgroundColor)
+
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -936,11 +984,7 @@ fun StreakCard(
                                 modifier = Modifier
                                     .size(32.dp)
                                     .clip(CircleShape)
-                                    .background(
-                                        if (day.isCompleted) FastTimesTheme.accentColor
-                                        else if (day.isFuture) Color.Transparent
-                                        else MaterialTheme.colorScheme.surfaceVariant
-                                    )
+                                    .background(backgroundColor)
                                     .then(
                                         if (day.isFuture) Modifier.border(
                                             1.dp,
@@ -950,28 +994,95 @@ fun StreakCard(
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (day.isCompleted) {
+                                if (showPlusIndicator) {
+                                    Text(
+                                        text = "+${streakDays - 5}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = contentColor,
+                                        fontWeight = FontWeight.Black,
+                                        textAlign = TextAlign.Center
+                                    )
+                                } else if (day.isCompleted) {
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = null,
-                                        tint = Color.White,
+                                        tint = contentColor,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
-                            Text(
-                                text = day.date.dayOfWeek.getDisplayName(
-                                    TextStyle.NARROW,
-                                    Locale.getDefault()
-                                ),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            
+                            Box(
+                                modifier = Modifier.height(20.dp),
+                                contentAlignment = Alignment.TopCenter
+                            ) {
+                                if (!showPlusIndicator) {
+                                    Text(
+                                        text = day.date.dayOfWeek.getDisplayName(
+                                            TextStyle.NARROW,
+                                            Locale.getDefault()
+                                        ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isToday) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun StreakInfoContent(onDismiss: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "About Streaks",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            StreakInfoItem(
+                title = "Fair Progress Tracking",
+                description = "A day counts toward your streak if a fast either started or ended on that day."
+            )
+            StreakInfoItem(
+                title = "Midnight Overlap",
+                description = "Fasts that span across midnight contribute to both calendar days."
+            )
+            StreakInfoItem(
+                title = "Rolling View",
+                description = "We show a rolling 7-day window. If your streak is longer, the first circle displays the total accumulated days."
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Button(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+        ) {
+            Text("Got it")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun StreakInfoItem(title: String, description: String) {
+    Column {
+        Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text(text = description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

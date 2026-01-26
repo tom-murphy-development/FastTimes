@@ -10,6 +10,12 @@ plugins {
     alias(libs.plugins.spotless)
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }

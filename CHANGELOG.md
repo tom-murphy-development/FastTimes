@@ -1,8 +1,16 @@
 # Changelog
 
+## [Unreleased]
+### Added
+-
+### Changed
+-
+### Fixed
+-
+
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.0] - 2026-01-26
 ### Added
 - Initial Beta release of FastTimes.
 - Support for multiple fasting profiles (12:12, 14:10, 16:8, 18:6, 20:4).

@@ -10,16 +10,20 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success')
     permissions:
       contents: write
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Cleanup Old Beta Releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Fetching list of all releases..."
-          releases=$(gh release list --limit 100 --json tagName,isPrerelease)
+          echo "Fetching list of all releases for ${{ github.repository }}..."
+          # We specify the repo explicitly to avoid 'not a git repository' issues if checkout is shallow or missing
+          releases=$(gh release list --repo ${{ github.repository }} --limit 100 --json tagName,isPrerelease)
           
           # Debug: Show what we found
           echo "Full release list found:"
@@ -30,10 +34,10 @@ jobs:
           
           if [ -z "$beta_tags" ]; then
             echo "No pre-releases identified by the 'isPrerelease' flag."
-            # Fallback: check for tags containing '-beta'
-            beta_tags=$(echo "$releases" | jq -r '.[] | .tagName' | grep -- "-beta" || true)
+            # Fallback: check for tags containing 'beta'
+            beta_tags=$(echo "$releases" | jq -r '.[] | .tagName' | grep "beta" || true)
             if [ -z "$beta_tags" ]; then
-              echo "No releases with '-beta' in the tag name found either."
+              echo "No releases with 'beta' in the tag name found either."
               exit 0
             fi
             echo "Found beta releases by tag name fallback:"
@@ -53,7 +57,7 @@ jobs:
               echo "$flavor_tags" | tail -n +2 | while read -r tag; do
                 if [ -n "$tag" ]; then
                   echo "Deleting old $flavor beta: $tag"
-                  gh release delete "$tag" --yes --cleanup-tag
+                  gh release delete "$tag" --repo ${{ github.repository }} --yes --cleanup-tag
                 fi
               done
             else

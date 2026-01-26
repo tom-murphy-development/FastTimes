@@ -1,1 +1,133 @@
-### Fixed
+- Add Room database schema for version 6
+- Enhance fasting streaks and add info sheets for History and Dashboard
+- Rebrand "Manual" fasts to "Open Fast" and improve duration formatting
+- implement flavor-based distribution and add store metadata
+- implement flavor-based distribution and add store metadata
+- Modernize monthly statistics with expressive UI components
+- Modernize monthly statistics with expressive UI components
+- implement monthly view for activity chart
+- implement expandable all-time metrics and enhance data display
+- implement period filtering and enhance trends visualization
+- Implement weekly average fast calculation and update UI
+- implement expressive statistics cards and modernize dashboard
+- Modernize Statistics UI with Material 3 Expressive components
+- Add comprehensive statistics screen and dashboard streak visualization
+- overhaul goal selection and upgrade build infrastructure
+- Modernize theme selection UI and update documentation
+- Revamp UI and add About section
+- Redesign settings screen with Material 3 components
+- Improve clarity of setting labels
+- Introduce Roboto Flex variable font and enhance UI typography
+- Introduce optional wavy progress indicator
+- Introduce selection mode for profile management
+- Enhance profile management UX
+- Introduce favorite fasting profiles
+- Introduce manageable fasting profiles
+- Introduce Material You and default accent colors
+- Introduce customizable accent color
+- Add hourglass timer icon
+- Add hourglass timer icon
+- Add multi-state Floating Action Button
+- Add "First Day of Week" setting
+- Add data import and export functionality
+- Add "Goal Reached" notification setting and refactor service
+- Add ability to delete a fast
+- Add fast completion and rating modal
+- Update foreground service type to health
+- Add input validation and error handling
+- Request notification permission for live progress
+- Display recent fasts on the Dashboard
+- Implement editing of active and past fasts
+- Implement draggable Dashboard and History screens
+- Implement draggable Dashboard and History screens
+- Add reusable StatisticTile component
+- Add average fast statistic and redesign stats card
+- Add pulsating animation to manual fast timer
+- Add pulsating animation to manual fast timer
+- Add manual fasting mode
+- Add live progress notification via foreground service
+- Implement history screen with calendar view
+- Add fast completion notifications and alarms
+- Add new fasting profiles and enhance dashboard UI
+- Add total fasting time to stats and update UI
+- Add circular progress indicator for active fasts
+- Implement Fasting Profiles
+- Refactor Dashboard and Settings screens to improve composability and add previews
+- Add user preferences repository and theme management feat: Add Dark Theme
+- Implement core fasting app features
+- Implement core fasting app features
+
+- update release workflow and fastlane metadata structure
+- update CHANGELOG.md for 1.0.0
+- streamline `HistoryViewModel` state logic and improve unit tests
+- Clean up whitespace in feature and DI files
+- Update Settings and AboutCard visuals
+- Update History statistics card styling
+- Add license header to AboutCard
+- Compact layout adjustments for Settings and Dashboard
+- Compact layout adjustments for Settings and Dashboard
+- Segregate debug profiles and harden DataStore resilience
+- Enable Spotless in CI and remove hardcoded JDK path
+- Migrate to GPLv3 and configure Spotless
+- Use `targetDuration` to identify manual fasts
+- Simplify profile selection logic and layout
+- Adapt to Android 14 exact alarm restrictions and update splash screen
+- Rename `BrandColor` to `AccentColor` for clarity
+- Simplify "No Fast" state logic
+- Decouple theme state from screens and introduce skeleton loader
+- Introduce dynamic theming with Material Kolor
+- Improve Add/Edit Profile dialog and favorite handling
+- Migrate duration handling from TimeUnit to Kotlin Duration
+- Rename `FastingProfile.name` to `displayName` for clarity
+- Simplify DashboardViewModel by removing unused navigation and profile handling code
+- Update fast completion notification icon
+- Update fast completion notification icon
+- Overhaul FastingProfile data model and persistence
+- Update dependencies and remove unnecessary API requirement
+- Harmonize component colors for better contrast
+- Unify star rating color and improve display
+- Collect active fast as a flow in EditFastViewModel
+- Enhance FastingSummaryModal with detailed layout
+- Redesign `LastFastItem` for better detail
+- Enhance history details and dashboard empty state
+- Use LazyColumn in DailyFastDetailsSheet
+- Disable automatic app backups
+- Upgrade dependencies and project configuration
+- Update Compose Foundation and refactor AnchoredDraggableState
+- Persist confetti state to prevent re-triggering
+- Refine dashboard and history screen visuals
+- Redesign monthly stats card
+- Redesign statistic tiles and add borders
+- Redesign statistics display with `StatisticTile`
+- Standardize on BarChart icon for "Total Fasts" statistic
+- Enhance stats, navigation, and data model
+- Standardize on `Duration` for statistics and update formatter
+- Adjust goal reached color for better visibility
+- Update history screen colors for consistency
+- Update app launcher icon
+- Replace manual swipe logic with `anchoredDraggable`
+- Improve code quality in CalendarView
+- Add swipe gesture to navigate calendar months
+- Fix calendar animation bug
+- Remove swipe gesture from CalendarView
+- Add swipe gestures and animations to History screen
+- Optimize history calculation and data handling
+- Optimize History screen performance and logic
+- Consolidate fasting logic into `DashboardUiState`
+- Use `kotlin.time.Duration` for fasting profiles
+- Extract formatters and modal, and improve UI
+- Update dependencies and adapt to API changes
+- Enable edge-to-edge display and refine UI
+- Replace `values()` with `entries` for enums
+- Improve Dashboard UI text styling
+- Centralize DI and add splash screen
+- Enable Gradle configuration cache for improved build performance
+- Update library versions in libs.versions.toml
+- Update library versions in libs.versions.toml
+
+- Improve test stability and handle service exceptions
+- Remove redundant progress indicator
+
+
+### Other
+- - Initial Stable release of FastTimes. - Support for multiple fasting profiles (12:12, 14:10, 16:8, 18:6, 20:4). - Open-ended fasting timer. - Detailed history - Performance metrics - Streak tracking and weekly progress visualization. - Dark mode & custom theming support.

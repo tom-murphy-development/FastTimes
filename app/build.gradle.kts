@@ -99,7 +99,6 @@ android {
         compose = true
     }
 
-    @Suppress("UnstableApiUsage")
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompilerVersion.get()
     }

@@ -36,10 +36,12 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Get Version Name
+      - name: Get Version Code and Name
         id: get_version
         run: |
+          VERSION_CODE=$(grep "versionCode =" app/build.gradle.kts | sed 's/.*= \(.*\)/\1/')
           VERSION_NAME=$(grep "versionName =" app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
 
       - name: Generate and Update Changelog
@@ -90,17 +92,19 @@ jobs:
           # 5. Update CHANGELOG.md file
           DATE=$(date +%Y-%m-%d)
           sed -i "s/## \[Unreleased\]/## [$VERSION_NAME] - $DATE/" CHANGELOG.md
-          # Insert the new content (optional: if you want the actual notes in the file too)
-          # For now, we replace [Unreleased] with the versioned header and keep the history
           
           # Prepend new [Unreleased] section for next time
           sed -i '3i ## [Unreleased]\n### Added\n-\n### Changed\n-\n### Fixed\n-\n' CHANGELOG.md
+
+          # 6. Update Fastlane Changelog (for F-Droid/Play Store)
+          mkdir -p fastlane/metadata/android/en-US/changelogs
+          cat final_release_notes.md > "fastlane/metadata/android/en-US/changelogs/${{ steps.get_version.outputs.VERSION_CODE }}.txt"
           
           # Commit updates
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git commit -m "chore: update CHANGELOG.md for $VERSION_NAME" || echo "No changes to commit"
+          git add CHANGELOG.md fastlane/metadata/android/en-US/changelogs/
+          git commit -m "chore: update CHANGELOG.md and fastlane metadata for $VERSION_NAME" || echo "No changes to commit"
           git push || echo "No changes to push"
           
           # Set output for the Release body

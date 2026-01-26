@@ -5,12 +5,12 @@ Simple, private, open-source Android intermittent fasting tracker.
 ## Screenshots
 
 <p width="100%" align="center">
-  <img src="fastlane/metadata/android/images/phoneScreenshots/1_DashboardFastDark.png" width="30%" alt="">
-  <img src="fastlane/metadata/android/images/phoneScreenshots/2_DashboardFastLight.png" width="30%" alt="">
-  <img src="fastlane/metadata/android/images/phoneScreenshots/3_PerformanceLight.png" width="30%" alt="">
-  <img src="fastlane/metadata/android/images/phoneScreenshots/4_DashboardNoFastDark.png" width="30%" alt="">
-  <img src="fastlane/metadata/android/images/phoneScreenshots/5_HistoryDark.png" width="30%" alt="">
-  <img src="fastlane/metadata/android/images/phoneScreenshots/6_SettingsDark.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_DashboardFastDark.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_DashboardFastLight.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_PerformanceLight.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_DashboardNoFastDark.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5_HistoryDark.png" width="30%" alt="">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6_SettingsDark.png" width="30%" alt="">
 
 </p>
 

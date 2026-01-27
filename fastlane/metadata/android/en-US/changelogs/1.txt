@@ -57,6 +57,7 @@
 - Implement core fasting app features
 - Implement core fasting app features
 
+- update CHANGELOG.md and fastlane metadata for 1.0.0
 - update release workflow and fastlane metadata structure
 - update CHANGELOG.md for 1.0.0
 - streamline `HistoryViewModel` state logic and improve unit tests
@@ -128,6 +129,3 @@
 - Improve test stability and handle service exceptions
 - Remove redundant progress indicator
 
-
-### Other
-- - Initial Stable release of FastTimes. - Support for multiple fasting profiles (12:12, 14:10, 16:8, 18:6, 20:4). - Open-ended fasting timer. - Detailed history - Performance metrics - Streak tracking and weekly progress visualization. - Dark mode & custom theming support.

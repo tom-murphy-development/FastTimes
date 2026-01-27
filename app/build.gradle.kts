@@ -35,20 +35,22 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            val keystorePropertiesFile = rootProject.file("keystore.properties")
-            if (keystorePropertiesFile.exists()) {
-                val properties = Properties()
-                properties.load(FileInputStream(keystorePropertiesFile))
-                storeFile = rootProject.file(properties.getProperty("storeFile"))
-                storePassword = properties.getProperty("storePassword")
-                keyAlias = properties.getProperty("keyAlias")
-                keyPassword = properties.getProperty("keyPassword")
-            } else if (System.getenv("RELEASE_KEYSTORE_PATH") != null) {
-                storeFile = rootProject.file(System.getenv("RELEASE_KEYSTORE_PATH"))
-                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
-                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+        val keystorePropertiesFile = rootProject.file("keystore.properties")
+        if (keystorePropertiesFile.exists() || System.getenv("RELEASE_KEYSTORE_PATH") != null) {
+            create("release") {
+                if (keystorePropertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(FileInputStream(keystorePropertiesFile))
+                    storeFile = rootProject.file(properties.getProperty("storeFile"))
+                    storePassword = properties.getProperty("storePassword")
+                    keyAlias = properties.getProperty("keyAlias")
+                    keyPassword = properties.getProperty("keyPassword")
+                } else {
+                    storeFile = rootProject.file(System.getenv("RELEASE_KEYSTORE_PATH"))
+                    storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                    keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                    keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+                }
             }
         }
     }
@@ -74,14 +76,16 @@ android {
             initWith(getByName("release"))
             applicationIdSuffix = ".beta"
             versionNameSuffix = "-BETA"
-            signingConfig = signingConfigs.getByName("release")
+            if (signingConfigs.findByName("release") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             matchingFallbacks += listOf("release")
         }
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
             // Use signing if available, otherwise build unsigned for F-Droid
-            signingConfig = if (signingConfigs.getByName("release").storeFile != null) {
+            signingConfig = if (signingConfigs.findByName("release") != null) {
                 signingConfigs.getByName("release")
             } else {
                 null

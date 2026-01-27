@@ -59,6 +59,7 @@
 
 - update CHANGELOG.md and fastlane metadata for 1.0.0
 - update CHANGELOG.md and fastlane metadata for 1.0.0
+- update CHANGELOG.md and fastlane metadata for 1.0.0
 - update release workflow and fastlane metadata structure
 - update CHANGELOG.md for 1.0.0
 - streamline `HistoryViewModel` state logic and improve unit tests

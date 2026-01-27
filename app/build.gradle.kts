@@ -10,12 +10,6 @@ plugins {
     alias(libs.plugins.spotless)
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
@@ -84,7 +78,6 @@ android {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
-            // Use signing if available, otherwise build unsigned for F-Droid
             signingConfig = if (signingConfigs.findByName("release") != null) {
                 signingConfigs.getByName("release")
             } else {

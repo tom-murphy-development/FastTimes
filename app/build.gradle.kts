@@ -26,6 +26,12 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags("-Wl,--build-id=none", "-ffile-prefix-map=${rootProject.projectDir.absolutePath}=.")
+            }
+        }
     }
 
     signingConfigs {
@@ -116,8 +122,14 @@ android {
     }
 }
 
+// Fixed: Moved kotlin extension outside of the android block
 kotlin {
     jvmToolchain(21)
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-Xfile-prefix-map=${rootProject.projectDir.absolutePath}=."
+        )
+    }
 }
 
 spotless {

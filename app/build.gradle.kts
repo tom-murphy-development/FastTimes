@@ -11,7 +11,7 @@ plugins {
 }
 
 ksp {
-    arg("room.schemaLocation", "${projectDir}/schemas")
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 android {
@@ -29,9 +29,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                val prefixMap = "-ffile-prefix-map=${rootProject.projectDir.absolutePath}=."
-                cppFlags("-Wl,--build-id=none", prefixMap)
-                cFlags("-Wl,--build-id=none", prefixMap)
+                cppFlags("-Wl,--build-id=none", "-ffile-prefix-map=${rootProject.projectDir.absolutePath}=.")
             }
         }
     }
@@ -78,13 +76,19 @@ android {
             initWith(getByName("release"))
             applicationIdSuffix = ".beta"
             versionNameSuffix = "-BETA"
-            signingConfig = signingConfigs.findByName("release")
+            if (signingConfigs.findByName("release") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             matchingFallbacks += listOf("release")
         }
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.findByName("release")
+            signingConfig = if (signingConfigs.findByName("release") != null) {
+                signingConfigs.getByName("release")
+            } else {
+                null
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -102,6 +106,11 @@ android {
         compose = true
     }
 
+    @Suppress("UnstableApiUsage")
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.composeCompilerVersion.get()
+    }
+
     packaging {
         resources {
             excludes += "META-INF/AL2.0"
@@ -111,31 +120,14 @@ android {
             excludes += "META-INF/NOTICE"
         }
     }
-
-    // AAPT2 Hardening for reproducibility
-    aaptOptions {
-        additionalParameters("--no-version-vectors", "--no-xml-namespaces")
-    }
 }
 
-composeCompiler {
-    includeSourceInformation = false
-}
-
+// Fixed: Moved kotlin extension outside of the android block
 kotlin {
     jvmToolchain(21)
     compilerOptions {
         freeCompilerArgs.addAll(
-            // Map absolute paths to relative
-            "-Xfile-prefix-map=${rootProject.projectDir.absolutePath}=.",
-            // Strip absolute paths from Kotlin metadata
-            "-Xno-source-debug-extension",
-            // Ensure consistent JDK API surface
-            "-Xjdk-release=21",
-            // Force single-threaded backend for deterministic code generation
-            "-Xbackend-threads=1",
-            // Stabilize metadata generation
-            "-Xallow-no-source-files"
+            "-Xfile-prefix-map=${rootProject.projectDir.absolutePath}=."
         )
     }
 }
@@ -158,6 +150,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.material3)
     implementation(libs.compose.material.icons)
     implementation(libs.konfetti.compose)
     implementation(libs.navigation.compose)

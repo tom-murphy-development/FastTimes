@@ -1,67 +1,37 @@
-Added:
-- Add Room database schema for version 6
-- Add Room database schema for version 6
-- Enhance fasting streaks and add info sheets for History and Dashboard
-- Rebrand "Manual" fasts to "Open Fast" and improve duration formatting
-- implement flavor-based distribution and add store metadata
-- implement flavor-based distribution and add store metadata
-- Modernize monthly statistics with expressive UI components
-- Modernize monthly statistics with expressive UI components
-- implement monthly view for activity chart
-- implement expandable all-time metrics and enhance data display
-- implement period filtering and enhance trends visualization
-- Implement weekly average fast calculation and update UI
-- implement expressive statistics cards and modernize dashboard
-- Modernize Statistics UI with Material 3 Expressive components
-- Add comprehensive statistics screen and dashboard streak visualization
-- overhaul goal selection and upgrade build infrastructure
-- Modernize theme selection UI and update documentation
-- Revamp UI and add About section
-- Redesign settings screen with Material 3 components
-- Improve clarity of setting labels
-- Introduce Roboto Flex variable font and enhance UI typography
-- Introduce optional wavy progress indicator
-- Introduce selection mode for profile management
-- Enhance profile management UX
-- Introduce favorite fasting profiles
-- Introduce manageable fasting profiles
-- Introduce Material You and default accent colors
-- Introduce customizable accent color
-- Add hourglass timer icon
-- Add hourglass timer icon
-- Add multi-state Floating Action Button
-- Add "First Day of Week" setting
-- Add data import and export functionality
-- Add "Goal Reached" notification setting and refactor service
-- Add ability to delete a fast
-- Add fast completion and rating modal
-- Update foreground service type to health
-- Add input validation and error handling
-- Request notification permission for live progress
-- Display recent fasts on the Dashboard
-- Implement editing of active and past fasts
-- Implement draggable Dashboard and History screens
-- Implement draggable Dashboard and History screens
-- Add reusable StatisticTile component
-- Add average fast statistic and redesign stats card
-- Add pulsating animation to manual fast timer
-- Add pulsating animation to manual fast timer
-- Add manual fasting mode
-- Add live progress notification via foreground service
-- Implement history screen with calendar view
-- Add fast completion notifications and alarms
-- Add new fasting profiles and enhance dashboard UI
-- Add total fasting time to stats and update UI
-- Add circular progress indicator for active fasts
-- Implement Fasting Profiles
-- Refactor Dashboard and Settings screens to improve composability and add previews
-- Add user preferences repository and theme management feat: Add Dark Theme
-- Implement core fasting app features
-- Implement core fasting app features
+## 🚀 Release Notes: v1.0.0 (Stable)
 
-Fixed:
-- Handle notification permissions and update default settings
-- Improve test stability and handle service exceptions
-- Remove redundant progress indicator
+The first stable release of FastTimes!
 
-...
+## ✨ Key Features
+
+### ⏱️ Intermittent Fast Tracking
+
+- **Intuitive Timer**: Start, stop, and adjust your fasts with a single tap. A persistent background service ensures your progress is tracked accurately, even if the app is closed or the device restarts.
+- **Flexible Fasting Goals**: Choose from standard intermittent fasting plans (16:8, 20:4, OMAD) or define a custom goal that fits your specific routine.
+- **Visual Progress**: Stay motivated with Material 3 Expressive countdowns and notifications.
+- **Comprehensive History**: Review past fasts with detailed logs and edit previous entries to keep your data accurate.
+- **Streaks**: Stay motivated by building up you fasting streaks, helping you build a habit.
+- **Statistics**: Visualize your streaks and habits over time to better understand your progress.
+
+### 🎨 Personalization
+
+- **Material 3 & Dynamic Colors**: A modern Material 3 interface (using Material 3 Expressive components) that supports "Material You," automatically adapting to your system wallpaper colors.
+- **Theming Support**: Seamlessly switch between light and dark themes for comfortable nighttime logging.
+- **UI Customization**: Tailor the app's look with adjustable accent colors and interface elements.
+
+### 🛡️ Privacy First
+
+- **100% Offline**: FastTimes works entirely without an internet connection. Your data never leaves your device.
+- **No Accounts, No Tracking**: No email required, no cloud syncing, and absolutely no third-party analytics or trackers.
+- **Open Source**: Built with transparency in mind.
+- **Full Data Control**: You own your data. Export and Import your history as you wish.
+
+### 🏗️ Modern Tech Stack
+
+Built with the latest Android standards to ensure a high-performance, resilient experience:
+
+- **Jetpack Compose**: A fully declarative UI for fluid animations and a modern user experience.
+- **Kotlin Coroutines & Flow**: Powering reactive, non-blocking data streams throughout the app.
+- **Room & DataStore**: Robust local-first persistence; Room handles complex fasting logs while DataStore manages user preferences.
+- **Hilt DI**: Clean dependency injection for a modular, maintainable, and testable architecture.
+- **Clean Architecture (MVVM)**: Ensure the app is scalable and robust.

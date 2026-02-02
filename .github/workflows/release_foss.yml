@@ -98,26 +98,7 @@ jobs:
 
           # 6. Update Fastlane Changelog (for F-Droid/Play Store)
           mkdir -p fastlane/metadata/android/en-US/changelogs
-          CHANGELOG_DEST="fastlane/metadata/android/en-US/changelogs/${{ steps.get_version.outputs.VERSION_CODE }}.txt"
-          
-          # Store metadata has a 500 character limit. Summarize if needed.
-          if [ $(wc -m < final_release_notes.md) -gt 500 ]; then
-            echo "Changelog exceeds 500 characters. Summarizing for store metadata..."
-            {
-              [ -n "$AUTO_ADDED" ] && echo -e "Added:\n$AUTO_ADDED"
-              [ -n "$AUTO_FIXED" ] && echo -e "Fixed:\n$AUTO_FIXED"
-              [ -n "${{ github.event.inputs.manual_changelog }}" ] && echo -e "Other:\n- ${{ github.event.inputs.manual_changelog }}"
-            } > fastlane_notes.txt
-            
-            if [ $(wc -m < fastlane_notes.txt) -gt 500 ]; then
-              cut -c 1-497 fastlane_notes.txt > "$CHANGELOG_DEST"
-              echo "..." >> "$CHANGELOG_DEST"
-            else
-              cat fastlane_notes.txt > "$CHANGELOG_DEST"
-            fi
-          else
-            cat final_release_notes.md > "$CHANGELOG_DEST"
-          fi
+          cat final_release_notes.md > "fastlane/metadata/android/en-US/changelogs/${{ steps.get_version.outputs.VERSION_CODE }}.txt"
           
           # Commit updates
           git config user.name "github-actions[bot]"

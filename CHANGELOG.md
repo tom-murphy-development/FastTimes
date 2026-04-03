@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+### Added
+-
+### Changed
+-
+### Fixed
+-
+
 ## [1.0.1]
 ### Added
 - Implemented responsive layout

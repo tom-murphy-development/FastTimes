@@ -1,0 +1,4 @@
+- release version 1.0.1 and update CHANGELOG.md
+
+### Other
+- Release Version 1.0.1

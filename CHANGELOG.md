@@ -1,12 +1,12 @@
 # Changelog
 
-## [Unreleased]
+## [1.0.1]
 ### Added
--
+- Implemented responsive layout
 ### Changed
--
+- Updated Dependencies
 ### Fixed
--
+- Calendar Display issue in Edit dialog
 
 ## [1.0.0] - 2026-02-02
 ### Added

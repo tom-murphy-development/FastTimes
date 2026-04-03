@@ -68,6 +68,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -79,6 +80,7 @@ import com.tmdev.fasttimes.ui.components.rememberRandomExpressiveShape
 import com.tmdev.fasttimes.ui.formatDuration
 import com.tmdev.fasttimes.ui.theme.FastTimesPreviewTheme
 import com.tmdev.fasttimes.ui.theme.FastTimesTheme
+import com.tmdev.fasttimes.ui.theme.spacing
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -104,6 +106,7 @@ fun StatisticsScreen(
     viewModel: StatisticsViewModel = hiltViewModel()
 ) {
     val state by viewModel.statisticsState.collectAsState()
+    val locale = LocalConfiguration.current.locales[0]
 
     // Generate random stable expressive shapes for the summary cards.
     val streakShape = rememberRandomExpressiveShape(seed = remember { Random.nextInt() })
@@ -141,8 +144,8 @@ fun StatisticsScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(horizontal = MaterialTheme.spacing.screenHorizontal, vertical = MaterialTheme.spacing.sectionSpacing),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sectionSpacing)
             ) {
                 // Hero Header Section with Navigation
                 Column {
@@ -191,19 +194,21 @@ fun StatisticsScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.sectionSpacing))
 
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             text = "%.1fh".format(state.chartAverageHours),
-                            style = MaterialTheme.typography.displayLarge.copy(fontSize = 56.sp),
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                fontSize = MaterialTheme.spacing.heroStatFontSize
+                            ),
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "avg",
                             style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
+                            modifier = Modifier.padding(bottom = MaterialTheme.spacing.small, start = MaterialTheme.spacing.small),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -228,12 +233,12 @@ fun StatisticsScreen(
                     firstDayOfWeek = state.firstDayOfWeek,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(MaterialTheme.spacing.chartHeight)
                 )
 
                 // Expressive Asymmetrical Summary Cards
                 Column {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.sectionSpacing))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -265,7 +270,7 @@ fun StatisticsScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.sectionSpacing))
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -283,7 +288,7 @@ fun StatisticsScreen(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                 shape = streakShape,
-                                height = 160.dp
+                                height = MaterialTheme.spacing.performanceStatCardHeight
                             )
                         } else {
                             ExpressiveStatCard(
@@ -294,14 +299,14 @@ fun StatisticsScreen(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                 shape = streakShape,
-                                height = 160.dp
+                                height = MaterialTheme.spacing.performanceStatCardHeight
                             )
                         }
                         
                         ExpressiveStatCard(
                             modifier = Modifier.weight(1f),
                             label = "Average Fast",
-                            value = formatHoursOnly(state.periodAverageFast),
+                            value = formatHoursOnly(state.periodAverageFast, locale),
                             unit = when(state.selectedPeriod) {
                                 StatisticsPeriod.WEEKLY -> "this week"
                                 StatisticsPeriod.MONTHLY -> "this month"
@@ -310,7 +315,7 @@ fun StatisticsScreen(
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                             shape = averageShape,
-                            height = 160.dp
+                            height = MaterialTheme.spacing.performanceStatCardHeight
                         )
                         
                         ExpressiveStatCard(
@@ -321,7 +326,7 @@ fun StatisticsScreen(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             shape = consistencyShape,
-                            height = 160.dp
+                            height = MaterialTheme.spacing.performanceStatCardHeight
                         )
                     }
                 }
@@ -355,39 +360,39 @@ fun StatisticsScreen(
                             shape = RoundedCornerShape(24.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 4.dp)
+                                .padding(top = MaterialTheme.spacing.extraSmall)
                         ) {
-                            Column(modifier = Modifier.padding(24.dp)) {
+                            Column(modifier = Modifier.padding(MaterialTheme.spacing.large)) {
                                 DetailRow("Total Fasts", state.totalFasts.toString())
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.spacing.medium), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                 
-                                DetailRow("Total Duration", formatDuration(state.totalFastingTime))
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                DetailRow("Total Duration", formatDuration(state.totalFastingTime, locale))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.spacing.medium), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
-                                DetailRow("Average Fast", formatDuration(state.averageFast))
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                DetailRow("Average Fast", formatDuration(state.averageFast, locale))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.spacing.medium), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
                                 state.longestFast?.let { fast ->
-                                    DetailRow("Longest Fast", formatDuration(fast.duration().milliseconds))
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    DetailRow("Longest Fast", formatDuration(fast.duration().milliseconds, locale))
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.spacing.medium), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                 }
 
                                 DetailRow("Avg. Fasts Per Week", "%.1f".format(state.fastsPerWeek))
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.spacing.medium), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                 
                                 DetailRow(
                                     "Most Common Day",
-                                    state.mostFrequentDay?.getDisplayName(TextStyle.FULL, Locale.getDefault()) ?: "-"
+                                    state.mostFrequentDay?.getDisplayName(TextStyle.FULL, locale) ?: "-"
                                 )
 
                                 state.averageStartTime?.let { time ->
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.spacing.medium), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                     val timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
                                     DetailRow("Average Start Time", time.format(timeFormatter))
                                 }
                                 
                                 state.firstFastDate?.let { date ->
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.spacing.medium), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                     val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
                                     DetailRow("Journey Started", date.format(dateFormatter))
                                 }
@@ -396,7 +401,7 @@ fun StatisticsScreen(
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.sectionSpacing))
             }
         }
     }
@@ -418,6 +423,7 @@ fun ActivityChart(
 ) {
     val maxHours = activity.maxOfOrNull { it.durationHours }?.coerceAtLeast(24f) ?: 24f
     val isMonthly = activity.size > 7
+    val locale = LocalConfiguration.current.locales[0]
 
     // Custom modifier to vertically center an element on its parent's bottom edge
     val verticalCenterOnLine = Modifier.layout { measurable, constraints ->
@@ -548,7 +554,7 @@ fun ActivityChart(
                         ) {
                             if (!isMonthly) {
                                 Text(
-                                    text = daily.date.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
+                                    text = daily.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -620,9 +626,17 @@ private fun DetailRow(label: String, value: String) {
 /**
  * Helper to format duration as a decimal number of hours.
  */
-private fun formatHoursOnly(duration: Duration): String {
+private fun formatHoursOnly(duration: Duration, locale: Locale): String {
     val totalHours = duration.inWholeMinutes / 60f
-    return String.format(Locale.getDefault(), "%.1fh", totalHours)
+    return String.format(locale, "%.1fh", totalHours)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun StatisticsScreenPreview() {
+    FastTimesPreviewTheme {
+        StatisticsScreen(onBackClick = {}, onHistoryClick = {})
+    }
 }
 
 @Preview(showBackground = true)

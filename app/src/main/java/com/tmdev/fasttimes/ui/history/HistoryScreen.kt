@@ -42,10 +42,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.tmdev.fasttimes.ui.components.ExpressiveStatCard
 import com.tmdev.fasttimes.ui.components.rememberRandomExpressiveShape
 import com.tmdev.fasttimes.ui.editfast.EditFastRoute
@@ -62,6 +63,7 @@ fun HistoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val sheetState = rememberModalBottomSheetState()
+    val locale = LocalConfiguration.current.locales[0]
 
     if (uiState.editingFastId != null) {
         Dialog(onDismissRequest = viewModel::onEditFastDismissed) {
@@ -93,7 +95,7 @@ fun HistoryScreen(
                 onDayClick = viewModel::onDayClick,
             )
 
-            MonthlyStats(uiState = uiState)
+            MonthlyStats(uiState = uiState, locale = locale)
         }
 
         if (uiState.selectedDay != null) {
@@ -142,9 +144,10 @@ fun HistoryScreen(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MonthlyStats(
-    uiState: HistoryUiState
+    uiState: HistoryUiState,
+    locale: Locale
 ) {
-    val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM", Locale.getDefault()) }
+    val monthFormatter = remember(locale) { DateTimeFormatter.ofPattern("MMMM", locale) }
     
     // Stable random seeds for shapes based on the displayed month
     val monthSeed = remember(uiState.displayedMonth) { 
@@ -181,7 +184,7 @@ private fun MonthlyStats(
             ExpressiveStatCard(
                 modifier = Modifier.weight(1f),
                 label = "Longest Fast",
-                value = uiState.longestFastInMonth?.let { formatHoursOnly(it.duration()) } ?: "-",
+                value = uiState.longestFastInMonth?.let { formatHoursOnly(it.duration(), locale) } ?: "-",
                 unit = "this month",
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -192,7 +195,7 @@ private fun MonthlyStats(
             ExpressiveStatCard(
                 modifier = Modifier.weight(1f),
                 label = "Average",
-                value = formatHoursOnly(uiState.averageFastDurationInMonth),
+                value = formatHoursOnly(uiState.averageFastDurationInMonth, locale),
                 unit = "duration",
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -203,7 +206,7 @@ private fun MonthlyStats(
     }
 }
 
-private fun formatHoursOnly(durationMillis: Long): String {
+private fun formatHoursOnly(durationMillis: Long, locale: Locale): String {
     val totalHours = durationMillis / (1000f * 60 * 60)
-    return String.format(Locale.getDefault(), "%.1fh", totalHours)
+    return String.format(locale, "%.1fh", totalHours)
 }

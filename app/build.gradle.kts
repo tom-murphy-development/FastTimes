@@ -129,6 +129,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.material)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material3.windowsize)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splashscreen)
     implementation(libs.compose.ui)

@@ -44,13 +44,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.tmdev.fasttimes.data.AppTheme
 import com.tmdev.fasttimes.data.fast.Fast
 import com.tmdev.fasttimes.ui.components.DateTimeDialog
 import com.tmdev.fasttimes.ui.components.RatingDialog
 import com.tmdev.fasttimes.ui.theme.FastTimesTheme
+import com.tmdev.fasttimes.ui.theme.spacing
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -159,15 +161,20 @@ fun EditFastScreen(
         modifier = modifier
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(MaterialTheme.spacing.cardPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator()
             } else if (uiState.fast != null) {
                 val fast = uiState.fast
-                Text("Edit Fast", style = MaterialTheme.typography.headlineSmall)
-                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Edit Fast",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontSize = MaterialTheme.spacing.headlineSmallFontSize
+                    )
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.sectionSpacing))
 
                 EditableFastDetailRow(
                     label = "Start Time",
@@ -177,7 +184,7 @@ fun EditFastScreen(
                 }
 
                 if (fast.endTime != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                     EditableFastDetailRow(
                         label = "End Time",
                         onClick = { showPicker = PickerType.End }
@@ -185,7 +192,7 @@ fun EditFastScreen(
                         Text(formatTimestamp(fast.endTime))
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                     EditableFastDetailRow(
                         label = "Rating",
                         onClick = { showPicker = PickerType.Rating }
@@ -199,7 +206,7 @@ fun EditFastScreen(
                 }
 
                 if (uiState.error != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.sectionSpacing))
                     Text(
                         text = uiState.error,
                         color = MaterialTheme.colorScheme.error,
@@ -207,7 +214,7 @@ fun EditFastScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.sectionSpacing))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -277,7 +284,13 @@ private fun formatTimestamp(timestamp: Long): String {
 @Preview(showBackground = true)
 @Composable
 private fun EditFastScreenInProgressPreview() {
-    MaterialTheme {
+    FastTimesTheme(
+        theme = AppTheme.SYSTEM,
+        seedColor = Color(0xFF6750A4),
+        accentColor = Color(0xFF625b71),
+        useExpressiveTheme = false,
+        useSystemColors = false
+    ) {
         EditFastScreen(
             uiState = EditFastUiState(
                 isLoading = false,
@@ -304,7 +317,13 @@ private fun EditFastScreenInProgressPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun EditFastScreenFinishedPreview() {
-    MaterialTheme {
+    FastTimesTheme(
+        theme = AppTheme.SYSTEM,
+        seedColor = Color(0xFF6750A4),
+        accentColor = Color(0xFF625b71),
+        useExpressiveTheme = false,
+        useSystemColors = false
+    ) {
         EditFastScreen(
             uiState = EditFastUiState(
                 isLoading = false,
@@ -331,7 +350,13 @@ private fun EditFastScreenFinishedPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun EditFastScreenWithErrorPreview() {
-    MaterialTheme {
+    FastTimesTheme(
+        theme = AppTheme.SYSTEM,
+        seedColor = Color(0xFF6750A4),
+        accentColor = Color(0xFF625b71),
+        useExpressiveTheme = false,
+        useSystemColors = false
+    ) {
         EditFastScreen(
             uiState = EditFastUiState(
                 isLoading = false,

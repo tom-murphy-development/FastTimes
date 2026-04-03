@@ -46,9 +46,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.tmdev.fasttimes.ui.theme.spacing
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,10 +59,19 @@ fun DateTimeDialog(
     onDismiss: () -> Unit,
     onConfirm: (Long) -> Unit
 ) {
-    val time = Instant.ofEpochMilli(initialMillis).atZone(ZoneId.systemDefault()).toLocalTime()
+    val zoneId = ZoneId.systemDefault()
+    val initialDateTime = Instant.ofEpochMilli(initialMillis).atZone(zoneId)
 
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
-    val timePickerState = rememberTimePickerState(initialHour = time.hour, initialMinute = time.minute)
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDateTime.toLocalDate()
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
+    )
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialDateTime.hour,
+        initialMinute = initialDateTime.minute
+    )
 
     var showTimePicker by remember { mutableStateOf(false) }
 
@@ -68,7 +79,7 @@ fun DateTimeDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Box(modifier = Modifier.padding(horizontal = 32.dp)) {
+        Box(modifier = Modifier.padding(horizontal = MaterialTheme.spacing.dialogHorizontal)) {
             Surface(
                 shape = MaterialTheme.shapes.extraLarge,
                 color = MaterialTheme.colorScheme.surface
@@ -79,10 +90,10 @@ fun DateTimeDialog(
                         onConfirm = {
                             val localDate =
                                 Instant.ofEpochMilli(datePickerState.selectedDateMillis!!)
-                                    .atZone(ZoneId.systemDefault()).toLocalDate()
+                                    .atZone(ZoneOffset.UTC).toLocalDate()
                             val localTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
                             val zonedDateTime =
-                                localDate.atTime(localTime).atZone(ZoneId.systemDefault())
+                                localDate.atTime(localTime).atZone(zoneId)
                             onConfirm(zonedDateTime.toInstant().toEpochMilli())
                         },
                         onCancel = { showTimePicker = false }

@@ -19,12 +19,15 @@ Simple, private, open-source Android intermittent fasting tracker.
   <a href="https://f-droid.org/en/packages/com.tmdev.fasttimes/">
     <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="70">
   </a>  
-  <a href="https://github.com/tom-murphy-development/fasttimes/releases">
-    <img src="https://img.shields.io/badge/Get%20it%20on%20GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="Get it on GitHub" height="70">
-  </a>
+
   <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/tom-murphy-development/fasttimes">
   <img src="https://github.com/ImranR98/Obtainium/blob/main/assets/graphics/badge_obtainium.png"
-  alt="Get it on Obtainium" height="70"/>
+  alt="Get it on Obtainium" height="54"/>
+  </a>
+</p>
+<p>
+  <a href="https://github.com/tom-murphy-development/fasttimes/releases">
+    <img src="https://img.shields.io/badge/Get%20it%20on%20GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="Get it on GitHub" height="70">
   </a>
 </p>
 

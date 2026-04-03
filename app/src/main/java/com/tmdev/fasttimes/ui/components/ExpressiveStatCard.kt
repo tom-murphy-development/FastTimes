@@ -46,9 +46,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.toPath
+import com.tmdev.fasttimes.ui.theme.spacing
 import kotlin.math.abs
 
 /**
@@ -96,8 +96,8 @@ fun ExpressiveStatCard(
                 text = value, 
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Black,
-                    fontSize = 30.sp,
-                    lineHeight = 26.sp
+                    fontSize = MaterialTheme.spacing.statValueFontSize,
+                    lineHeight = MaterialTheme.spacing.statValueFontSize * 0.85f
                 ),
                 textAlign = TextAlign.Center,
                 maxLines = 1
@@ -105,11 +105,13 @@ fun ExpressiveStatCard(
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = unit, 
-                style = MaterialTheme.typography.labelMedium.copy(fontSize = 10.sp),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontSize = MaterialTheme.spacing.statUnitFontSize,
+                    lineHeight = MaterialTheme.spacing.statUnitFontSize * 1.2f
+                ),
                 color = contentColor.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 maxLines = 2,
-                lineHeight = 12.sp,
                 overflow = TextOverflow.Ellipsis
             )
         }

@@ -104,6 +104,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -125,6 +126,7 @@ import com.tmdev.fasttimes.ui.dashboard.FastingSummaryModal
 import com.tmdev.fasttimes.ui.editfast.EditFastRoute
 import com.tmdev.fasttimes.ui.theme.FastTimesTheme
 import com.tmdev.fasttimes.ui.theme.contentColorFor
+import com.tmdev.fasttimes.ui.theme.spacing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.compose.KonfettiView
@@ -184,8 +186,9 @@ fun DashboardScreen(
     val completedFast by viewModel.completedFast.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+    val locale = LocalConfiguration.current.locales[0]
 
-    val sdf = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+    val sdf = remember(locale) { SimpleDateFormat("hh:mm a", locale) }
     val context = LocalContext.current
 
     var parties by remember { mutableStateOf(emptyList<Party>()) }
@@ -287,9 +290,9 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
+                .padding(horizontal = MaterialTheme.spacing.screenHorizontal, vertical = MaterialTheme.spacing.sectionSpacing)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sectionSpacing)
         ) {
             val state = uiState
             if (state is DashboardUiState.Loading && state.showSkeleton) {
@@ -306,7 +309,7 @@ fun DashboardScreen(
                         }
 
                         is DashboardUiState.NoFast -> {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Column(modifier = Modifier.padding(MaterialTheme.spacing.cardPadding)) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -314,7 +317,9 @@ fun DashboardScreen(
                                 ) {
                                     Text(
                                         "Set your goal",
-                                        style = MaterialTheme.typography.headlineMedium,
+                                        style = MaterialTheme.typography.headlineMedium.copy(
+                                            fontSize = MaterialTheme.spacing.headlineMediumFontSize
+                                        ),
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     )
                                     TextButton(
@@ -333,7 +338,7 @@ fun DashboardScreen(
                                         )
                                     }
                                 }
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 GoalSelectionSection(
                                     profiles = profiles,
                                     onStartFast = onStartFast,
@@ -344,7 +349,7 @@ fun DashboardScreen(
 
                         is DashboardUiState.FastingInProgress -> {
                             Column(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(MaterialTheme.spacing.cardPadding),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Row(
@@ -354,7 +359,9 @@ fun DashboardScreen(
                                 ) {
                                     Text(
                                         "Current Fast",
-                                        style = MaterialTheme.typography.headlineMedium,
+                                        style = MaterialTheme.typography.headlineMedium.copy(
+                                            fontSize = MaterialTheme.spacing.headlineMediumFontSize
+                                        ),
                                     )
                                     Row {
                                         IconButton(onClick = viewModel::onEditFast) {
@@ -371,25 +378,25 @@ fun DashboardScreen(
                                         }
                                     }
                                 }
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Box(contentAlignment = Alignment.Center) {
                                     if (state.useWavyIndicator) {
                                         CircularWavyProgressIndicator(
                                             progress = { state.progress },
-                                            modifier = Modifier.size(260.dp),
+                                            modifier = Modifier.size(MaterialTheme.spacing.timerSize),
                                             color = FastTimesTheme.accentColor,
                                             trackColor = MaterialTheme.colorScheme.secondary.copy(
                                                 alpha = 0.1f
                                             ),
                                             stroke = Stroke(
                                                 width = with(LocalDensity.current) {
-                                                    16.dp.toPx()
+                                                    12.dp.toPx()
                                                 },
                                                 cap = StrokeCap.Round,
                                             ),
                                             trackStroke = Stroke(
                                                 width = with(LocalDensity.current) {
-                                                    16.dp.toPx()
+                                                    12.dp.toPx()
                                                 },
                                                 cap = StrokeCap.Round,
                                             ),
@@ -400,9 +407,9 @@ fun DashboardScreen(
                                     } else {
                                         CircularProgressIndicator(
                                             progress = { state.progress },
-                                            modifier = Modifier.size(260.dp),
+                                            modifier = Modifier.size(MaterialTheme.spacing.timerSize),
                                             color = FastTimesTheme.accentColor,
-                                            strokeWidth = 20.dp,
+                                            strokeWidth = 16.dp,
                                             trackColor = MaterialTheme.colorScheme.secondary.copy(
                                                 alpha = 0.1f
                                             ),
@@ -414,7 +421,7 @@ fun DashboardScreen(
                                             state.activeFast.profileName,
                                             style = MaterialTheme.typography.titleMedium
                                         )
-                                        Spacer(Modifier.height(8.dp))
+                                        Spacer(Modifier.height(MaterialTheme.spacing.extraSmall))
 
                                         Text(
                                             text = "Remaining",
@@ -422,14 +429,16 @@ fun DashboardScreen(
                                         )
 
                                         Text(
-                                            text = formatDuration(state.remainingTime),
-                                            style = MaterialTheme.typography.displaySmall
+                                            text = formatDuration(state.remainingTime, locale),
+                                            style = MaterialTheme.typography.displaySmall.copy(
+                                                fontSize = MaterialTheme.spacing.timerDurationFontSize
+                                            )
                                         )
                                     }
                                 }
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
                                     onClick = onEndFast,
                                     colors = ButtonDefaults.buttonColors(
@@ -438,7 +447,7 @@ fun DashboardScreen(
                                     )
                                 ) {
                                     Icon(Icons.Filled.Stop, contentDescription = "End Fast")
-                                    Spacer(Modifier.width(8.dp))
+                                    Spacer(Modifier.width(MaterialTheme.spacing.small))
                                     Text("End Fast")
                                 }
                             }
@@ -460,7 +469,7 @@ fun DashboardScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
+                                    .padding(MaterialTheme.spacing.cardPadding),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Row(
@@ -471,7 +480,8 @@ fun DashboardScreen(
                                     Text(
                                         "Open Fast",
                                         style = MaterialTheme.typography.titleLarge.copy(
-                                            fontWeight = FontWeight.Bold
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = MaterialTheme.spacing.titleLargeFontSize
                                         )
                                     )
                                     Row {
@@ -489,18 +499,18 @@ fun DashboardScreen(
                                         }
                                     }
                                 }
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Box(contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(
                                         progress = { 1f },
                                         modifier = Modifier
-                                            .size(260.dp)
+                                            .size(MaterialTheme.spacing.timerSize)
                                             .graphicsLayer {
                                                 scaleX = scale
                                                 scaleY = scale
                                             },
                                         color = MaterialTheme.colorScheme.secondary,
-                                        strokeWidth = 20.dp,
+                                        strokeWidth = 16.dp,
                                         trackColor = MaterialTheme.colorScheme.secondary.copy(
                                             alpha = 0.1f
                                         ),
@@ -511,17 +521,19 @@ fun DashboardScreen(
                                             text = "Elapsed Time",
                                             style = MaterialTheme.typography.titleMedium
                                         )
-                                        Spacer(Modifier.height(8.dp))
+                                        Spacer(Modifier.height(MaterialTheme.spacing.extraSmall))
 
                                         Text(
-                                            text = formatDuration(state.elapsedTime),
-                                            style = MaterialTheme.typography.displaySmall
+                                            text = formatDuration(state.elapsedTime, locale),
+                                            style = MaterialTheme.typography.displaySmall.copy(
+                                                fontSize = MaterialTheme.spacing.timerDurationFontSize
+                                            )
                                         )
                                     }
                                 }
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
                                     onClick = onEndFast,
                                     colors = ButtonDefaults.buttonColors(
@@ -530,7 +542,7 @@ fun DashboardScreen(
                                     )
                                 ) {
                                     Icon(Icons.Filled.Stop, contentDescription = "End Fast")
-                                    Spacer(Modifier.width(8.dp))
+                                    Spacer(Modifier.width(MaterialTheme.spacing.small))
                                     Text("End Fast")
                                 }
                             }
@@ -540,7 +552,7 @@ fun DashboardScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
+                                    .padding(MaterialTheme.spacing.cardPadding),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Row(
@@ -550,7 +562,9 @@ fun DashboardScreen(
                                 ) {
                                     Text(
                                         "Current Fast",
-                                        style = MaterialTheme.typography.headlineMedium,
+                                        style = MaterialTheme.typography.headlineMedium.copy(
+                                            fontSize = MaterialTheme.spacing.headlineMediumFontSize
+                                        ),
                                     )
                                     Row {
                                         IconButton(onClick = viewModel::onEditFast) {
@@ -567,24 +581,24 @@ fun DashboardScreen(
                                         }
                                     }
                                 }
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Box(contentAlignment = Alignment.Center) {
                                     CircularWavyProgressIndicator(
                                         progress = { 1f },
-                                        modifier = Modifier.size(260.dp),
+                                        modifier = Modifier.size(MaterialTheme.spacing.timerSize),
                                         color = FastTimesTheme.accentColor,
                                         trackColor = MaterialTheme.colorScheme.secondary.copy(
                                             alpha = 0.1f
                                         ),
                                         stroke = Stroke(
                                             width = with(LocalDensity.current) {
-                                                16.dp.toPx()
+                                                12.dp.toPx()
                                             },
                                             cap = StrokeCap.Round,
                                         ),
                                         trackStroke = Stroke(
                                             width = with(LocalDensity.current) {
-                                                16.dp.toPx()
+                                                12.dp.toPx()
                                             },
                                             cap = StrokeCap.Round,
                                         ),
@@ -598,7 +612,7 @@ fun DashboardScreen(
                                             style = MaterialTheme.typography.titleLargeEmphasized,
                                             color = FastTimesTheme.accentColor
                                         )
-                                        Spacer(Modifier.height(8.dp))
+                                        Spacer(Modifier.height(MaterialTheme.spacing.extraSmall))
 
                                         Text(
                                             text = "Total Time",
@@ -606,14 +620,16 @@ fun DashboardScreen(
                                         )
 
                                         Text(
-                                            text = formatDuration(state.totalElapsedTime),
-                                            style = MaterialTheme.typography.displaySmall
+                                            text = formatDuration(state.totalElapsedTime, locale),
+                                            style = MaterialTheme.typography.displaySmall.copy(
+                                                fontSize = MaterialTheme.spacing.timerDurationFontSize
+                                            )
                                         )
                                     }
                                 }
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
                                     onClick = onEndFast,
                                     colors = ButtonDefaults.buttonColors(
@@ -622,7 +638,7 @@ fun DashboardScreen(
                                     )
                                 ) {
                                     Icon(Icons.Filled.Stop, contentDescription = "End Fast")
-                                    Spacer(Modifier.width(8.dp))
+                                    Spacer(Modifier.width(MaterialTheme.spacing.small))
                                     Text("End Fast")
                                 }
                             }
@@ -651,7 +667,9 @@ fun DashboardScreen(
                     ) {
                         Text(
                             "Performance",
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontSize = MaterialTheme.spacing.headlineSmallFontSize
+                            ),
                             modifier = Modifier.weight(1f),
                             fontWeight = FontWeight.Bold
                         )
@@ -677,7 +695,7 @@ fun DashboardScreen(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             shape = fastsMonthShape,
-                            height = 140.dp
+                            height = MaterialTheme.spacing.dashboardStatCardHeight
                         )
 
                         // Longest fast this month Card
@@ -695,7 +713,7 @@ fun DashboardScreen(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             shape = longestFastMonthShape,
-                            height = 140.dp
+                            height = MaterialTheme.spacing.dashboardStatCardHeight
                         )
                     }
                     Spacer(Modifier.height(8.dp))
@@ -716,12 +734,14 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { onHistoryClick() }
-                                    .padding(16.dp),
+                                    .padding(MaterialTheme.spacing.cardPadding),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     "History",
-                                    style = MaterialTheme.typography.headlineSmall,
+                                    style = MaterialTheme.typography.headlineSmall.copy(
+                                        fontSize = MaterialTheme.spacing.headlineSmallFontSize
+                                    ),
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(
@@ -734,7 +754,7 @@ fun DashboardScreen(
                                 if (state.thisWeekFasts.isEmpty() && state.lastWeekFasts.isEmpty()) {
                                     Box(
                                         modifier = Modifier
-                                            .padding(16.dp)
+                                            .padding(MaterialTheme.spacing.cardPadding)
                                             .fillMaxWidth(),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -748,19 +768,20 @@ fun DashboardScreen(
                                     Column(
                                         modifier = Modifier
                                             .verticalScroll(rememberScrollState())
-                                            .padding(horizontal = 16.dp)
-                                            .padding(bottom = 16.dp)
+                                            .padding(horizontal = MaterialTheme.spacing.cardPadding)
+                                            .padding(bottom = MaterialTheme.spacing.cardPadding)
                                     ) {
                                         if (state.thisWeekFasts.isNotEmpty()) {
                                             Text(
                                                 "This Week",
                                                 style = MaterialTheme.typography.labelLarge,
-                                                modifier = Modifier.padding(bottom = 8.dp)
+                                                modifier = Modifier.padding(bottom = MaterialTheme.spacing.small)
                                             )
-                                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
                                                 state.thisWeekFasts.forEachIndexed { index, fast ->
                                                     LastFastItem(
                                                         fast = fast,
+                                                        locale = locale,
                                                         modifier = Modifier.clickable {
                                                             onViewFastDetails(
                                                                 fast.id
@@ -769,7 +790,7 @@ fun DashboardScreen(
                                                     if (index < state.thisWeekFasts.lastIndex) {
                                                         HorizontalDivider(
                                                             modifier = Modifier.padding(
-                                                                vertical = 8.dp
+                                                                vertical = MaterialTheme.spacing.small
                                                             )
                                                         )
                                                     }
@@ -779,17 +800,18 @@ fun DashboardScreen(
 
                                         if (state.lastWeekFasts.isNotEmpty()) {
                                             if (state.thisWeekFasts.isNotEmpty()) {
-                                                Spacer(Modifier.height(16.dp))
+                                                Spacer(Modifier.height(MaterialTheme.spacing.medium))
                                             }
                                             Text(
                                                 "Last Week",
                                                 style = MaterialTheme.typography.labelLarge,
-                                                modifier = Modifier.padding(bottom = 8.dp)
+                                                modifier = Modifier.padding(bottom = MaterialTheme.spacing.small)
                                             )
-                                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
                                                 state.lastWeekFasts.forEachIndexed { index, fast ->
                                                     LastFastItem(
                                                         fast = fast,
+                                                        locale = locale,
                                                         modifier = Modifier.clickable {
                                                             onViewFastDetails(
                                                                 fast.id
@@ -798,7 +820,7 @@ fun DashboardScreen(
                                                     if (index < state.lastWeekFasts.lastIndex) {
                                                         HorizontalDivider(
                                                             modifier = Modifier.padding(
-                                                                vertical = 8.dp
+                                                                vertical = MaterialTheme.spacing.small
                                                             )
                                                         )
                                                     }
@@ -877,6 +899,7 @@ fun StreakCard(
     onInfoClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val locale = LocalConfiguration.current.locales[0]
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -906,7 +929,7 @@ fun StreakCard(
             }
 
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(MaterialTheme.spacing.cardPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
@@ -917,10 +940,10 @@ fun StreakCard(
                     Icon(
                         imageVector = Icons.Default.LocalFireDepartment,
                         contentDescription = "Streak",
-                        modifier = Modifier.size(48.dp),
+                        modifier = Modifier.size(MaterialTheme.spacing.large * 2),
                         tint = Color(0xFFFF5722) // Orange streak color
                     )
-                    Spacer(Modifier.width(16.dp))
+                    Spacer(Modifier.width(MaterialTheme.spacing.medium))
                     Column {
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
@@ -1020,7 +1043,7 @@ fun StreakCard(
                                     Text(
                                         text = day.date.dayOfWeek.getDisplayName(
                                             TextStyle.NARROW,
-                                            Locale.getDefault()
+                                            locale
                                         ),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
@@ -1089,8 +1112,9 @@ private fun StreakInfoItem(title: String, description: String) {
 @Composable
 private fun SkeletonLoader() {
     val skeletonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+    val density = LocalDensity.current
 
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sectionSpacing)) {
         // Current Fast Skeleton
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -1098,7 +1122,7 @@ private fun SkeletonLoader() {
         ) {
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(MaterialTheme.spacing.cardPadding)
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -1110,7 +1134,7 @@ private fun SkeletonLoader() {
                 ) {
                     Box(
                         modifier = Modifier
-                            .height(32.dp)
+                            .height(with(density) { MaterialTheme.spacing.headlineMediumFontSize.toDp() })
                             .width(150.dp)
                             .background(skeletonColor)
                     )
@@ -1121,7 +1145,7 @@ private fun SkeletonLoader() {
                                 .clip(CircleShape)
                                 .background(skeletonColor)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                         Box(
                             modifier = Modifier
                                 .size(24.dp)
@@ -1130,23 +1154,23 @@ private fun SkeletonLoader() {
                         )
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                 // Timer placeholder
                 Box(
                     modifier = Modifier
-                        .size(260.dp)
+                        .size(MaterialTheme.spacing.timerSize)
                         .clip(CircleShape)
                         .background(skeletonColor.copy(alpha = 0.05f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(220.dp)
+                            .size(MaterialTheme.spacing.timerSize * 0.85f)
                             .clip(CircleShape)
                             .background(skeletonColor.copy(alpha = 0.1f))
                     )
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                 // Start time placeholder
                 Box(
                     modifier = Modifier
@@ -1154,7 +1178,7 @@ private fun SkeletonLoader() {
                         .width(200.dp)
                         .background(skeletonColor)
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                 // Button placeholder
                 Box(
                     modifier = Modifier
@@ -1170,16 +1194,16 @@ private fun SkeletonLoader() {
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(MaterialTheme.spacing.cardPadding)) {
                 Box(
                     modifier = Modifier
                         .height(28.dp)
                         .width(120.dp)
-                        .padding(bottom = 8.dp)
+                        .padding(bottom = MaterialTheme.spacing.small)
                         .background(skeletonColor)
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium)) {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -1193,7 +1217,7 @@ private fun SkeletonLoader() {
                                 .background(skeletonColor)
                         )
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium)) {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -1216,15 +1240,15 @@ private fun SkeletonLoader() {
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(MaterialTheme.spacing.cardPadding)) {
                 Box(
                     modifier = Modifier
                         .height(28.dp)
                         .width(100.dp)
-                        .padding(bottom = 8.dp)
+                        .padding(bottom = MaterialTheme.spacing.small)
                         .background(skeletonColor)
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(MaterialTheme.spacing.small))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1298,10 +1322,11 @@ private fun RatingBar(rating: Int, modifier: Modifier = Modifier) {
 @Composable
 private fun LastFastItem(
     fast: Fast,
+    locale: Locale,
     modifier: Modifier = Modifier
 ) {
-    val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
-    val dateFormatter = DateTimeFormatter.ofPattern("EEE, MMM d")
+    val timeFormatter = remember(locale) { DateTimeFormatter.ofPattern("h:mm a", locale) }
+    val dateFormatter = remember(locale) { DateTimeFormatter.ofPattern("EEE, MMM d", locale) }
     val today = ZonedDateTime.now().toLocalDate()
 
     val durationString = if (fast.end != null) {
@@ -1338,7 +1363,7 @@ private fun LastFastItem(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall)) {
             Row {
                 Text(
                     text = "Start:",
@@ -1480,7 +1505,9 @@ private fun GoalSelectionSection(
                                     // Display infinity symbol for 'Open Fast' profile
                                     Text(
                                         text = "∞",
-                                        style = MaterialTheme.typography.displaySmall,
+                                        style = MaterialTheme.typography.displaySmall.copy(
+                                            fontSize = MaterialTheme.spacing.goalCardValueFontSize
+                                        ),
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -1489,7 +1516,9 @@ private fun GoalSelectionSection(
                                     val hours = profile.durationMinutes / 3_600_000
                                     Text(
                                         text = "${hours}h",
-                                        style = MaterialTheme.typography.displaySmall,
+                                        style = MaterialTheme.typography.displaySmall.copy(
+                                            fontSize = MaterialTheme.spacing.goalCardValueFontSize
+                                        ),
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -1497,7 +1526,9 @@ private fun GoalSelectionSection(
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = profile.displayName,
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontSize = MaterialTheme.spacing.goalCardLabelFontSize
+                                    ),
                                     fontWeight = FontWeight.Medium,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )

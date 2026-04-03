@@ -76,6 +76,7 @@ import com.tmdev.fasttimes.ui.settings.AccentColorScreen
 import com.tmdev.fasttimes.ui.settings.SettingsScreen
 import com.tmdev.fasttimes.ui.statistics.StatisticsScreen
 import com.tmdev.fasttimes.ui.theme.FastTimesTheme
+import com.tmdev.fasttimes.ui.theme.spacing
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -94,8 +95,12 @@ fun FastTimesNavHost() {
                 DragAnchors.History -> "History"
             }
             val currentStyle = when (draggableState.state.currentValue) {
-                DragAnchors.Dashboard -> MaterialTheme.typography.headlineLarge
-                DragAnchors.History -> MaterialTheme.typography.headlineLarge
+                DragAnchors.Dashboard -> MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = MaterialTheme.spacing.headlineLargeFontSize
+                )
+                DragAnchors.History -> MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = MaterialTheme.spacing.headlineLargeFontSize
+                )
             }
             val currentColor = when (draggableState.state.currentValue) {
                 DragAnchors.Dashboard -> FastTimesTheme.accentColor

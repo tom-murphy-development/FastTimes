@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -68,7 +69,6 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.Locale
 import kotlin.math.roundToInt
 
 private enum class DragAnchors {
@@ -86,9 +86,9 @@ fun CalendarView(
     onDayClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val daysOfWeek = remember(uiState.firstDayOfWeek) {
+    val locale = LocalConfiguration.current.locales[0]
+    val daysOfWeek = remember(uiState.firstDayOfWeek, locale) {
         val days = DayOfWeek.entries.toTypedArray()
-        val locale = Locale.getDefault()
         if (uiState.firstDayOfWeek == "Sunday") {
             (days.takeLast(1) + days.take(6)).map {
                 it.getDisplayName(TextStyle.NARROW, locale)

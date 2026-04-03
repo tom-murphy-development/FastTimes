@@ -62,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -73,6 +74,7 @@ import com.tmdev.fasttimes.data.profile.FastingProfile
 import com.tmdev.fasttimes.ui.components.StatisticTile
 import com.tmdev.fasttimes.ui.theme.FastTimesTheme
 import com.tmdev.fasttimes.ui.theme.contentColorFor
+import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -108,6 +110,7 @@ fun ProfileManagementScreen(
     var showDeleteDialog by remember { mutableStateOf<FastingProfile?>(null) }
     var selectedProfile by remember { mutableStateOf<FastingProfile?>(null) }
     val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
 
     if (selectedProfile != null) {
         BackHandler {
@@ -242,7 +245,7 @@ fun ProfileManagementScreen(
                         .padding(16.dp),
                     icon = Icons.Filled.Favorite,
                     label = favoriteProfile.displayName,
-                    value = formatDuration(favoriteProfile.duration),
+                    value = formatDuration(favoriteProfile.duration, locale),
                     description = favoriteProfile.description,
                     border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
                     onClick = {
@@ -282,7 +285,7 @@ fun ProfileManagementScreen(
                             modifier = Modifier.fillMaxWidth(),
                             icon = Icons.Filled.Star,
                             label = profile.displayName,
-                            value = formatDuration(profile.duration),
+                            value = formatDuration(profile.duration, locale),
                             description = profile.description,
                             border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
                             onClick = {
@@ -299,7 +302,7 @@ fun ProfileManagementScreen(
     }
 }
 
-private fun formatDuration(duration: Long?): String {
+private fun formatDuration(duration: Long?, locale: Locale): String {
     if (duration == null || duration <= 0) {
         return "Open"
     }
@@ -309,21 +312,21 @@ private fun formatDuration(duration: Long?): String {
             val hourText = if (hours == 1L) "Hour" else "Hours"
             if (minutes > 0) {
                 val minuteText = if (minutes == 1) "Minute" else "Minutes"
-                "$hours $hourText, $minutes $minuteText"
+                String.format(locale, "%d %s, %d %s", hours, hourText, minutes, minuteText)
             } else {
-                "$hours $hourText"
+                String.format(locale, "%d %s", hours, hourText)
             }
         } else if (minutes > 0) {
             val minuteText = if (minutes == 1) "Minute" else "Minutes"
             if (seconds > 0) {
                 val secondText = if (seconds == 1) "Second" else "Seconds"
-                "$minutes $minuteText, $seconds $secondText"
+                String.format(locale, "%d %s, %d %s", minutes, minuteText, seconds, secondText)
             } else {
-                "$minutes $minuteText"
+                String.format(locale, "%d %s", minutes, minuteText)
             }
         } else {
             val secondText = if (seconds == 1) "Second" else "Seconds"
-            "$seconds $secondText"
+            String.format(locale, "%d %s", seconds, secondText)
         }
     }
 }

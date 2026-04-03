@@ -23,6 +23,9 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -32,6 +35,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.materialkolor.DynamicMaterialTheme
 import com.materialkolor.PaletteStyle
@@ -41,6 +46,7 @@ private val LocalAccentColor = staticCompositionLocalOf<Color> {
     error("No AccentColor provided")
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun FastTimesTheme(
     theme: AppTheme,
@@ -48,8 +54,77 @@ fun FastTimesTheme(
     accentColor: Color,
     useExpressiveTheme: Boolean,
     useSystemColors: Boolean,
+    windowWidthSizeClass: WindowWidthSizeClass? = null,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val calculatedWindowSizeClass = (context as? Activity)?.let { calculateWindowSizeClass(it) }
+    val widthSizeClass = windowWidthSizeClass ?: calculatedWindowSizeClass?.widthSizeClass
+    
+    val spacing = when (widthSizeClass) {
+        WindowWidthSizeClass.Compact -> Spacing(
+            dialogHorizontal = 16.dp,
+            screenHorizontal = 12.dp,
+            sectionSpacing = 10.dp,
+            cardPadding = 12.dp,
+            timerSize = 220.dp,
+            dashboardStatCardHeight = 120.dp,
+            performanceStatCardHeight = 140.dp,
+            chartHeight = 170.dp,
+            statValueFontSize = 22.sp,
+            statUnitFontSize = 8.sp,
+            timerDurationFontSize = 30.sp,
+            heroStatFontSize = 44.sp,
+            goalCardValueFontSize = 26.sp,
+            goalCardLabelFontSize = 10.sp,
+            headlineLargeFontSize = 26.sp,
+            headlineMediumFontSize = 22.sp,
+            headlineSmallFontSize = 18.sp,
+            titleLargeFontSize = 16.sp
+        )
+        WindowWidthSizeClass.Medium -> Spacing(
+            dialogHorizontal = 32.dp,
+            screenHorizontal = 24.dp,
+            sectionSpacing = 16.dp,
+            cardPadding = 16.dp,
+            timerSize = 280.dp,
+            dashboardStatCardHeight = 150.dp,
+            performanceStatCardHeight = 170.dp,
+            chartHeight = 220.dp,
+            statValueFontSize = 30.sp,
+            statUnitFontSize = 11.sp,
+            timerDurationFontSize = 40.sp,
+            heroStatFontSize = 64.sp,
+            goalCardValueFontSize = 32.sp,
+            goalCardLabelFontSize = 12.sp,
+            headlineLargeFontSize = 32.sp,
+            headlineMediumFontSize = 28.sp,
+            headlineSmallFontSize = 24.sp,
+            titleLargeFontSize = 22.sp
+        )
+        WindowWidthSizeClass.Expanded -> Spacing(
+            dialogHorizontal = 48.dp,
+            screenHorizontal = 32.dp,
+            sectionSpacing = 24.dp,
+            cardPadding = 20.dp,
+            timerSize = 320.dp,
+            dashboardStatCardHeight = 170.dp,
+            performanceStatCardHeight = 190.dp,
+            chartHeight = 260.dp,
+            statValueFontSize = 34.sp,
+            statUnitFontSize = 12.sp,
+            timerDurationFontSize = 48.sp,
+            heroStatFontSize = 72.sp,
+            goalCardValueFontSize = 36.sp,
+            goalCardLabelFontSize = 13.sp,
+            headlineLargeFontSize = 36.sp,
+            headlineMediumFontSize = 32.sp,
+            headlineSmallFontSize = 28.sp,
+            titleLargeFontSize = 24.sp
+        )
+        else -> Spacing()
+    }
+
     val isDark = when (theme) {
         AppTheme.LIGHT -> false
         AppTheme.DARK -> true
@@ -71,7 +146,10 @@ fun FastTimesTheme(
 
     val style = if (useExpressiveTheme) PaletteStyle.Expressive else PaletteStyle.Vibrant
 
-    CompositionLocalProvider(LocalAccentColor provides accentColor) {
+    CompositionLocalProvider(
+        LocalAccentColor provides accentColor,
+        LocalSpacing provides spacing
+    ) {
         DynamicMaterialTheme(
             seedColor = finalSeedColor,
             isDark = isDark,

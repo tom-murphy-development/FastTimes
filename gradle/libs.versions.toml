@@ -1,18 +1,19 @@
 [versions]
 # Gradle & Kotlin
-agp = "9.1.0"
-kotlin = "2.3.20"
+agp = "9.1.1"
+kotlin = "2.3.21"
 composeCompilerVersion = "1.5.3"
 konfetti = "2.0.5"
 kotlinx-collections-immutable = "0.4.0"
-compose-foundation = "1.10.6"
-compose-bom-beta = "2026.03.01"
+compose-foundation = "1.11.0"
+compose-bom-beta = "2026.04.01"
 material = "1.13.0"
-material3 = "material3-*:1.5.0-alpha07"
-material3-windowsize = "1.5.0-alpha16"
-serialization = "1.10.0"
-materialKolor = "4.1.1"
+material3 = "1.5.0-alpha18"
+material3-windowsize = "1.5.0-alpha18"
+serialization = "1.11.0"
+materialKolor = "5.0.0-alpha07"
 spotless = "8.4.0"
+graphics-shapes = "1.1.0"
 leakcanary = "2.14"
 
 
@@ -20,8 +21,8 @@ leakcanary = "2.14"
 core-ktx = "1.18.0"
 activity = "1.13.0"
 lifecycle = "2.10.0"
-compose-bom = "2026.03.01"
-navigation = "2.9.7"
+compose-bom = "2026.04.01"
+navigation = "2.9.8"
 datastore = "1.2.1"
 splashscreen = "1.2.0"
 
@@ -60,7 +61,7 @@ compose-ui = { group = "androidx.compose.ui", name = "ui" }
 compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 compose-material3-windowsize = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3-windowsize" }
 compose-material-icons = { group = "androidx.compose.material", name = "material-icons-extended" }
 konfetti-compose = { group = "nl.dionsegijn", name = "konfetti-compose", version.ref = "konfetti" }
@@ -91,6 +92,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 
 # Themeing
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+androidx-graphics-shapes = { group = "androidx.graphics", name = "graphics-shapes", version.ref = "graphics-shapes" }
 
 # Debug
 leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
@@ -110,7 +112,7 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-ksp = { id = "com.google.devtools.ksp", version = "2.3.2" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.6" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

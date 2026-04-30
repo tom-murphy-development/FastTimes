@@ -364,8 +364,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun endCurrentFast() {
-        val uiValue = uiState.value
-        val fastToEnd = when (uiValue) {
+        val fastToEnd = when (val uiValue = uiState.value) {
             is DashboardUiState.FastingInProgress -> uiValue.activeFast
             is DashboardUiState.FastingGoalReached -> uiValue.activeFast
             is DashboardUiState.OpenFasting -> uiValue.activeFast

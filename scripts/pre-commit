@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Run spotlessApply to format code
+echo "Running Spotless..."
+./gradlew spotlessApply
+
+# Run unit tests
+echo "Running Unit Tests..."
+./gradlew test
+
+# Capture the exit code of the tests
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+    echo "Tests failed. Commit aborted."
+    exit 1
+fi
+
+# If spotless changed files, we need to add them back to the commit
+git add -u
+
+echo "Pre-commit checks passed successfully."
+exit 0

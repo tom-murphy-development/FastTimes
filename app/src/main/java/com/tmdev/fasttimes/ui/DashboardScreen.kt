@@ -1530,7 +1530,7 @@ private fun GoalSelectionSection(
                                         fontSize = MaterialTheme.spacing.goalCardLabelFontSize
                                     ),
                                     fontWeight = FontWeight.Medium,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    textAlign = TextAlign.Center
                                 )
                             }
 

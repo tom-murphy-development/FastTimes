@@ -88,6 +88,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
@@ -200,8 +201,8 @@ fun SettingsScreen(
     if (showPermissionRationale) {
         AlertDialog(
             onDismissRequest = { showPermissionRationale = false },
-            title = { Text("Permission Required") },
-            text = { Text("To ensure you're notified, the app needs permission to post notifications and schedule exact alarms. This is only used to show a notification when the timer ends.") },
+            title = { Text("Notification Preferences") },
+            text = { Text("Would you like to receive notifications for your fasts? This helps you stay on track with your goals. You can manage these alerts at any time here in Settings.") },
             confirmButton = {
                 Button(onClick = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -214,11 +215,11 @@ fun SettingsScreen(
                     }
                     showPermissionRationale = false
                 }) {
-                    Text("Grant Permission")
+                    Text("Enable Notifications")
                 }
             },
             dismissButton = {
-                Button(onClick = { showPermissionRationale = false }) {
+                TextButton(onClick = { showPermissionRationale = false }) {
                     Text("Cancel")
                 }
             }

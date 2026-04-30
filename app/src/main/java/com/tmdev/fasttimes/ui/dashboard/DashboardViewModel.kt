@@ -270,6 +270,8 @@ class DashboardViewModel @Inject constructor(
     val showAlarmPermissionRationale: StateFlow<Boolean> =
         _showAlarmPermissionRationale.asStateFlow()
 
+    private var pendingFastStart: (() -> Unit)? = null
+
     val showGoalReachedNotification: StateFlow<Boolean> = settingsRepository.showGoalReachedNotification
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
@@ -285,6 +287,33 @@ class DashboardViewModel @Inject constructor(
 
     fun dismissAlarmPermissionRationale() {
         _showAlarmPermissionRationale.value = false
+    }
+
+    fun onCancelPermissionRationale() {
+        _showAlarmPermissionRationale.value = false
+        pendingFastStart = null
+    }
+
+    fun onNoNotificationSelected() {
+        viewModelScope.launch {
+            settingsRepository.setShowLiveProgress(false)
+            settingsRepository.setShowGoalReachedNotification(false)
+            _showAlarmPermissionRationale.value = false
+            pendingFastStart?.invoke()
+            pendingFastStart = null
+            android.widget.Toast.makeText(
+                application,
+                "Notifications disabled. You can manage this in Settings.",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    fun onPermissionResult(granted: Boolean) {
+        if (granted) {
+            pendingFastStart?.invoke()
+        }
+        pendingFastStart = null
     }
 
     fun onEditFast() {
@@ -307,6 +336,7 @@ class DashboardViewModel @Inject constructor(
                     ) == PackageManager.PERMISSION_GRANTED
 
                     if (!hasNotificationPermission) {
+                        pendingFastStart = { startOpenFast() }
                         _showAlarmPermissionRationale.value = true
                         return@launch
                     }
@@ -338,6 +368,7 @@ class DashboardViewModel @Inject constructor(
                     ) == PackageManager.PERMISSION_GRANTED
 
                     if (!hasNotificationPermission) {
+                        pendingFastStart = { startProfileFast(profile) }
                         _showAlarmPermissionRationale.value = true
                         return@launch
                     }
@@ -345,8 +376,8 @@ class DashboardViewModel @Inject constructor(
             }
 
             if (showGoalReached && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-                _showAlarmPermissionRationale.value = true
-                return@launch
+                // If we don't have exact alarm permission, we just proceed.
+                // The FastAlarmScheduler will fall back to using setAndAllowWhileIdle.
             }
 
             val fast = Fast(

@@ -188,7 +188,8 @@ fun DashboardScreen(
     val scope = rememberCoroutineScope()
     val locale = LocalConfiguration.current.locales[0]
 
-    val sdf = remember(locale) { SimpleDateFormat("hh:mm a", locale) }
+    val sdf = remember(locale) { SimpleDateFormat("EEE, hh:mm a", locale) }
+    val todaySdf = remember(locale) { SimpleDateFormat("hh:mm a", locale) }
     val context = LocalContext.current
 
     var parties by remember { mutableStateOf(emptyList<Party>()) }
@@ -437,9 +438,38 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
-                                Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
-                                state.activeFast.targetDuration?.let { target ->
-                                    Text("End Time: ${sdf.format(Date(state.activeFast.startTime + target))}")
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "Started",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        val startTime = state.activeFast.startTime
+                                        val isToday = android.text.format.DateUtils.isToday(startTime)
+                                        Text(
+                                            text = if (isToday) "Today, ${todaySdf.format(Date(startTime))}" else sdf.format(Date(startTime)),
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+                                    state.activeFast.targetDuration?.let { target ->
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "End Time",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            val endTime = state.activeFast.startTime + target
+                                            val isToday = android.text.format.DateUtils.isToday(endTime)
+                                            Text(
+                                                text = if (isToday) "Today, ${todaySdf.format(Date(endTime))}" else sdf.format(Date(endTime)),
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                        }
+                                    }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
@@ -535,7 +565,24 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
-                                Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "Started",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        val startTime = state.activeFast.startTime
+                                        val isToday = android.text.format.DateUtils.isToday(startTime)
+                                        Text(
+                                            text = if (isToday) "Today, ${todaySdf.format(Date(startTime))}" else sdf.format(Date(startTime)),
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+                                }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
                                     onClick = onEndFast,
@@ -631,9 +678,38 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
-                                Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
-                                state.activeFast.targetDuration?.let { target ->
-                                    Text("End Time: ${sdf.format(Date(state.activeFast.startTime + target))}")
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "Started",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        val startTime = state.activeFast.startTime
+                                        val isToday = android.text.format.DateUtils.isToday(startTime)
+                                        Text(
+                                            text = if (isToday) "Today, ${todaySdf.format(Date(startTime))}" else sdf.format(Date(startTime)),
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+                                    state.activeFast.targetDuration?.let { target ->
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "End Time",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            val endTime = state.activeFast.startTime + target
+                                            val isToday = android.text.format.DateUtils.isToday(endTime)
+                                            Text(
+                                                text = if (isToday) "Today, ${todaySdf.format(Date(endTime))}" else sdf.format(Date(endTime)),
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                        }
+                                    }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(

@@ -13,6 +13,7 @@ plugins {
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
+
 android {
     namespace = "com.tmdev.fasttimes"
     compileSdk = 36
@@ -21,27 +22,29 @@ android {
         applicationId = "com.tmdev.fasttimes"
         minSdk = 30
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
-        create("release") {
-            val keystorePropertiesFile = rootProject.file("keystore.properties")
-            if (keystorePropertiesFile.exists()) {
-                val properties = Properties()
-                properties.load(FileInputStream(keystorePropertiesFile))
-                storeFile = rootProject.file(properties.getProperty("storeFile"))
-                storePassword = properties.getProperty("storePassword")
-                keyAlias = properties.getProperty("keyAlias")
-                keyPassword = properties.getProperty("keyPassword")
-            } else if (System.getenv("RELEASE_KEYSTORE_PATH") != null) {
-                storeFile = rootProject.file(System.getenv("RELEASE_KEYSTORE_PATH"))
-                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
-                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+        val keystorePropertiesFile = rootProject.file("keystore.properties")
+        if (keystorePropertiesFile.exists() || System.getenv("RELEASE_KEYSTORE_PATH") != null) {
+            create("release") {
+                if (keystorePropertiesFile.exists()) {
+                    val properties = Properties()
+                    properties.load(FileInputStream(keystorePropertiesFile))
+                    storeFile = rootProject.file(properties.getProperty("storeFile"))
+                    storePassword = properties.getProperty("storePassword")
+                    keyAlias = properties.getProperty("keyAlias")
+                    keyPassword = properties.getProperty("keyPassword")
+                } else {
+                    storeFile = rootProject.file(System.getenv("RELEASE_KEYSTORE_PATH"))
+                    storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                    keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                    keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+                }
             }
         }
     }
@@ -51,11 +54,9 @@ android {
     productFlavors {
         create("foss") {
             dimension = "distribution"
-            // This is the F-Droid and GitHub release version
         }
         create("playstore") {
             dimension = "distribution"
-            // This version can include Google Play Billing or other Play-specific services
         }
     }
 
@@ -69,13 +70,19 @@ android {
             initWith(getByName("release"))
             applicationIdSuffix = ".beta"
             versionNameSuffix = "-BETA"
-            signingConfig = signingConfigs.getByName("release")
+            if (signingConfigs.findByName("release") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             matchingFallbacks += listOf("release")
         }
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (signingConfigs.findByName("release") != null) {
+                signingConfigs.getByName("release")
+            } else {
+                null
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -84,8 +91,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     buildFeatures {
@@ -105,11 +112,7 @@ android {
 }
 
 kotlin {
-    jvmToolchain(17)
-
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-    }
+    jvmToolchain(21)
 }
 
 spotless {
@@ -153,16 +156,13 @@ dependencies {
     implementation(libs.materialKolor)
     implementation(libs.compose.runtime)
 
-    // Debug
     debugImplementation(libs.leakcanary.android)
 
-    // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.mockk)
 
-    // Android Testing
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso)
     androidTestImplementation(platform(libs.compose.bom.beta))

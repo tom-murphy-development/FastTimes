@@ -438,6 +438,9 @@ fun DashboardScreen(
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                                state.activeFast.targetDuration?.let { target ->
+                                    Text("End Time: ${sdf.format(Date(state.activeFast.startTime + target))}")
+                                }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
                                     onClick = onEndFast,
@@ -629,6 +632,9 @@ fun DashboardScreen(
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                                state.activeFast.targetDuration?.let { target ->
+                                    Text("End Time: ${sdf.format(Date(state.activeFast.startTime + target))}")
+                                }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
                                     onClick = onEndFast,

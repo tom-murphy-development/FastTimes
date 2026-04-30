@@ -70,6 +70,7 @@ class FastTimerService : LifecycleService() {
             ACTION_START -> startService()
             ACTION_STOP -> stopService()
             ACTION_END_FAST -> endFast()
+            else -> startService() // Resume service if restarted by system
         }
         return START_STICKY
     }
@@ -106,7 +107,7 @@ class FastTimerService : LifecycleService() {
                                 break // Exit loop; collector will wait for the next state change
                             }
                             
-                            delay(1000) // Update every second
+                            delay(60000) // Update every minute for progress bar (chronometer handles seconds)
                             notificationManager.notify(NOTIFICATION_ID, buildNotification(activeFast))
                         }
                     }
@@ -169,30 +170,41 @@ class FastTimerService : LifecycleService() {
         val title = "${fast.profileName} in Progress"
 
         val progress: Int
-        val contentText: String
+        var contentText: String? = null
         val isIndeterminate: Boolean
+        var whenTime: Long = 0
+        var useChronometer = false
+        var countDown = false
 
         val totalDuration = fast.targetDuration
         if (totalDuration != null && totalDuration > 0) {
             val targetEndTime = fast.startTime + totalDuration
-            val remainingTime = (targetEndTime - now).coerceAtLeast(0)
+            (targetEndTime - now).coerceAtLeast(0)
             progress = (elapsedTime.toDouble() / totalDuration * 100).toInt().coerceIn(0, 100)
-            contentText = "Remaining: ${formatDuration(remainingTime)}"
+            
+            // Use native chronometer for reliable countdown
+            contentText = "Remaining: "
+            whenTime = targetEndTime
+            useChronometer = true
+            countDown = true
             isIndeterminate = false
         } else {
             progress = 0
             contentText = "Tap to view progress"
-            isIndeterminate = false // We don't want a spinning bar for a static notification
+            isIndeterminate = false
         }
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(contentText)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm) // Placeholder icon
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setProgress(if (totalDuration != null) 100 else 0, progress, isIndeterminate)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setContentIntent(openAppIntent)
+            .setWhen(whenTime)
+            .setUsesChronometer(useChronometer)
+            .setChronometerCountDown(countDown)
             .addAction(0, "End Fast", endFastIntent)
             .build()
     }

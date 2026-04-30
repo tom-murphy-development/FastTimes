@@ -17,12 +17,7 @@
 package com.tmdev.fasttimes.ui
 
 import android.Manifest
-import android.app.AlarmManager
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
@@ -188,7 +183,8 @@ fun DashboardScreen(
     val scope = rememberCoroutineScope()
     val locale = LocalConfiguration.current.locales[0]
 
-    val sdf = remember(locale) { SimpleDateFormat("hh:mm a", locale) }
+    val sdf = remember(locale) { SimpleDateFormat("EEE, hh:mm a", locale) }
+    val todaySdf = remember(locale) { SimpleDateFormat("hh:mm a", locale) }
     val context = LocalContext.current
 
     var parties by remember { mutableStateOf(emptyList<Party>()) }
@@ -201,15 +197,7 @@ fun DashboardScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
-            if (isGranted) {
-                // For Tiramisu+, we also need to ask for exact alarm permissions
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
-                    }
-                    context.startActivity(intent)
-                }
-            }
+            viewModel.onPermissionResult(isGranted)
         }
     )
 
@@ -233,36 +221,28 @@ fun DashboardScreen(
     }
 
     if (showAlarmPermissionRationale) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
         AlertDialog(
-            onDismissRequest = onDismissAlarmPermissionRationale,
-            title = { Text("Permission Required") },
-            text = { Text("To ensure you're notified when your fast is complete, the app needs permission to post notifications and schedule exact alarms. This is only used to show a notification when the timer ends.") },
+            onDismissRequest = viewModel::onCancelPermissionRationale,
+            title = { Text("Notification Preferences") },
+            text = { Text("Would you like to receive a notification when your fast is complete? This helps you stay on track with your fasting goals. You can manage these alerts at any time in Settings.") },
             confirmButton = {
                 Button(onClick = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        // On Android 13+, ask for notifications first.
-                        // The launcher callback handles the Exact Alarm check.
                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        // On Android 12 (S/S_V2), notifications are implicit, but we might need Exact Alarm.
-                        // Only send to settings if we don't have it.
-                        if (!alarmManager.canScheduleExactAlarms()) {
-                            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                            }
-                            context.startActivity(intent)
-                        }
                     }
                     onDismissAlarmPermissionRationale()
                 }) {
-                    Text("Grant Permission")
+                    Text("Enable Notifications")
                 }
             },
             dismissButton = {
-                Button(onClick = onDismissAlarmPermissionRationale) {
-                    Text("Cancel")
+                Row {
+                    TextButton(onClick = viewModel::onNoNotificationSelected) {
+                        Text("No Notifications")
+                    }
+                    TextButton(onClick = viewModel::onCancelPermissionRationale) {
+                        Text("Cancel")
+                    }
                 }
             }
         )
@@ -437,9 +417,38 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
-                                Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
-                                state.activeFast.targetDuration?.let { target ->
-                                    Text("End Time: ${sdf.format(Date(state.activeFast.startTime + target))}")
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "Started",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        val startTime = state.activeFast.startTime
+                                        val isToday = android.text.format.DateUtils.isToday(startTime)
+                                        Text(
+                                            text = if (isToday) "Today, ${todaySdf.format(Date(startTime))}" else sdf.format(Date(startTime)),
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+                                    state.activeFast.targetDuration?.let { target ->
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "End Time",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            val endTime = state.activeFast.startTime + target
+                                            val isToday = android.text.format.DateUtils.isToday(endTime)
+                                            Text(
+                                                text = if (isToday) "Today, ${todaySdf.format(Date(endTime))}" else sdf.format(Date(endTime)),
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                        }
+                                    }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
@@ -535,7 +544,24 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
-                                Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "Started",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        val startTime = state.activeFast.startTime
+                                        val isToday = android.text.format.DateUtils.isToday(startTime)
+                                        Text(
+                                            text = if (isToday) "Today, ${todaySdf.format(Date(startTime))}" else sdf.format(Date(startTime)),
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+                                }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
                                     onClick = onEndFast,
@@ -631,9 +657,38 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
-                                Text("Started: ${sdf.format(Date(state.activeFast.startTime))}")
-                                state.activeFast.targetDuration?.let { target ->
-                                    Text("End Time: ${sdf.format(Date(state.activeFast.startTime + target))}")
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "Started",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        val startTime = state.activeFast.startTime
+                                        val isToday = android.text.format.DateUtils.isToday(startTime)
+                                        Text(
+                                            text = if (isToday) "Today, ${todaySdf.format(Date(startTime))}" else sdf.format(Date(startTime)),
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+                                    state.activeFast.targetDuration?.let { target ->
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "Goal",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            val endTime = state.activeFast.startTime + target
+                                            val isToday = android.text.format.DateUtils.isToday(endTime)
+                                            Text(
+                                                text = if (isToday) "Today, ${todaySdf.format(Date(endTime))}" else sdf.format(Date(endTime)),
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                        }
+                                    }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Button(
@@ -1536,7 +1591,7 @@ private fun GoalSelectionSection(
                                         fontSize = MaterialTheme.spacing.goalCardLabelFontSize
                                     ),
                                     fontWeight = FontWeight.Medium,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    textAlign = TextAlign.Center
                                 )
                             }
 

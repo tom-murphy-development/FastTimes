@@ -64,6 +64,12 @@ class FastAlarmScheduler @Inject constructor(
                     completionTime,
                     pendingIntent
                 )
+            } else {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    completionTime,
+                    pendingIntent
+                )
             }
         }
     }

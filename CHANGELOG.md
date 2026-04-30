@@ -2,11 +2,11 @@
 
 ## [Unreleased]
 ### Added
--
+- Added goal end time
 ### Changed
--
+- Updated Dependencies
 ### Fixed
--
+- Notification permission dialog to allow no notifications
 
 ## [1.0.1]
 ### Added

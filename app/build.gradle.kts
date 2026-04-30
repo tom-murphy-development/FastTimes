@@ -22,8 +22,8 @@ android {
         applicationId = "com.tmdev.fasttimes"
         minSdk = 30
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -100,11 +100,6 @@ android {
         compose = true
     }
 
-    @Suppress("UnstableApiUsage")
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompilerVersion.get()
-    }
-
     packaging {
         resources {
             excludes += "META-INF/AL2.0"
@@ -139,7 +134,6 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.compose.material3)
     implementation(libs.compose.material.icons)
     implementation(libs.konfetti.compose)
     implementation(libs.navigation.compose)
@@ -158,9 +152,8 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.compose.foundation)
     implementation(libs.kotlinx.serialization.json)
-    implementation("androidx.compose.material3:material3:1.5.0-alpha12")
-    implementation("androidx.graphics:graphics-shapes:1.1.0")
-    implementation("com.materialkolor:material-kolor:5.0.0-alpha05")
+    implementation(libs.androidx.graphics.shapes)
+    implementation(libs.materialKolor)
     implementation(libs.compose.runtime)
 
     debugImplementation(libs.leakcanary.android)

@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Fast Times</string>
-</resources>
 
+    <!-- Fasting Phases -->
+    <string name="phase_post_absorptive_name">Post-Absorptive State</string>
+    <string name="phase_post_absorptive_desc"><![CDATA[As your body finishes digesting its last meal, <b>blood glucose levels</b> begin to stabilize and <b>insulin</b> starts to decline.<br/>During this window, the <b>metabolism</b> remains steady as the body relies on its remaining <b>sugar stores (glycogen)</b> for energy.<br/>This phase serves as the baseline period where your body completes absorption before transitioning into a <b>fasted state</b>.]]></string>
+
+    <string name="phase_metabolic_switch_name">Metabolic Switch</string>
+    <string name="phase_metabolic_switch_desc"><![CDATA[This window marks the "switch" where the body transitions from using <b>glucose to burning fat</b> as its primary fuel.<br/>Changes in <b>hunger hormones</b>, like dropping <b>leptin levels</b>, help improve <b>appetite control</b> and reduce cravings.<br/>Additionally, your cells begin <b>early autophagy</b>, a self-cleaning process that activates as <b>nutrient-sensing pathways (mTOR)</b> are turned down.]]></string>
+
+    <string name="phase_early_autophagy_name">Autophagy Activation</string>
+    <string name="phase_early_autophagy_desc"><![CDATA[As insulin stays low, the body triggers a 2- to 5-fold increase in <b>Human Growth Hormone (HGH)</b>, which helps protect <b>lean muscle</b>.<br/>You may experience naturally lower <b>blood pressure</b> as the body sheds excess <b>sodium</b> and <b>vascular tension</b> relaxes.<br/>During this time, the "self-cleaning" process intensifies, specifically focusing on <b>liver and immune cell repair</b>.]]></string>
+
+    <string name="phase_deep_ketosis_repair_name">Deep Ketosis &amp; Repair</string>
+    <string name="phase_deep_ketosis_repair_desc"><![CDATA[Your brain begins running on clean-burning <b>ketones</b>, which can lead to sharper focus and <b>mental clarity</b>.<br/>The body actively strengthens the <b>gut barrier</b> by reducing <b>inflammatory signals</b> and healing the intestinal lining.<br/>Simultaneously, the body performs <b>mitophagy</b>, where it recycles weak <b>mitochondria</b> to build a more efficient energy system.]]></string>
+
+    <string name="phase_immune_regeneration_name">Immune Regeneration</string>
+    <string name="phase_immune_regeneration_desc"><![CDATA[This deep fasting window triggers a major <b>immune system rebuild</b> by clearing out old defense cells and activating <b>stem cells</b> to create new ones.<br/>Long-term <b>cardiovascular health</b> is supported as blood vessel function improves and <b>systemic inflammation</b> markers drop.<br/>The body reaches a state of <b>sustained ketosis</b> that helps stabilize <b>metabolic markers</b> and reduce long-term disease risks.]]></string>
+
+    <!-- Settings -->
+    <string name="settings_show_fasting_phases">Show Fasting Phases</string>
+</resources>

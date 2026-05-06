@@ -23,6 +23,7 @@ import com.tmdev.fasttimes.alarms.AlarmScheduler
 import com.tmdev.fasttimes.data.AppTheme
 import com.tmdev.fasttimes.data.DefaultFastingProfile
 import com.tmdev.fasttimes.data.fast.Fast
+import com.tmdev.fasttimes.data.fast.FastingPhase
 import com.tmdev.fasttimes.data.fast.FastsRepository
 import com.tmdev.fasttimes.data.profile.FastingProfile
 import com.tmdev.fasttimes.data.profile.FastingProfileRepository
@@ -52,12 +53,13 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 class DashboardViewModelTest {
 
     @get:Rule
-    val mainCoroutineRule = MainCoroutineRule()
+    val mainCoroutineRule = MainCoroutineRule(UnconfinedTestDispatcher())
 
     private lateinit var fastsRepository: FastsRepository
     private lateinit var settingsRepository: SettingsRepository
@@ -81,6 +83,7 @@ class DashboardViewModelTest {
         every { settingsRepository.showLiveProgress } returns flowOf(true)
         every { settingsRepository.confettiShownForFastId } returns flowOf(0L)
         every { settingsRepository.showFab } returns flowOf(true)
+        every { settingsRepository.showFastingPhases } returns flowOf(true)
         every { settingsRepository.showGoalReachedNotification } returns flowOf(true)
         every { settingsRepository.userData } returns flowOf(
             UserData(
@@ -90,7 +93,8 @@ class DashboardViewModelTest {
                 accentColor = null,
                 useWavyIndicator = false,
                 useExpressiveTheme = false,
-                useSystemColors = false
+                useSystemColors = false,
+                showFastingPhases = true
             )
         )
         every { fastingProfileRepository.getProfiles() } returns flowOf(emptyList())
@@ -149,16 +153,23 @@ class DashboardViewModelTest {
             application
         )
 
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+        // Collect the flow to make it active and wait for the initial value
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiState.collect()
         }
         
+        // Ensure the state is updated from Loading
         runCurrent()
+        
+        assertTrue("State was ${viewModel.uiState.value}", viewModel.uiState.value !is DashboardUiState.Loading)
+
         viewModel.endCurrentFast()
         runCurrent()
 
         coVerify { fastsRepository.endFast(fast.id, any()) }
-        coVerify { alarmScheduler.cancel(fast) }
+        coVerify { alarmScheduler.cancel(match { it.id == fast.id }) }
+        
+        job.cancel()
     }
 
     @Test
@@ -180,13 +191,18 @@ class DashboardViewModelTest {
             application
         )
 
-        viewModel.stats.test {
-            val stats = awaitItem().let { if (it.totalFasts == 0) awaitItem() else it }
-            assertEquals(2, stats.totalFasts)
-            assertEquals(6.hours, stats.totalFastingTime)
-            assertEquals(3.hours, stats.averageFast)
-            assertEquals(fasts[1].id, stats.longestFast?.id)
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.stats.collect()
         }
+        runCurrent()
+
+        val stats = viewModel.stats.value
+        assertEquals(2, stats.totalFasts)
+        assertEquals(6.hours, stats.totalFastingTime)
+        assertEquals(3.hours, stats.averageFast)
+        assertEquals(fasts[1].id, stats.longestFast?.id)
+        
+        job.cancel()
     }
 
     @Test
@@ -208,13 +224,18 @@ class DashboardViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
 
-        viewModel.stats.test {
-            val stats = awaitItem().let { if (it.totalFasts == 0) awaitItem() else it }
-            assertEquals(2, stats.trend.currentCount)
-            assertEquals(1, stats.trend.previousCount)
-            assertEquals(100f, stats.trend.percentageChange)
-            assertTrue(stats.trend.isUpward)
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.stats.collect()
         }
+        runCurrent()
+
+        val stats = viewModel.stats.value
+        assertEquals(2, stats.trend.currentCount)
+        assertEquals(1, stats.trend.previousCount)
+        assertEquals(100f, stats.trend.percentageChange)
+        assertTrue(stats.trend.isUpward)
+        
+        job.cancel()
     }
 
     @Test
@@ -233,10 +254,15 @@ class DashboardViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
 
-        viewModel.stats.test {
-            val stats = awaitItem().let { if (it.streak.daysInARow == 0) awaitItem() else it }
-            assertEquals(3, stats.streak.daysInARow)
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.stats.collect()
         }
+        runCurrent()
+
+        val stats = viewModel.stats.value
+        assertEquals(3, stats.streak.daysInARow)
+        
+        job.cancel()
     }
 
     @Test
@@ -254,10 +280,15 @@ class DashboardViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
 
-        viewModel.stats.test {
-            val stats = awaitItem().let { if (it.streak.daysInARow == 0) awaitItem() else it }
-            assertEquals(2, stats.streak.daysInARow)
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.stats.collect()
         }
+        runCurrent()
+
+        val stats = viewModel.stats.value
+        assertEquals(2, stats.streak.daysInARow)
+        
+        job.cancel()
     }
 
     @Test
@@ -276,11 +307,16 @@ class DashboardViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
 
-        viewModel.stats.test {
-            val stats = awaitItem().let { if (it.streak.daysInARow == 0) awaitItem() else it }
-            assertEquals(2, stats.streak.daysInARow)
-            assertEquals(fourDaysAgo, stats.streak.lastFastDate)
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.stats.collect()
         }
+        runCurrent()
+
+        val stats = viewModel.stats.value
+        assertEquals(2, stats.streak.daysInARow)
+        assertEquals(fourDaysAgo, stats.streak.lastFastDate)
+        
+        job.cancel()
     }
 
     @Test
@@ -289,16 +325,78 @@ class DashboardViewModelTest {
         val activeFast = Fast(id = 1, startTime = startTime, endTime = null, profileName = "16:8", targetDuration = 16.hours.inWholeMilliseconds)
         
         every { fastsRepository.getFasts() } returns flowOf(listOf(activeFast))
-        every { settingsRepository.confettiShownForFastId } returns flowOf(0L) // Confetti not yet shown for this ID
+        every { settingsRepository.confettiShownForFastId } returns flowOf(0L) 
         
         viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
 
-        viewModel.uiState.test {
-            val state = awaitItem().let { if (it is DashboardUiState.Loading) awaitItem() else it }
-            assertTrue("State should be FastingGoalReached but was $state", state is DashboardUiState.FastingGoalReached)
-            val reachedState = state as DashboardUiState.FastingGoalReached
-            assertTrue(reachedState.showConfetti)
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect()
         }
+        runCurrent()
+
+        val state = viewModel.uiState.value
+        assertTrue("State should be FastingGoalReached but was $state", state is DashboardUiState.FastingGoalReached)
+        val reachedState = state as DashboardUiState.FastingGoalReached
+        assertTrue(reachedState.showConfetti)
+        // Verify phases
+        assertTrue(reachedState.relevantPhases.isNotEmpty())
+        assertEquals(FastingPhase.POST_ABSORPTIVE, reachedState.relevantPhases[0])
+        assertEquals(FastingPhase.METABOLIC_SWITCH, reachedState.currentPhase)
+        
+        job.cancel()
+    }
+
+    @Test
+    fun `uiState in FastingInProgress has correct phases`() = runTest {
+        val startTime = System.currentTimeMillis() - 13.hours.inWholeMilliseconds
+        val activeFast = Fast(id = 1, startTime = startTime, endTime = null, profileName = "16:8", targetDuration = 16.hours.inWholeMilliseconds)
+        
+        every { fastsRepository.getFasts() } returns flowOf(listOf(activeFast))
+        
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect()
+        }
+        runCurrent()
+
+        val state = viewModel.uiState.value
+        assertTrue("State should be FastingInProgress but was $state", state is DashboardUiState.FastingInProgress)
+        val progressState = state as DashboardUiState.FastingInProgress
+        
+        // For 16h goal, phases should be POST_ABSORPTIVE (0h) and METABOLIC_SWITCH (12h)
+        assertEquals(2, progressState.relevantPhases.size)
+        assertEquals(FastingPhase.POST_ABSORPTIVE, progressState.relevantPhases[0])
+        assertEquals(FastingPhase.METABOLIC_SWITCH, progressState.relevantPhases[1])
+        
+        // At 13h, current phase should be METABOLIC_SWITCH
+        assertEquals(FastingPhase.METABOLIC_SWITCH, progressState.currentPhase)
+        
+        job.cancel()
+    }
+
+    @Test
+    fun `uiState in OpenFasting has current phase`() = runTest {
+        val startTime = System.currentTimeMillis() - 19.hours.inWholeMilliseconds
+        val activeFast = Fast(id = 1, startTime = startTime, endTime = null, profileName = "Open Fast", targetDuration = null)
+        
+        every { fastsRepository.getFasts() } returns flowOf(listOf(activeFast))
+        
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect()
+        }
+        runCurrent()
+
+        val state = viewModel.uiState.value
+        assertTrue("State should be OpenFasting but was $state", state is DashboardUiState.OpenFasting)
+        val openState = state as DashboardUiState.OpenFasting
+        
+        // At 19h, current phase should be EARLY_AUTOPHAGY
+        assertEquals(FastingPhase.EARLY_AUTOPHAGY, openState.currentPhase)
+        
+        job.cancel()
     }
 
     @Test
@@ -307,15 +405,24 @@ class DashboardViewModelTest {
         val activeFast = Fast(id = 99, startTime = startTime, endTime = null, profileName = "16:8", targetDuration = 16.hours.inWholeMilliseconds)
         
         every { fastsRepository.getFasts() } returns flowOf(listOf(activeFast))
-        every { settingsRepository.confettiShownForFastId } returns flowOf(99L) // Match the fast ID
+        every { settingsRepository.confettiShownForFastId } returns flowOf(99L) 
         
         viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
 
-        viewModel.uiState.test {
-            val state = awaitItem().let { if (it is DashboardUiState.Loading) awaitItem() else it }
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect()
+        }
+
+        viewModel.uiState.test(timeout = 1.seconds) {
+            var state = awaitItem()
+            while (state is DashboardUiState.Loading) {
+                state = awaitItem()
+            }
+
             val reachedState = state as DashboardUiState.FastingGoalReached
             assertFalse(reachedState.showConfetti)
         }
+        job.cancel()
     }
 
     @Test

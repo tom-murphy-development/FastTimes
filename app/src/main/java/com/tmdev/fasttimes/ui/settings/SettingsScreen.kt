@@ -64,6 +64,7 @@ import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Timelapse
@@ -309,6 +310,20 @@ fun SettingsScreen(
                     Switch(
                         checked = uiState.useWavyIndicator,
                         onCheckedChange = viewModel::onUseWavyIndicatorChanged
+                    )
+                }
+                SettingsDivider()
+                Row(
+                    modifier = settingsRowModifier,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = Icons.Default.Info, contentDescription = null)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(text = "Show Fasting Phases", style = settingsTextStyle)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = uiState.showFastingPhases,
+                        onCheckedChange = viewModel::onShowFastingPhasesChanged
                     )
                 }
             }

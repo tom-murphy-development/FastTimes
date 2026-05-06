@@ -38,7 +38,8 @@ data class UserData(
     val fastingGoal: Duration,
     val theme: Theme,
     val accentColor: Long?,
-    val useWavyIndicator: Boolean
+    val useWavyIndicator: Boolean,
+    val showFastingPhases: Boolean
 )
 
 @Singleton
@@ -49,6 +50,7 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
         val FASTING_GOAL_KEY = longPreferencesKey("fasting_goal")
         val ACCENT_COLOR_KEY = longPreferencesKey("accent_color")
         val USE_WAVY_INDICATOR = booleanPreferencesKey("use_wavy_indicator")
+        val SHOW_FASTING_PHASES = booleanPreferencesKey("show_fasting_phases")
 
     }
 
@@ -66,7 +68,8 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
             val fastingGoal = Duration.ofSeconds(fastingGoalInSeconds)
             val accentColor = preferences[PreferencesKeys.ACCENT_COLOR_KEY]
             val useWavyIndicator = preferences[PreferencesKeys.USE_WAVY_INDICATOR] ?: true
-            UserData(fastingGoal, theme, accentColor, useWavyIndicator)
+            val showFastingPhases = preferences[PreferencesKeys.SHOW_FASTING_PHASES] ?: true
+            UserData(fastingGoal, theme, accentColor, useWavyIndicator, showFastingPhases)
         }
 
     suspend fun setTheme(theme: Theme) {
@@ -96,6 +99,12 @@ class UserPreferencesRepository @Inject constructor(private val dataStore: DataS
     suspend fun setUseWavyIndicator(useWavy: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.USE_WAVY_INDICATOR] = useWavy
+        }
+    }
+
+    suspend fun setShowFastingPhases(showPhases: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SHOW_FASTING_PHASES] = showPhases
         }
     }
 }

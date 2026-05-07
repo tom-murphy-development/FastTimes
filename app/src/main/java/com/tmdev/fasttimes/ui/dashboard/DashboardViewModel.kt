@@ -28,6 +28,7 @@ import androidx.lifecycle.viewModelScope
 import com.tmdev.fasttimes.alarms.AlarmScheduler
 import com.tmdev.fasttimes.data.DefaultFastingProfile
 import com.tmdev.fasttimes.data.fast.Fast
+import com.tmdev.fasttimes.data.fast.FastingPhase
 import com.tmdev.fasttimes.data.fast.FastsRepository
 import com.tmdev.fasttimes.data.profile.FastingProfile
 import com.tmdev.fasttimes.data.profile.FastingProfileRepository
@@ -149,28 +150,36 @@ class DashboardViewModel @Inject constructor(
         val isEditing: Boolean,
         val confettiShownForFastId: Long?,
         val showFab: Boolean,
+        val showFastingPhases: Boolean,
         val userData: UserData
     )
 
     private val dashboardData = combine(
-        fastsRepository.getFasts(),
-        profiles,
-        _isEditing,
-        settingsRepository.confettiShownForFastId,
-        settingsRepository.showFab
-    ) { fasts, profiles, isEditing, confettiShown, showFab ->
-        // Create a temporary tuple for the first 5 results
-        Triple(fasts, profiles, isEditing) to (confettiShown to showFab)
-    }.combine(settingsRepository.userData) { fiveResults, userData ->
-        val (triple, pair) = fiveResults
-        val (fasts, profiles, isEditing) = triple
-        val (confettiShown, showFab) = pair
+        combine(
+            fastsRepository.getFasts(),
+            profiles,
+            _isEditing
+        ) { fasts, profiles, isEditing ->
+            Triple(fasts, profiles, isEditing)
+        },
+        combine(
+            settingsRepository.confettiShownForFastId,
+            settingsRepository.showFab,
+            settingsRepository.showFastingPhases
+        ) { confettiShown, showFab, showFastingPhases ->
+            Triple(confettiShown, showFab, showFastingPhases)
+        },
+        settingsRepository.userData
+    ) { fastingData, displaySettings, userData ->
+        val (fasts, profiles, isEditing) = fastingData
+        val (confettiShown, showFab, showFastingPhases) = displaySettings
         DashboardData(
             fasts = fasts,
             profiles = profiles,
             isEditing = isEditing,
             confettiShownForFastId = confettiShown,
             showFab = showFab,
+            showFastingPhases = showFastingPhases,
             userData = userData
         )
     }
@@ -217,39 +226,56 @@ class DashboardViewModel @Inject constructor(
             ticker.map {
                 val now = System.currentTimeMillis()
                 val startTime = activeFast.startTime
+                val elapsedTimeHours = (now - startTime).toDouble() / (1000 * 60 * 60)
+                val currentPhase = FastingPhase.getPhaseForDuration(elapsedTimeHours)
 
                 if (activeFast.targetDuration == null) {
                     val elapsedTime = (now - startTime).milliseconds
+                    val elapsedTimeHours = elapsedTime.inWholeMilliseconds.toDouble() / (1000 * 60 * 60)
+                    // For open fasts, we show phases up to a reasonable limit (e.g., 72h) or the current phase + 1
+                    val relevantPhases = FastingPhase.entries.filter { it.startHour <= elapsedTimeHours || it.startHour <= 24 }
+                    
                     DashboardUiState.OpenFasting(
                         activeFast,
                         elapsedTime,
                         data.isEditing,
-                        data.userData.useWavyIndicator
+                        data.userData.useWavyIndicator,
+                        currentPhase = currentPhase,
+                        relevantPhases = relevantPhases,
+                        showFastingPhases = data.showFastingPhases
                     )
                 } else {
                     val targetDuration = activeFast.targetDuration.milliseconds
                     val targetEndTime = startTime + targetDuration.inWholeMilliseconds
+                    val targetDurationHours = targetDuration.inWholeMilliseconds.toDouble() / (1000 * 60 * 60)
+                    val relevantPhases = FastingPhase.getPhasesForGoal(targetDurationHours)
 
                     if (now >= targetEndTime) {
                         val elapsedTime = (now - startTime).milliseconds
                         val showConfetti = data.confettiShownForFastId != activeFast.id
                         DashboardUiState.FastingGoalReached(
-                            activeFast,
-                            elapsedTime,
-                            showConfetti,
-                            data.isEditing,
-                            data.userData.useWavyIndicator
+                            activeFast = activeFast,
+                            totalElapsedTime = elapsedTime,
+                            showConfetti = showConfetti,
+                            isEditing = data.isEditing,
+                            useWavyIndicator = data.userData.useWavyIndicator,
+                            currentPhase = currentPhase,
+                            relevantPhases = relevantPhases,
+                            showFastingPhases = data.showFastingPhases
                         )
                     } else {
                         val remainingTime = (targetEndTime - now).milliseconds
                         val progress =
                             1f - (remainingTime.inWholeMilliseconds.toFloat() / targetDuration.inWholeMilliseconds)
                         DashboardUiState.FastingInProgress(
-                            activeFast,
-                            remainingTime,
-                            progress,
-                            data.isEditing,
-                            data.userData.useWavyIndicator
+                            activeFast = activeFast,
+                            remainingTime = remainingTime,
+                            progress = progress,
+                            isEditing = data.isEditing,
+                            useWavyIndicator = data.userData.useWavyIndicator,
+                            currentPhase = currentPhase,
+                            relevantPhases = relevantPhases,
+                            showFastingPhases = data.showFastingPhases
                         )
                     }
                 }

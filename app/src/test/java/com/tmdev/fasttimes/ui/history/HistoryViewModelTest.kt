@@ -17,7 +17,6 @@
 package com.tmdev.fasttimes.ui.history
 
 import androidx.lifecycle.SavedStateHandle
-import app.cash.turbine.test
 import com.tmdev.fasttimes.data.fast.Fast
 import com.tmdev.fasttimes.data.fast.FastsRepository
 import com.tmdev.fasttimes.data.settings.SettingsRepository
@@ -25,7 +24,10 @@ import com.tmdev.fasttimes.ui.dashboard.MainCoroutineRule
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -39,7 +41,7 @@ import java.time.ZoneId
 class HistoryViewModelTest {
 
     @get:Rule
-    val mainCoroutineRule = MainCoroutineRule()
+    val mainCoroutineRule = MainCoroutineRule(kotlinx.coroutines.test.UnconfinedTestDispatcher())
 
     private lateinit var fastsRepository: FastsRepository
     private lateinit var settingsRepository: SettingsRepository
@@ -53,6 +55,7 @@ class HistoryViewModelTest {
         
         every { fastsRepository.getFasts() } returns flowOf(emptyList())
         every { settingsRepository.firstDayOfWeek } returns flowOf("MONDAY")
+        every { settingsRepository.userData } returns flowOf(mockk(relaxed = true))
     }
 
     @Test
@@ -60,24 +63,25 @@ class HistoryViewModelTest {
         viewModel = HistoryViewModel(fastsRepository, settingsRepository, savedStateHandle)
         val initialMonth = YearMonth.now()
         
-        viewModel.uiState.test {
-            var state = expectMostRecentItem()
-            assertEquals(initialMonth, state.displayedMonth)
-            
-            viewModel.onPreviousMonth()
-            state = awaitItem()
-            while(state.displayedMonth != initialMonth.minusMonths(1)) {
-                state = awaitItem()
-            }
-            assertEquals(initialMonth.minusMonths(1), state.displayedMonth)
-            
-            viewModel.onNextMonth()
-            state = awaitItem()
-            while(state.displayedMonth != initialMonth) {
-                state = awaitItem()
-            }
-            assertEquals(initialMonth, state.displayedMonth)
+        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect()
         }
+        runCurrent()
+
+        var state = viewModel.uiState.value
+        assertEquals(initialMonth, state.displayedMonth)
+        
+        viewModel.onPreviousMonth()
+        runCurrent()
+        state = viewModel.uiState.value
+        assertEquals(initialMonth.minusMonths(1), state.displayedMonth)
+        
+        viewModel.onNextMonth()
+        runCurrent()
+        state = viewModel.uiState.value
+        assertEquals(initialMonth, state.displayedMonth)
+
+        job.cancel()
     }
 
     @Test
@@ -120,47 +124,44 @@ class HistoryViewModelTest {
         
         viewModel = HistoryViewModel(fastsRepository, settingsRepository, savedStateHandle)
         
-        viewModel.uiState.test {
-            // Wait for the state that includes the fast for this month
-            var state = awaitItem()
-            while (state.totalFastsInMonth != 1) {
-                state = awaitItem()
-            }
-            assertEquals(1, state.totalFastsInMonth)
-            
-            viewModel.onPreviousMonth()
-            
-            // Wait for the state that reflects the previous month's data
-            state = awaitItem()
-            while (state.displayedMonth != lastMonth || state.totalFastsInMonth != 1) {
-                state = awaitItem()
-            }
-            
-            assertEquals(1, state.totalFastsInMonth)
-            assertEquals(fastInLastMonth.id, state.longestFastInMonth?.id)
+        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect()
         }
+        runCurrent()
+
+        var state = viewModel.uiState.value
+        assertEquals(1, state.totalFastsInMonth)
+        
+        viewModel.onPreviousMonth()
+        runCurrent()
+
+        state = viewModel.uiState.value
+        assertEquals(lastMonth, state.displayedMonth)
+        assertEquals(1, state.totalFastsInMonth)
+        assertEquals(fastInLastMonth.id, state.longestFastInMonth?.id)
+
+        job.cancel()
     }
 
     @Test
     fun `onDayClick toggles selection`() = runTest {
         viewModel = HistoryViewModel(fastsRepository, settingsRepository, savedStateHandle)
         
-        viewModel.uiState.test {
-            expectMostRecentItem()
-            
-            viewModel.onDayClick(15)
-            var state = awaitItem()
-            while (state.selectedDay != 15) {
-                state = awaitItem()
-            }
-            assertEquals(15, state.selectedDay)
-            
-            viewModel.onDayClick(15)
-            state = awaitItem()
-            while (state.selectedDay != null) {
-                state = awaitItem()
-            }
-            assertNull(state.selectedDay)
+        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect()
         }
+        runCurrent()
+
+        viewModel.onDayClick(15)
+        runCurrent()
+        var state = viewModel.uiState.value
+        assertEquals(15, state.selectedDay)
+        
+        viewModel.onDayClick(15)
+        runCurrent()
+        state = viewModel.uiState.value
+        assertNull(state.selectedDay)
+
+        job.cancel()
     }
 }

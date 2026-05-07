@@ -53,6 +53,7 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.theme,
         settingsRepository.firstDayOfWeek,
         settingsRepository.showFab,
+        settingsRepository.showFastingPhases,
         settingsRepository.userData
     ) { args ->
         @Suppress("UNCHECKED_CAST")
@@ -61,7 +62,8 @@ class SettingsViewModel @Inject constructor(
         val theme = args[2] as AppTheme
         val firstDayOfWeek = args[3] as String
         val showFab = args[4] as Boolean
-        val userData = args[5] as UserData
+        val showFastingPhases = args[5] as Boolean
+        val userData = args[6] as UserData
 
         SettingsUiState(
             showLiveProgress = showLiveProgress,
@@ -71,6 +73,7 @@ class SettingsViewModel @Inject constructor(
             accentColor = userData.accentColor,
             firstDayOfWeek = firstDayOfWeek,
             showFab = showFab,
+            showFastingPhases = showFastingPhases,
             useWavyIndicator = userData.useWavyIndicator,
             useExpressiveTheme = userData.useExpressiveTheme,
             useSystemColors = userData.useSystemColors
@@ -132,6 +135,12 @@ class SettingsViewModel @Inject constructor(
     fun onShowFabChanged(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setShowFab(enabled)
+        }
+    }
+
+    fun onShowFastingPhasesChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setShowFastingPhases(enabled)
         }
     }
 

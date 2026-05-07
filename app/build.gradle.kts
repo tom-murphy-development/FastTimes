@@ -115,6 +115,13 @@ kotlin {
     jvmToolchain(21)
 }
 
+// Fix for "Task 'testDebugUnitTest' is ambiguous" error by aggregating flavor-specific debug unit tests
+tasks.register("testDebugUnitTest") {
+    group = "verification"
+    description = "Run unit tests for all debug variants."
+    dependsOn(tasks.matching { it.name.endsWith("DebugUnitTest") && it.name != "testDebugUnitTest" && it.name.contains("Debug") })
+}
+
 spotless {
     kotlin {
         target("src/**/*.kt")
@@ -168,4 +175,5 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom.beta))
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation(libs.mockk)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 }

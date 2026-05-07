@@ -110,6 +110,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.tmdev.fasttimes.R
 import com.tmdev.fasttimes.data.fast.Fast
+import com.tmdev.fasttimes.data.fast.FastingPhase
 import com.tmdev.fasttimes.data.profile.FastingProfile
 import com.tmdev.fasttimes.data.profile.durationMinutes
 import com.tmdev.fasttimes.ui.components.ExpressiveStatCard
@@ -117,9 +118,13 @@ import com.tmdev.fasttimes.ui.components.rememberRandomExpressiveShape
 import com.tmdev.fasttimes.ui.dashboard.DashboardUiState
 import com.tmdev.fasttimes.ui.dashboard.DashboardViewModel
 import com.tmdev.fasttimes.ui.dashboard.DayProgress
+import com.tmdev.fasttimes.ui.dashboard.FastingPhaseChip
+import com.tmdev.fasttimes.ui.dashboard.FastingPhaseInfoModal
+import com.tmdev.fasttimes.ui.dashboard.FastingPhasesCanvas
 import com.tmdev.fasttimes.ui.dashboard.FastingSummaryModal
 import com.tmdev.fasttimes.ui.editfast.EditFastRoute
 import com.tmdev.fasttimes.ui.theme.FastTimesTheme
+import com.tmdev.fasttimes.ui.theme.StreakColor
 import com.tmdev.fasttimes.ui.theme.contentColorFor
 import com.tmdev.fasttimes.ui.theme.spacing
 import kotlinx.coroutines.delay
@@ -185,10 +190,11 @@ fun DashboardScreen(
 
     val sdf = remember(locale) { SimpleDateFormat("EEE, hh:mm a", locale) }
     val todaySdf = remember(locale) { SimpleDateFormat("hh:mm a", locale) }
-    val context = LocalContext.current
+    LocalContext.current
 
     var parties by remember { mutableStateOf(emptyList<Party>()) }
     var showStreakInfo by remember { mutableStateOf(false) }
+    var showPhaseDetails by remember { mutableStateOf<FastingPhase?>(null) }
 
     val onStartFast: (FastingProfile) -> Unit = {
         viewModel.startProfileFast(it)
@@ -360,43 +366,60 @@ fun DashboardScreen(
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Box(contentAlignment = Alignment.Center) {
-                                    if (state.useWavyIndicator) {
-                                        CircularWavyProgressIndicator(
-                                            progress = { state.progress },
-                                            modifier = Modifier.size(MaterialTheme.spacing.timerSize),
-                                            color = FastTimesTheme.accentColor,
-                                            trackColor = MaterialTheme.colorScheme.secondary.copy(
-                                                alpha = 0.1f
-                                            ),
-                                            stroke = Stroke(
-                                                width = with(LocalDensity.current) {
-                                                    12.dp.toPx()
-                                                },
-                                                cap = StrokeCap.Round,
-                                            ),
-                                            trackStroke = Stroke(
-                                                width = with(LocalDensity.current) {
-                                                    12.dp.toPx()
-                                                },
-                                                cap = StrokeCap.Round,
-                                            ),
-                                            wavelength = 60.dp,
-                                            waveSpeed = 15.dp,
-                                            gapSize = 8.dp
-                                        )
-                                    } else {
-                                        CircularProgressIndicator(
-                                            progress = { state.progress },
-                                            modifier = Modifier.size(MaterialTheme.spacing.timerSize),
-                                            color = FastTimesTheme.accentColor,
-                                            strokeWidth = 16.dp,
-                                            trackColor = MaterialTheme.colorScheme.secondary.copy(
-                                                alpha = 0.1f
-                                            ),
-                                            strokeCap = StrokeCap.Round
-                                        )
+                                    val goalHours = (state.activeFast.targetDuration ?: 0L).toDouble() / (1000 * 60 * 60)
+                                    val accentColor = FastTimesTheme.accentColor
+                                    val trackColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+                                    
+                                    Box(modifier = Modifier.size(MaterialTheme.spacing.timerSize)) {
+                                        if (state.showFastingPhases && goalHours > 0) {
+                                            FastingPhasesCanvas(
+                                                relevantPhases = state.relevantPhases,
+                                                goalHours = goalHours,
+                                                modifier = Modifier.fillMaxSize(),
+                                                currentPhase = state.currentPhase,
+                                                onPhaseClick = { showPhaseDetails = it }
+                                            )
+                                        }
+
+                                        if (state.useWavyIndicator) {
+                                            CircularWavyProgressIndicator(
+                                                progress = { state.progress },
+                                                modifier = Modifier.fillMaxSize(),
+                                                color = accentColor,
+                                                trackColor = trackColor,
+                                                stroke = Stroke(
+                                                    width = with(LocalDensity.current) { 12.dp.toPx() },
+                                                    cap = StrokeCap.Round,
+                                                ),
+                                                trackStroke = Stroke(
+                                                    width = with(LocalDensity.current) { 12.dp.toPx() },
+                                                    cap = StrokeCap.Round,
+                                                ),
+                                                wavelength = 60.dp,
+                                                waveSpeed = 15.dp,
+                                                gapSize = 8.dp
+                                            )
+                                        } else {
+                                            CircularProgressIndicator(
+                                                progress = { state.progress },
+                                                modifier = Modifier.fillMaxSize(),
+                                                color = accentColor,
+                                                strokeWidth = 16.dp,
+                                                trackColor = trackColor,
+                                                strokeCap = StrokeCap.Round
+                                            )
+                                        }
                                     }
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        state.currentPhase?.let { phase ->
+                                            if (state.showFastingPhases) {
+                                                FastingPhaseChip(
+                                                    phase = phase,
+                                                    modifier = Modifier.padding(bottom = 4.dp),
+                                                    onClick = { showPhaseDetails = phase }
+                                                )
+                                            }
+                                        }
                                         Text(
                                             state.activeFast.profileName,
                                             style = MaterialTheme.typography.titleMedium
@@ -451,6 +474,7 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
+
                                 Button(
                                     onClick = onEndFast,
                                     colors = ButtonDefaults.buttonColors(
@@ -513,22 +537,68 @@ fun DashboardScreen(
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
                                 Box(contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator(
-                                        progress = { 1f },
+                                    val accentColor = MaterialTheme.colorScheme.secondary
+                                    val trackColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+                                    val goalHours = 24f // Standard cycle for open fast segments
+
+                                    Box(
                                         modifier = Modifier
                                             .size(MaterialTheme.spacing.timerSize)
                                             .graphicsLayer {
                                                 scaleX = scale
                                                 scaleY = scale
-                                            },
-                                        color = MaterialTheme.colorScheme.secondary,
-                                        strokeWidth = 16.dp,
-                                        trackColor = MaterialTheme.colorScheme.secondary.copy(
-                                            alpha = 0.1f
-                                        ),
-                                        strokeCap = StrokeCap.Round
-                                    )
+                                            }
+                                    ) {
+                                        if (state.showFastingPhases) {
+                                            FastingPhasesCanvas(
+                                                relevantPhases = state.relevantPhases,
+                                                goalHours = goalHours.toDouble(),
+                                                modifier = Modifier.fillMaxSize(),
+                                                showSegments = false,
+                                                currentPhase = state.currentPhase,
+                                                onPhaseClick = { showPhaseDetails = it }
+                                            )
+                                        }
+
+                                        if (state.useWavyIndicator) {
+                                            CircularWavyProgressIndicator(
+                                                progress = { 1f },
+                                                modifier = Modifier.fillMaxSize(),
+                                                color = accentColor,
+                                                trackColor = trackColor,
+                                                stroke = Stroke(
+                                                    width = with(LocalDensity.current) { 12.dp.toPx() },
+                                                    cap = StrokeCap.Round,
+                                                ),
+                                                trackStroke = Stroke(
+                                                    width = with(LocalDensity.current) { 12.dp.toPx() },
+                                                    cap = StrokeCap.Round,
+                                                ),
+                                                wavelength = 60.dp,
+                                                waveSpeed = 15.dp,
+                                                gapSize = 8.dp
+                                            )
+                                        } else {
+                                            CircularProgressIndicator(
+                                                progress = { 1f },
+                                                modifier = Modifier.fillMaxSize(),
+                                                color = accentColor,
+                                                strokeWidth = 16.dp,
+                                                trackColor = trackColor,
+                                                strokeCap = StrokeCap.Round
+                                            )
+                                        }
+                                    }
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        state.currentPhase?.let { phase ->
+                                            if (state.showFastingPhases) {
+                                                FastingPhaseChip(
+                                                    phase = phase,
+                                                    modifier = Modifier.padding(bottom = 4.dp),
+                                                    onClick = { showPhaseDetails = phase }
+                                                )
+                                            }
+                                        }
                                         Text(
                                             text = "Elapsed Time",
                                             style = MaterialTheme.typography.titleMedium
@@ -563,6 +633,7 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
+
                                 Button(
                                     onClick = onEndFast,
                                     colors = ButtonDefaults.buttonColors(
@@ -611,31 +682,63 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
+
                                 Box(contentAlignment = Alignment.Center) {
-                                    CircularWavyProgressIndicator(
-                                        progress = { 1f },
-                                        modifier = Modifier.size(MaterialTheme.spacing.timerSize),
-                                        color = FastTimesTheme.accentColor,
-                                        trackColor = MaterialTheme.colorScheme.secondary.copy(
-                                            alpha = 0.1f
-                                        ),
-                                        stroke = Stroke(
-                                            width = with(LocalDensity.current) {
-                                                12.dp.toPx()
-                                            },
-                                            cap = StrokeCap.Round,
-                                        ),
-                                        trackStroke = Stroke(
-                                            width = with(LocalDensity.current) {
-                                                12.dp.toPx()
-                                            },
-                                            cap = StrokeCap.Round,
-                                        ),
-                                        wavelength = 60.dp,
-                                        waveSpeed = 15.dp,
-                                        gapSize = 8.dp
-                                    )
+                                    val goalHours = (state.activeFast.targetDuration ?: 0L).toDouble() / (1000 * 60 * 60)
+                                    val accentColor = FastTimesTheme.accentColor
+                                    val trackColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+                                    
+                                    Box(modifier = Modifier.size(MaterialTheme.spacing.timerSize)) {
+                                        if (state.showFastingPhases && goalHours > 0) {
+                                            FastingPhasesCanvas(
+                                                relevantPhases = state.relevantPhases,
+                                                goalHours = goalHours,
+                                                modifier = Modifier.fillMaxSize(),
+                                                showSegments = false,
+                                                currentPhase = state.currentPhase,
+                                                onPhaseClick = { showPhaseDetails = it }
+                                            )
+                                        }
+
+                                        if (state.useWavyIndicator) {
+                                            CircularWavyProgressIndicator(
+                                                progress = { 1f },
+                                                modifier = Modifier.fillMaxSize(),
+                                                color = accentColor,
+                                                trackColor = trackColor,
+                                                stroke = Stroke(
+                                                    width = with(LocalDensity.current) { 12.dp.toPx() },
+                                                    cap = StrokeCap.Round,
+                                                ),
+                                                trackStroke = Stroke(
+                                                    width = with(LocalDensity.current) { 12.dp.toPx() },
+                                                    cap = StrokeCap.Round,
+                                                ),
+                                                wavelength = 60.dp,
+                                                waveSpeed = 15.dp,
+                                                gapSize = 8.dp
+                                            )
+                                        } else {
+                                            CircularProgressIndicator(
+                                                progress = { 1f },
+                                                modifier = Modifier.fillMaxSize(),
+                                                color = accentColor,
+                                                strokeWidth = 16.dp,
+                                                trackColor = trackColor,
+                                                strokeCap = StrokeCap.Round
+                                            )
+                                        }
+                                    }
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        state.currentPhase?.let { phase ->
+                                            if (state.showFastingPhases) {
+                                                FastingPhaseChip(
+                                                    phase = phase,
+                                                    modifier = Modifier.padding(bottom = 4.dp),
+                                                    onClick = { showPhaseDetails = phase }
+                                                )
+                                            }
+                                        }
                                         Text(
                                             text = "Goal Reached!",
                                             style = MaterialTheme.typography.titleLargeEmphasized,
@@ -691,6 +794,7 @@ fun DashboardScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(MaterialTheme.spacing.sectionSpacing))
+                                
                                 Button(
                                     onClick = onEndFast,
                                     colors = ButtonDefaults.buttonColors(
@@ -705,6 +809,13 @@ fun DashboardScreen(
                             }
                         }
                     }
+                }
+                
+                showPhaseDetails?.let { phase ->
+                    FastingPhaseInfoModal(
+                        phase = phase,
+                        onDismiss = { showPhaseDetails = null }
+                    )
                 }
 
                 // Streak Card - only shown if streak is 2 or more
@@ -1002,7 +1113,7 @@ fun StreakCard(
                         imageVector = Icons.Default.LocalFireDepartment,
                         contentDescription = "Streak",
                         modifier = Modifier.size(MaterialTheme.spacing.large * 2),
-                        tint = Color(0xFFFF5722) // Orange streak color
+                        tint = StreakColor
                     )
                     Spacer(Modifier.width(MaterialTheme.spacing.medium))
                     Column {

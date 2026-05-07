@@ -1,0 +1,8 @@
+- improve active fast time display on DashboardScreen
+- add git pre-commit hook and optimize timer notification
+- show end time for active fasts on dashboard
+
+- release version 1.0.1 and update CHANGELOG.md
+
+### Other
+- - feat: improve active fast time display on DashboardScreen

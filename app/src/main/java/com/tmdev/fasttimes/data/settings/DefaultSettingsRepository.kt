@@ -48,6 +48,7 @@ class DefaultSettingsRepository @Inject constructor(
         val FIRST_DAY_OF_WEEK = stringPreferencesKey("first_day_of_week")
         val USE_EXPRESSIVE_THEME = booleanPreferencesKey("use_expressive_theme")
         val USE_SYSTEM_COLORS = booleanPreferencesKey("use_system_colors")
+        val SHOW_FASTING_PHASES = booleanPreferencesKey("show_fasting_phases")
     }
 
     // Centralized safe flow access to handle DataStore corruption/decryption errors
@@ -70,6 +71,7 @@ class DefaultSettingsRepository @Inject constructor(
             val useWavyIndicator = preferences[PreferencesKeys.USE_WAVY_INDICATOR] ?: true
             val useExpressiveTheme = preferences[PreferencesKeys.USE_EXPRESSIVE_THEME] ?: false
             val useSystemColors = preferences[PreferencesKeys.USE_SYSTEM_COLORS] ?: true
+            val showFastingPhases = preferences[PreferencesKeys.SHOW_FASTING_PHASES] ?: true
             UserData(
                 fastingGoal = fastingGoal,
                 theme = theme,
@@ -77,7 +79,8 @@ class DefaultSettingsRepository @Inject constructor(
                 accentColor = accentColor,
                 useWavyIndicator = useWavyIndicator,
                 useExpressiveTheme = useExpressiveTheme,
-                useSystemColors = useSystemColors
+                useSystemColors = useSystemColors,
+                showFastingPhases = showFastingPhases
             )
         }
 
@@ -144,6 +147,13 @@ class DefaultSettingsRepository @Inject constructor(
 
     override suspend fun setShowFab(show: Boolean) {
         dataStore.edit { it[PreferencesKeys.SHOW_FAB] = show }
+    }
+
+    override val showFastingPhases: Flow<Boolean> =
+        safeDataStoreData.map { it[PreferencesKeys.SHOW_FASTING_PHASES] ?: true }
+
+    override suspend fun setShowFastingPhases(show: Boolean) {
+        dataStore.edit { it[PreferencesKeys.SHOW_FASTING_PHASES] = show }
     }
 
     override suspend fun setUseWavyIndicator(useWavy: Boolean) {

@@ -17,6 +17,7 @@
 package com.tmdev.fasttimes.ui.dashboard
 
 import com.tmdev.fasttimes.data.fast.Fast
+import com.tmdev.fasttimes.data.fast.FastingPhase
 import kotlin.time.Duration
 
 /**
@@ -60,7 +61,10 @@ sealed class DashboardUiState {
         val remainingTime: Duration,
         val progress: Float,
         val isEditing: Boolean = false,
-        val useWavyIndicator: Boolean
+        val useWavyIndicator: Boolean,
+        val currentPhase: FastingPhase? = null,
+        val relevantPhases: List<FastingPhase> = emptyList(),
+        val showFastingPhases: Boolean = false
     ) : DashboardUiState()
 
     /**
@@ -77,7 +81,10 @@ sealed class DashboardUiState {
         val totalElapsedTime: Duration,
         val showConfetti: Boolean,
         val isEditing: Boolean = false,
-        val useWavyIndicator: Boolean
+        val useWavyIndicator: Boolean,
+        val currentPhase: FastingPhase? = null,
+        val relevantPhases: List<FastingPhase> = emptyList(),
+        val showFastingPhases: Boolean = false
     ) : DashboardUiState()
 
     /**
@@ -92,6 +99,9 @@ sealed class DashboardUiState {
         val activeFast: Fast,
         val elapsedTime: Duration,
         val isEditing: Boolean = false,
-        val useWavyIndicator: Boolean
+        val useWavyIndicator: Boolean,
+        val currentPhase: FastingPhase? = null,
+        val relevantPhases: List<FastingPhase> = emptyList(),
+        val showFastingPhases: Boolean = false
     ) : DashboardUiState()
 }

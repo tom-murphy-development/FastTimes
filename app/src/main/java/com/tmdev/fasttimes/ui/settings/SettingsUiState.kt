@@ -26,6 +26,7 @@ data class SettingsUiState(
     val accentColor: Long? = null,
     val firstDayOfWeek: String = "Sunday",
     val showFab: Boolean = true,
+    val showFastingPhases: Boolean = true,
     val useWavyIndicator: Boolean = true,
     val useExpressiveTheme: Boolean = false,
     val useSystemColors: Boolean = false

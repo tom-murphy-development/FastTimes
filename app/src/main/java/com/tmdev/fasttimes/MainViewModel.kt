@@ -58,7 +58,8 @@ class MainViewModel @Inject constructor(
                 accentColor = null,
                 useWavyIndicator = true,
                 useExpressiveTheme = false,
-                useSystemColors = false
+                useSystemColors = false,
+                showFastingPhases = true
             ), isLoading = true
         )
     )

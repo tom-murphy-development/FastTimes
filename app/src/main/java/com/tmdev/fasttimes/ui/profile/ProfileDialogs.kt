@@ -127,10 +127,14 @@ fun AddEditProfileDialog(
                 Spacer(Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        val paddedDuration = duration.padStart(4, '0')
-                        val hours = paddedDuration.substring(0, 2).toLongOrNull() ?: 0L
-                        val minutes = paddedDuration.substring(2, 4).toLongOrNull() ?: 0L
-                        val totalMillis = (hours.hours + minutes.minutes).inWholeMilliseconds
+                        val totalMillis = if (duration.length <= 2) {
+                            (duration.toLongOrNull() ?: 0L).hours
+                        } else {
+                            val paddedDuration = duration.padStart(4, '0')
+                            val h = paddedDuration.substring(0, 2).toLongOrNull() ?: 0L
+                            val m = paddedDuration.substring(2, 4).toLongOrNull() ?: 0L
+                            h.hours + m.minutes
+                        }.inWholeMilliseconds
                         onSave(name, totalMillis.takeIf { it > 0 }, description, isFavorite)
                     },
                     enabled = name.isNotBlank()

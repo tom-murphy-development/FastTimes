@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 ### Added
+-
+### Changed
+-
+### Fixed
+-
+
+## [1.0.2] - 2026-04-30
+### Added
 - Added goal end time
 ### Changed
 - Updated Dependencies

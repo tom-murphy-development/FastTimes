@@ -2,11 +2,11 @@
 
 ## [Unreleased]
 ### Added
--
+- Implement fasting phases visualisation, tracking & education
 ### Changed
--
+- Refined UI styling
 ### Fixed
--
+- Resolved minor bug to improve duration parsing logic for custom fasts.
 
 ## [1.0.2] - 2026-04-30
 ### Added

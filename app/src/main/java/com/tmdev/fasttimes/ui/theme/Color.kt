@@ -27,6 +27,8 @@ internal val accentColors = listOf(
     Color(0xFF3A86FF)
 )
 
+val StreakColor = Color(0xFFFF5722)
+
 internal val seedColors = listOf(
     Color(0xfffeb4a7),
     Color(0xffffb3c0),

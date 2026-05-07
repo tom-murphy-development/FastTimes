@@ -124,6 +124,7 @@ import com.tmdev.fasttimes.ui.dashboard.FastingPhasesCanvas
 import com.tmdev.fasttimes.ui.dashboard.FastingSummaryModal
 import com.tmdev.fasttimes.ui.editfast.EditFastRoute
 import com.tmdev.fasttimes.ui.theme.FastTimesTheme
+import com.tmdev.fasttimes.ui.theme.StreakColor
 import com.tmdev.fasttimes.ui.theme.contentColorFor
 import com.tmdev.fasttimes.ui.theme.spacing
 import kotlinx.coroutines.delay
@@ -1112,7 +1113,7 @@ fun StreakCard(
                         imageVector = Icons.Default.LocalFireDepartment,
                         contentDescription = "Streak",
                         modifier = Modifier.size(MaterialTheme.spacing.large * 2),
-                        tint = Color(0xFFFF5722) // Orange streak color
+                        tint = StreakColor
                     )
                     Spacer(Modifier.width(MaterialTheme.spacing.medium))
                     Column {

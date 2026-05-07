@@ -16,7 +16,6 @@
  */
 package com.tmdev.fasttimes.ui.statistics
 
-import app.cash.turbine.test
 import com.tmdev.fasttimes.data.fast.Fast
 import com.tmdev.fasttimes.data.fast.FastsRepository
 import com.tmdev.fasttimes.data.settings.SettingsRepository
@@ -24,9 +23,13 @@ import com.tmdev.fasttimes.ui.dashboard.MainCoroutineRule
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -39,7 +42,7 @@ import kotlin.time.Duration.Companion.hours
 class StatisticsViewModelTest {
 
     @get:Rule
-    val mainCoroutineRule = MainCoroutineRule()
+    val mainCoroutineRule = MainCoroutineRule(kotlinx.coroutines.test.UnconfinedTestDispatcher())
 
     private lateinit var fastsRepository: FastsRepository
     private lateinit var settingsRepository: SettingsRepository
@@ -75,15 +78,18 @@ class StatisticsViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
 
-        viewModel.statisticsState.test {
-            // Skip initial loading state
-            var state = awaitItem()
-            if (state.isLoading) state = awaitItem()
-            
-            assertEquals(2, state.streak.daysInARow)
-            assertEquals(yesterday, state.streak.startDate)
-            assertEquals(today, state.streak.lastFastDate)
+        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.statisticsState.collect()
         }
+        runCurrent()
+
+        val state = viewModel.statisticsState.value
+        assertFalse(state.isLoading)
+        assertEquals(2, state.streak.daysInARow)
+        assertEquals(yesterday, state.streak.startDate)
+        assertEquals(today, state.streak.lastFastDate)
+
+        job.cancel()
     }
 
     @Test
@@ -100,17 +106,22 @@ class StatisticsViewModelTest {
 
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
-        viewModel.onPeriodSelected(StatisticsPeriod.WEEKLY)
-
-        viewModel.statisticsState.test {
-            var state = awaitItem()
-            if (state.isLoading || state.periodTotalFasts == 0) state = awaitItem()
-            
-            assertEquals(2, state.periodTrend.currentCount)
-            assertEquals(1, state.periodTrend.previousCount)
-            assertEquals(100f, state.periodTrend.percentageChange)
-            assertTrue(state.periodTrend.isUpward)
+        
+        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.statisticsState.collect()
         }
+        runCurrent()
+        
+        viewModel.onPeriodSelected(StatisticsPeriod.WEEKLY)
+        runCurrent()
+
+        val state = viewModel.statisticsState.value
+        assertEquals(2, state.periodTrend.currentCount)
+        assertEquals(1, state.periodTrend.previousCount)
+        assertEquals(100f, state.periodTrend.percentageChange)
+        assertTrue(state.periodTrend.isUpward)
+
+        job.cancel()
     }
 
     @Test
@@ -125,12 +136,15 @@ class StatisticsViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
 
-        viewModel.statisticsState.test {
-            var state = awaitItem()
-            if (state.isLoading || state.periodTotalFasts == 0) state = awaitItem()
-            
-            assertEquals(50f, state.periodConsistency)
+        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.statisticsState.collect()
         }
+        runCurrent()
+
+        val state = viewModel.statisticsState.value
+        assertEquals(50f, state.periodConsistency)
+
+        job.cancel()
     }
 
     private fun createFast(id: Long, startTime: Long, target: Long, actual: Long): Fast {

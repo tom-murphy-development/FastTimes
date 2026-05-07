@@ -27,7 +27,8 @@ data class UserData(
     val accentColor: Long?,
     val useWavyIndicator: Boolean,
     val useExpressiveTheme: Boolean,
-    val useSystemColors: Boolean
+    val useSystemColors: Boolean,
+    val showFastingPhases: Boolean
 )
 
 interface SettingsRepository {
@@ -59,6 +60,9 @@ interface SettingsRepository {
 
     val showFab: Flow<Boolean>
     suspend fun setShowFab(show: Boolean)
+
+    val showFastingPhases: Flow<Boolean>
+    suspend fun setShowFastingPhases(show: Boolean)
 
     suspend fun setUseWavyIndicator(useWavy: Boolean)
 

@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.tmdev.fasttimes.ui.components.ExpressiveStatCard
 import com.tmdev.fasttimes.ui.components.rememberRandomExpressiveShape
 import com.tmdev.fasttimes.ui.editfast.EditFastRoute
+import com.tmdev.fasttimes.ui.theme.spacing
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -79,7 +80,7 @@ fun HistoryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(p)
-                .padding(16.dp)
+                .padding(MaterialTheme.spacing.medium)
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures { _, dragAmount ->
                         if (dragAmount > 50) { // Threshold for swipe right
@@ -158,17 +159,17 @@ private fun MonthlyStats(
     val shape2 = rememberRandomExpressiveShape(seed = monthSeed + 1)
     val shape3 = rememberRandomExpressiveShape(seed = monthSeed + 2)
 
-    Column(modifier = Modifier.padding(top = 24.dp)) {
+    Column(modifier = Modifier.padding(top = MaterialTheme.spacing.large)) {
         Text(
             text = "${uiState.displayedMonth.format(monthFormatter)} Summary",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = MaterialTheme.spacing.medium)
         )
         
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)
         ) {
             ExpressiveStatCard(
                 modifier = Modifier.weight(1f),
@@ -178,7 +179,7 @@ private fun MonthlyStats(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 shape = shape1,
-                height = 140.dp
+                height = MaterialTheme.spacing.dashboardStatCardHeight
             )
             
             ExpressiveStatCard(
@@ -189,7 +190,7 @@ private fun MonthlyStats(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 shape = shape2,
-                height = 140.dp
+                height = MaterialTheme.spacing.dashboardStatCardHeight
             )
             
             ExpressiveStatCard(
@@ -200,7 +201,7 @@ private fun MonthlyStats(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 shape = shape3,
-                height = 140.dp
+                height = MaterialTheme.spacing.dashboardStatCardHeight
             )
         }
     }

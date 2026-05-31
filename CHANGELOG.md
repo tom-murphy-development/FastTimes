@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 ### Added
+-
+### Changed
+-
+### Fixed
+-
+
+## [1.0.4] - 2026-05-31
+### Added
 - Added monochrome themed icon support for Android13+.
 - Introduced `datesCovered` logic to accurately track multi-day and ongoing fasts.
 - Added "Current", "Last", and "Longest" streak labels in Statistics for better progress insights.

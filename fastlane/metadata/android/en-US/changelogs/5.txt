@@ -1,0 +1,5 @@
+- add monochrome app icon support
+- improve fasting streak logic and UI display
+
+
+### Fixed

@@ -187,10 +187,17 @@ fun DashboardScreen(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val locale = LocalConfiguration.current.locales[0]
+    val context = LocalContext.current
+    val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
 
-    val sdf = remember(locale) { SimpleDateFormat("EEE, hh:mm a", locale) }
-    val todaySdf = remember(locale) { SimpleDateFormat("hh:mm a", locale) }
-    LocalContext.current
+    val sdf = remember(locale, is24Hour) {
+        val pattern = if (is24Hour) "EEE, HH:mm" else "EEE, h:mm a"
+        SimpleDateFormat(pattern, locale)
+    }
+    val todaySdf = remember(locale, is24Hour) {
+        val pattern = if (is24Hour) "HH:mm" else "h:mm a"
+        SimpleDateFormat(pattern, locale)
+    }
 
     var parties by remember { mutableStateOf(emptyList<Party>()) }
     var showStreakInfo by remember { mutableStateOf(false) }
@@ -818,8 +825,8 @@ fun DashboardScreen(
                     )
                 }
 
-                // Streak Card - only shown if streak is 2 or more
-                if (stats.streak.daysInARow >= 2) {
+                // Streak Card - only shown if active and streak is 2 or more
+                if (stats.streak.isActive && stats.streak.daysInARow >= 2) {
                     StreakCard(
                         streakDays = stats.streak.daysInARow,
                         weeklyProgress = stats.weeklyProgress,
@@ -1248,7 +1255,7 @@ fun StreakInfoContent(onDismiss: () -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             StreakInfoItem(
                 title = "Fair Progress Tracking",
-                description = "A day counts toward your streak if a fast either started or ended on that day."
+                description = "A day counts toward your streak if it is covered by a fast's duration."
             )
             StreakInfoItem(
                 title = "Midnight Overlap",
@@ -1497,7 +1504,11 @@ private fun LastFastItem(
     locale: Locale,
     modifier: Modifier = Modifier
 ) {
-    val timeFormatter = remember(locale) { DateTimeFormatter.ofPattern("h:mm a", locale) }
+    val is24Hour = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
+    val timeFormatter = remember(locale, is24Hour) {
+        val pattern = if (is24Hour) "HH:mm" else "h:mm a"
+        DateTimeFormatter.ofPattern(pattern, locale)
+    }
     val dateFormatter = remember(locale) { DateTimeFormatter.ofPattern("EEE, MMM d", locale) }
     val today = ZonedDateTime.now().toLocalDate()
 

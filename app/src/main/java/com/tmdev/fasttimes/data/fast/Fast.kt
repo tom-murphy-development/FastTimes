@@ -57,4 +57,22 @@ data class Fast(
     fun duration(): Long {
         return (endTime ?: System.currentTimeMillis()) - startTime
     }
+
+    /**
+     * Returns a list of all LocalDates covered by this fast.
+     */
+    val datesCovered: List<java.time.LocalDate>
+        get() {
+            val startDate = start.toLocalDate()
+            val endDate = end?.toLocalDate() ?: java.time.LocalDate.now()
+            if (startDate == endDate) return listOf(startDate)
+
+            val dates = mutableListOf<java.time.LocalDate>()
+            var current = startDate
+            while (!current.isAfter(endDate)) {
+                dates.add(current)
+                current = current.plusDays(1)
+            }
+            return dates
+        }
 }

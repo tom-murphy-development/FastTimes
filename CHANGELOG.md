@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 ### Added
+-
+### Changed
+-
+### Fixed
+-
+
+## [1.0.3] - 2026-05-07
+### Added
 - Implement fasting phases visualisation, tracking & education
 ### Changed
 - Refined UI styling

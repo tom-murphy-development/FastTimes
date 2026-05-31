@@ -131,9 +131,9 @@ class DashboardViewModel @Inject constructor(
                 } else {
                     Duration.ZERO
                 },
-                streak = calculateStreak(completedFasts),
+                streak = calculateStreak(fasts),
                 trend = calculateTrend(completedFasts),
-                weeklyProgress = calculateWeeklyProgress(completedFasts),
+                weeklyProgress = calculateWeeklyProgress(fasts),
                 fastsThisMonth = thisMonthFasts.size,
                 longestFastThisMonth = thisMonthFasts.maxByOrNull { it.duration() }
             )
@@ -482,11 +482,7 @@ class DashboardViewModel @Inject constructor(
         if (completedFasts.isEmpty()) return FastingStreak()
 
         val fastDates = completedFasts
-            .flatMap { fast ->
-                val startDate = fast.start.toLocalDate()
-                val endDate = fast.end?.toLocalDate() ?: startDate
-                listOf(startDate, endDate)
-            }
+            .flatMap { it.datesCovered }
             .distinct()
             .sorted()
 
@@ -588,11 +584,7 @@ class DashboardViewModel @Inject constructor(
         val today = LocalDate.now()
         // Rolling 7 days ending today
         val startDate = today.minusDays(6)
-        val fastDates = completedFasts.flatMap { fast ->
-            val start = fast.start.toLocalDate()
-            val end = fast.end?.toLocalDate() ?: start
-            listOf(start, end)
-        }.toSet()
+        val fastDates = completedFasts.flatMap { it.datesCovered }.toSet()
 
         return (0..6).map { i ->
             val date = startDate.plusDays(i.toLong())

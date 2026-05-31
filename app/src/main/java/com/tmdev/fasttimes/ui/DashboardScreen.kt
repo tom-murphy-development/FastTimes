@@ -1248,7 +1248,7 @@ fun StreakInfoContent(onDismiss: () -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             StreakInfoItem(
                 title = "Fair Progress Tracking",
-                description = "A day counts toward your streak if a fast either started or ended on that day."
+                description = "A day counts toward your streak if it is covered by a fast's duration."
             )
             StreakInfoItem(
                 title = "Midnight Overlap",

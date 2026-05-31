@@ -26,6 +26,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -42,7 +43,7 @@ import kotlin.time.Duration.Companion.hours
 class StatisticsViewModelTest {
 
     @get:Rule
-    val mainCoroutineRule = MainCoroutineRule(kotlinx.coroutines.test.UnconfinedTestDispatcher())
+    val mainCoroutineRule = MainCoroutineRule(UnconfinedTestDispatcher())
 
     private lateinit var fastsRepository: FastsRepository
     private lateinit var settingsRepository: SettingsRepository
@@ -64,6 +65,70 @@ class StatisticsViewModelTest {
     }
 
     @Test
+    fun `calculateCurrentStreak handles multi-day fasts correctly`() = runTest {
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val twoDaysAgo = today.minusDays(2)
+
+        // A single fast spanning 3 days
+        val fasts = listOf(
+            createFast(
+                id = 1,
+                startTime = twoDaysAgo.atTime(20, 0).atZone(zoneId).toInstant().toEpochMilli(),
+                target = 36.hours.inWholeMilliseconds,
+                actual = 40.hours.inWholeMilliseconds // Ends today morning
+            )
+        )
+
+        every { fastsRepository.getFasts() } returns flowOf(fasts)
+        viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
+
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.statisticsState.collect()
+        }
+        runCurrent()
+
+        val state = viewModel.statisticsState.value
+        assertEquals(3, state.streak.daysInARow)
+        assertEquals(twoDaysAgo, state.streak.startDate)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `calculateCurrentStreak handles ongoing multi-day fasts correctly`() = runTest {
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val twoDaysAgo = today.minusDays(2)
+
+        // An active fast starting 2 days ago and not yet ended
+        val fasts = listOf(
+            Fast(
+                id = 1,
+                startTime = twoDaysAgo.atTime(20, 0).atZone(zoneId).toInstant().toEpochMilli(),
+                endTime = null,
+                profileName = "Long Fast",
+                targetDuration = 36.hours.inWholeMilliseconds,
+                notes = null
+            )
+        )
+
+        every { fastsRepository.getFasts() } returns flowOf(fasts)
+        viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
+
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.statisticsState.collect()
+        }
+        runCurrent()
+
+        val state = viewModel.statisticsState.value
+        assertEquals("Streak should be 3 days for an ongoing fast spanning twoDaysAgo, yesterday, and today", 3, state.streak.daysInARow)
+        assertEquals(twoDaysAgo, state.streak.startDate)
+
+        job.cancel()
+    }
+
+    @Test
     fun `calculateCurrentStreak handles active streak`() = runTest {
         val zoneId = ZoneId.systemDefault()
         val today = LocalDate.now()
@@ -78,7 +143,7 @@ class StatisticsViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
 
-        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.statisticsState.collect()
         }
         runCurrent()
@@ -107,7 +172,7 @@ class StatisticsViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
         
-        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.statisticsState.collect()
         }
         runCurrent()
@@ -136,7 +201,7 @@ class StatisticsViewModelTest {
         every { fastsRepository.getFasts() } returns flowOf(fasts)
         viewModel = StatisticsViewModel(fastsRepository, settingsRepository)
 
-        val job = backgroundScope.launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.statisticsState.collect()
         }
         runCurrent()

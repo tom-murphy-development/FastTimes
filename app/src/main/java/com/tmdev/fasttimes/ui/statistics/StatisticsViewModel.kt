@@ -127,12 +127,12 @@ class StatisticsViewModel @Inject constructor(
         val completedFasts = fasts.filter { it.endTime != null }
         
         // Base stats (always calculated for the top section/all-time)
-        val currentStreak = calculateCurrentStreak(completedFasts)
+        val currentStreak = calculateCurrentStreak(fasts)
         val averageFast = calculateAverageFast(completedFasts)
         val velocity = calculateVelocity(completedFasts, StatisticsPeriod.WEEKLY)
         
         // Calculate chart data based on selected chart period
-        val chartActivity = calculateActivity(completedFasts, chartPeriod)
+        val chartActivity = calculateActivity(fasts, chartPeriod)
         val chartDays = when (chartPeriod) {
             StatisticsPeriod.WEEKLY -> 7
             StatisticsPeriod.MONTHLY -> 30
@@ -157,7 +157,8 @@ class StatisticsViewModel @Inject constructor(
         val weeklyAverageFast = calculateAverageFast(weeklyFasts)
 
         // Period-specific stats for the Trends section
-        val (periodFasts, periodPrevFasts) = filterFastsForPeriod(completedFasts, period)
+        val (periodFasts, periodPrevFasts) = filterFastsForPeriod(fasts, period)
+        val (completedPeriodFasts, _) = filterFastsForPeriod(completedFasts, period)
         
         val periodStreakValue = if (period == StatisticsPeriod.WEEKLY) {
             currentStreak.daysInARow
@@ -165,11 +166,11 @@ class StatisticsViewModel @Inject constructor(
             calculateLongestStreak(periodFasts)
         }
         
-        val periodAverageFast = calculateAverageFast(periodFasts)
-        val periodTotalFasts = periodFasts.size
-        val periodFastingTime = periodFasts.sumOf { it.duration() }.milliseconds
-        val periodTrend = calculatePeriodVelocity(periodFasts, periodPrevFasts)
-        val periodConsistency = calculateConsistency(periodFasts)
+        val periodAverageFast = calculateAverageFast(completedPeriodFasts)
+        val periodTotalFasts = completedPeriodFasts.size
+        val periodFastingTime = completedPeriodFasts.sumOf { it.duration() }.milliseconds
+        val periodTrend = calculatePeriodVelocity(completedPeriodFasts, periodPrevFasts)
+        val periodConsistency = calculateConsistency(completedPeriodFasts)
 
         val longestFast = fasts.maxByOrNull { it.duration() }
         val firstFast = completedFasts.minByOrNull { it.startTime }
@@ -257,11 +258,7 @@ class StatisticsViewModel @Inject constructor(
         if (completedFasts.isEmpty()) return FastingStreak()
 
         val fastDates = completedFasts
-            .flatMap { fast ->
-                val startDate = fast.start.toLocalDate()
-                val endDate = fast.end?.toLocalDate() ?: startDate
-                listOf(startDate, endDate)
-            }
+            .flatMap { it.datesCovered }
             .distinct()
             .sorted()
 
@@ -313,11 +310,7 @@ class StatisticsViewModel @Inject constructor(
     private fun calculateLongestStreak(completedFasts: List<Fast>): Int {
         if (completedFasts.isEmpty()) return 0
         val fastDates = completedFasts
-            .flatMap { fast ->
-                val startDate = fast.start.toLocalDate()
-                val endDate = fast.end?.toLocalDate() ?: startDate
-                listOf(startDate, endDate)
-            }
+            .flatMap { it.datesCovered }
             .distinct()
             .sorted()
         
@@ -356,7 +349,6 @@ class StatisticsViewModel @Inject constructor(
         val startOfPrevPeriod = when (period) {
             StatisticsPeriod.WEEKLY -> startOfThisPeriod.minusWeeks(1)
             StatisticsPeriod.MONTHLY -> startOfThisPeriod.minusMonths(1)
-            else -> startOfThisPeriod
         }
 
         val thisPeriodCount = completedFasts.count { it.start.isAfter(startOfThisPeriod) }
@@ -412,9 +404,7 @@ class StatisticsViewModel @Inject constructor(
         return (0 until days).map { i ->
             val date = start.plusDays(i.toLong())
             val fastsOnDate = completedFasts.filter { fast ->
-                val startDate = fast.start.toLocalDate()
-                val endDate = fast.end?.toLocalDate() ?: startDate
-                startDate == date || endDate == date
+                date in fast.datesCovered
             }
             val totalDurationHours = fastsOnDate.sumOf { it.duration() }.toFloat() / 3600000f
             

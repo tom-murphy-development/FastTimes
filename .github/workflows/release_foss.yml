@@ -143,6 +143,26 @@ jobs:
             mv "$file" "$dir/$new_name"
           done
 
+      - name: Calculate Hashes
+        id: calculate_hashes
+        run: |
+          echo "### SHA-256 Checksums" > hashes.txt
+          echo "| File | SHA-256 |" >> hashes.txt
+          echo "| --- | --- |" >> hashes.txt
+          find app/build/outputs/apk/ -name "*.apk" -type f | while read -r file; do
+            filename=$(basename "$file")
+            sha256=$(sha256sum "$file" | awk '{ print $1 }')
+            echo "| $filename | \`$sha256\` |" >> hashes.txt
+          done
+          
+          echo -e "\n> [!NOTE]\n> **F-Droid Build:** This version is also available on F-Droid. Note that F-Droid builds use a different signing certificate unless otherwise specified." >> hashes.txt
+          
+          {
+            echo 'hashes_table<<EOF'
+            cat hashes.txt
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -156,7 +176,10 @@ jobs:
                 format('FOSS Release v{0}', steps.get_version.outputs.VERSION_NAME) || 
                 format('FOSS Beta v{0} (Build {1})', steps.get_version.outputs.VERSION_NAME, github.run_number) 
             }}
-          body: ${{ steps.changelog.outputs.final_changelog }}
+          body: |
+            ${{ steps.changelog.outputs.final_changelog }}
+            
+            ${{ steps.calculate_hashes.outputs.hashes_table }}
           files: app/build/outputs/apk/**/*.apk
           prerelease: ${{ github.event.inputs.release_type != 'stable' }}
           generate_release_notes: true

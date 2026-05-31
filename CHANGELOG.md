@@ -2,11 +2,22 @@
 
 ## [Unreleased]
 ### Added
--
+- Added monochrome themed icon support for Android13+.
+- Introduced `datesCovered` logic to accurately track multi-day and ongoing fasts.
+- Added "Current", "Last", and "Longest" streak labels in Statistics for better progress insights.
+
 ### Changed
--
+- Refactored streak and activity logic to include intermediate days of multi-day fasts.
+- Updated Dashboard and Statistics ViewModels to include ongoing fasts in metrics.
+- Refactored all time displays to dynamically respect system 24-hour/12-hour settings.
+- Optimized UI performance by leveraging `remember` blocks for date/time formatters.
+- Improved `StreakCard` visibility logic to only show for active streaks of 2+ days.
+
 ### Fixed
--
+- Fixed issue where multi-day fasts were not correctly counting toward daily progress (#15).
+- Fixed streak calculation inaccuracies for ongoing fasting sessions (#16).
+- Fixed time display formatting to adhere to user locale and device settings (#14).
+- Added monochrome layer to adaptive icons (#11).
 
 ## [1.0.3] - 2026-05-07
 ### Added

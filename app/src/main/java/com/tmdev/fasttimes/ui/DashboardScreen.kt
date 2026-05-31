@@ -818,8 +818,8 @@ fun DashboardScreen(
                     )
                 }
 
-                // Streak Card - only shown if streak is 2 or more
-                if (stats.streak.daysInARow >= 2) {
+                // Streak Card - only shown if active and streak is 2 or more
+                if (stats.streak.isActive && stats.streak.daysInARow >= 2) {
                     StreakCard(
                         streakDays = stats.streak.daysInARow,
                         weeklyProgress = stats.weeklyProgress,

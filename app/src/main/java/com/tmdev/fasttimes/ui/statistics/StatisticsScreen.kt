@@ -276,14 +276,29 @@ fun StatisticsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
-                        val streakLabel = if (state.selectedPeriod == StatisticsPeriod.WEEKLY) "Streak" else "Longest Streak"
-                        val showStreak = state.periodStreakValue > 2
+                        val streakLabel = if (state.selectedPeriod == StatisticsPeriod.WEEKLY) {
+                            if (state.streak.isActive) "Current Streak" else "Last Streak"
+                        } else {
+                            "Longest Streak"
+                        }
+                        
+                        val showStreak = if (state.selectedPeriod == StatisticsPeriod.WEEKLY) {
+                            state.streak.daysInARow >= 2
+                        } else {
+                            state.periodStreakValue >= 2
+                        }
                         
                         if (showStreak) {
+                            val streakValue = if (state.selectedPeriod == StatisticsPeriod.WEEKLY) {
+                                state.streak.daysInARow
+                            } else {
+                                state.periodStreakValue
+                            }
+                            
                             ExpressiveStatCard(
                                 modifier = Modifier.weight(1f),
                                 label = streakLabel,
-                                value = "${state.periodStreakValue}",
+                                value = "$streakValue",
                                 unit = "days",
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,

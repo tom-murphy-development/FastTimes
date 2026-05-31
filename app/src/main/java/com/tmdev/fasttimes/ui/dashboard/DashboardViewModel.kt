@@ -489,24 +489,25 @@ class DashboardViewModel @Inject constructor(
         if (fastDates.isEmpty()) return FastingStreak()
 
         val today = LocalDate.now()
+        val yesterday = today.minusDays(1)
         var currentDate = today
         var streakDays = 0
 
+        // Calculate current streak
         while (true) {
-            when {
-                currentDate in fastDates -> {
-                    streakDays++
-                    currentDate = currentDate.minusDays(1)
-                }
-                currentDate == today && fastDates.isNotEmpty() -> {
-                    currentDate = currentDate.minusDays(1)
-                }
-                else -> {
-                    break
-                }
+            if (currentDate in fastDates) {
+                streakDays++
+                currentDate = currentDate.minusDays(1)
+            } else if (currentDate == today) {
+                currentDate = currentDate.minusDays(1)
+            } else {
+                break
             }
         }
 
+        val isActive = streakDays > 0 && (fastDates.contains(today) || fastDates.contains(yesterday))
+
+        // If no active streak, find the most recent historical streak
         if (streakDays == 0 && fastDates.isNotEmpty()) {
             for (date in fastDates.reversed()) {
                 currentDate = date
@@ -521,7 +522,12 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
-        val lastFastDate = fastDates.lastOrNull()
+        val lastFastDate = if (isActive) {
+            fastDates.lastOrNull { it == today || it == yesterday } ?: fastDates.lastOrNull()
+        } else {
+            fastDates.lastOrNull()
+        }
+
         val streakStartDate = if (streakDays > 0) {
             lastFastDate?.minusDays((streakDays - 1).toLong())
         } else {
@@ -531,7 +537,8 @@ class DashboardViewModel @Inject constructor(
         return FastingStreak(
             daysInARow = streakDays,
             startDate = streakStartDate,
-            lastFastDate = lastFastDate
+            lastFastDate = lastFastDate,
+            isActive = isActive
         )
     }
 

@@ -51,7 +51,8 @@ enum class StatisticsPeriod {
 data class FastingStreak(
     val daysInARow: Int = 0,
     val startDate: LocalDate? = null,
-    val lastFastDate: LocalDate? = null
+    val lastFastDate: LocalDate? = null,
+    val isActive: Boolean = false
 )
 
 /**
@@ -265,6 +266,7 @@ class StatisticsViewModel @Inject constructor(
         if (fastDates.isEmpty()) return FastingStreak()
 
         val today = LocalDate.now()
+        val yesterday = today.minusDays(1)
         var currentDate = today
         var streakDays = 0
 
@@ -281,6 +283,8 @@ class StatisticsViewModel @Inject constructor(
             }
         }
 
+        val isActive = streakDays > 0 && (fastDates.contains(today) || fastDates.contains(yesterday))
+
         // If no active streak ending today/yesterday, find the last streak
         if (streakDays == 0 && fastDates.isNotEmpty()) {
             for (date in fastDates.reversed()) {
@@ -295,7 +299,12 @@ class StatisticsViewModel @Inject constructor(
             }
         }
 
-        val lastFastDate = fastDates.lastOrNull()
+        val lastFastDate = if (isActive) {
+            fastDates.lastOrNull { it == today || it == yesterday } ?: fastDates.lastOrNull()
+        } else {
+            fastDates.lastOrNull()
+        }
+        
         val streakStartDate = if (streakDays > 0) {
             lastFastDate?.minusDays((streakDays - 1).toLong())
         } else null
@@ -303,7 +312,8 @@ class StatisticsViewModel @Inject constructor(
         return FastingStreak(
             daysInARow = streakDays,
             startDate = streakStartDate,
-            lastFastDate = lastFastDate
+            lastFastDate = lastFastDate,
+            isActive = isActive
         )
     }
 

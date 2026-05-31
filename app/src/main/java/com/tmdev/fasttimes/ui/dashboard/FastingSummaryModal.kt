@@ -43,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tmdev.fasttimes.data.DefaultFastingProfile
@@ -58,7 +59,12 @@ fun FastingSummaryModal(
     onSaveRating: (Int) -> Unit
 ) {
     var rating by remember { mutableIntStateOf(fast.rating ?: 0) }
-    val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+    val context = LocalContext.current
+    val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+    val timeFormatter = remember(is24Hour) {
+        val pattern = if (is24Hour) "HH:mm" else "h:mm a"
+        DateTimeFormatter.ofPattern(pattern)
+    }
 
     val duration = Duration.between(
         fast.start,

@@ -439,6 +439,107 @@ class DashboardViewModelTest {
         coVerify { settingsRepository.setConfettiShownForFastId(456L) }
     }
 
+    @Test
+    fun `streak calculation includes all days covered by a multi-day fast`() = runTest {
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val twoDaysAgo = today.minusDays(2)
+
+        // A single fast starting 2 days ago and ending today (e.g., a 48-hour fast)
+        val fasts = listOf(
+            Fast(
+                id = 1,
+                startTime = twoDaysAgo.atTime(20, 0).atZone(zoneId).toInstant().toEpochMilli(),
+                endTime = today.atTime(8, 0).atZone(zoneId).toInstant().toEpochMilli(),
+                profileName = "Long Fast",
+                targetDuration = 36.hours.inWholeMilliseconds,
+                notes = null
+            )
+        )
+
+        every { fastsRepository.getFasts() } returns flowOf(fasts)
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.stats.collect()
+        }
+        runCurrent()
+
+        val stats = viewModel.stats.value
+        assertEquals("Streak should be 3 days for a fast spanning twoDaysAgo, yesterday, and today", 3, stats.streak.daysInARow)
+        
+        job.cancel()
+    }
+
+    @Test
+    fun `weekly progress reflects all days covered by a multi-day fast`() = runTest {
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val yesterday = today.minusDays(1)
+        val twoDaysAgo = today.minusDays(2)
+
+        val fasts = listOf(
+            Fast(
+                id = 1,
+                startTime = twoDaysAgo.atTime(20, 0).atZone(zoneId).toInstant().toEpochMilli(),
+                endTime = today.atTime(8, 0).atZone(zoneId).toInstant().toEpochMilli(),
+                profileName = "Long Fast",
+                targetDuration = 36.hours.inWholeMilliseconds,
+                notes = null
+            )
+        )
+
+        every { fastsRepository.getFasts() } returns flowOf(fasts)
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.stats.collect()
+        }
+        runCurrent()
+
+        val weeklyProgress = viewModel.stats.value.weeklyProgress
+        
+        val todayProgress = weeklyProgress.find { it.date == today }
+        val yesterdayProgress = weeklyProgress.find { it.date == yesterday }
+        val twoDaysAgoProgress = weeklyProgress.find { it.date == twoDaysAgo }
+
+        assertTrue("Today should be marked as completed", todayProgress?.isCompleted == true)
+        assertTrue("Yesterday should be marked as completed", yesterdayProgress?.isCompleted == true)
+        assertTrue("Two days ago should be marked as completed", twoDaysAgoProgress?.isCompleted == true)
+        
+        job.cancel()
+    }
+
+    @Test
+    fun `streak calculation includes days covered by an ongoing multi-day fast`() = runTest {
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now()
+        val twoDaysAgo = today.minusDays(2)
+
+        // An active fast starting 2 days ago and not yet ended
+        val activeFast = Fast(
+            id = 1,
+            startTime = twoDaysAgo.atTime(20, 0).atZone(zoneId).toInstant().toEpochMilli(),
+            endTime = null,
+            profileName = "Long Fast",
+            targetDuration = 36.hours.inWholeMilliseconds,
+            notes = null
+        )
+
+        every { fastsRepository.getFasts() } returns flowOf(listOf(activeFast))
+        viewModel = DashboardViewModel(fastsRepository, settingsRepository, fastingProfileRepository, alarmScheduler, alarmManager, application)
+
+        val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.stats.collect()
+        }
+        runCurrent()
+
+        val stats = viewModel.stats.value
+        assertEquals("Streak should be 3 days for an ongoing fast spanning twoDaysAgo, yesterday, and today", 3, stats.streak.daysInARow)
+        
+        job.cancel()
+    }
+
     private fun createCompletedFast(id: Long, dateMillis: Long): Fast {
         val zdt = ZonedDateTime.ofInstant(java.time.Instant.ofEpochMilli(dateMillis), ZoneId.systemDefault())
         // Ensure the fast is entirely within the day represented by dateMillis

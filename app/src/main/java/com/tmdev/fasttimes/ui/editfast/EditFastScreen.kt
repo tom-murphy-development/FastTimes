@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.tmdev.fasttimes.data.AppTheme
@@ -56,7 +57,6 @@ import com.tmdev.fasttimes.ui.theme.spacing
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 @Composable
 fun EditFastRoute(
@@ -168,6 +168,13 @@ fun EditFastScreen(
                 CircularProgressIndicator()
             } else if (uiState.fast != null) {
                 val fast = uiState.fast
+                val context = LocalContext.current
+                val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+                val timeFormatter = remember(is24Hour) {
+                    val pattern = if (is24Hour) "MMM d, HH:mm" else "MMM d, h:mm a"
+                    DateTimeFormatter.ofPattern(pattern)
+                }
+
                 Text(
                     "Edit Fast",
                     style = MaterialTheme.typography.headlineSmall.copy(
@@ -180,7 +187,7 @@ fun EditFastScreen(
                     label = "Start Time",
                     onClick = { showPicker = PickerType.Start }
                 ) {
-                    Text(formatTimestamp(fast.startTime))
+                    Text(formatTimestamp(fast.startTime, timeFormatter))
                 }
 
                 if (fast.endTime != null) {
@@ -189,7 +196,7 @@ fun EditFastScreen(
                         label = "End Time",
                         onClick = { showPicker = PickerType.End }
                     ) {
-                        Text(formatTimestamp(fast.endTime))
+                        Text(formatTimestamp(fast.endTime, timeFormatter))
                     }
 
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
@@ -275,10 +282,10 @@ private fun EditableFastDetailRow(
     }
 }
 
-private fun formatTimestamp(timestamp: Long): String {
+private fun formatTimestamp(timestamp: Long, formatter: DateTimeFormatter): String {
     return Instant.ofEpochMilli(timestamp)
         .atZone(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
+        .format(formatter)
 }
 
 @Preview(showBackground = true)

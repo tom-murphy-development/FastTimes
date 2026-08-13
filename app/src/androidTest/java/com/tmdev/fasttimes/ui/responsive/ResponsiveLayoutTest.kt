@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.tmdev.fasttimes.data.AppTheme
 import com.tmdev.fasttimes.data.fast.Fast
@@ -68,7 +69,7 @@ class ResponsiveLayoutTest {
         )))
 
         mockStatisticsViewModel = mockk(relaxed = true)
-        every { mockStatisticsViewModel.statisticsState } returns (MutableStateFlow(StatisticsUiState()))
+        every { mockStatisticsViewModel.statisticsState } returns (MutableStateFlow(StatisticsUiState(isLoading = false)))
     }
 
     @Test
@@ -94,7 +95,7 @@ class ResponsiveLayoutTest {
         renderStatistics(WindowWidthSizeClass.Compact)
 
         composeTestRule.onNodeWithText("Performance").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Trends").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Trends").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -102,7 +103,7 @@ class ResponsiveLayoutTest {
         renderStatistics(WindowWidthSizeClass.Expanded)
 
         composeTestRule.onNodeWithText("Performance").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Trends").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Trends").performScrollTo().assertIsDisplayed()
     }
 
     @Test

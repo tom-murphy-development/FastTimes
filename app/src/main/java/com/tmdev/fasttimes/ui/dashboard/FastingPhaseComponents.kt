@@ -61,6 +61,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -185,6 +186,7 @@ fun FastingPhasesCanvas(
                 }
             }
             .semantics {
+                contentDescription = "View fasting phase details"
                 onClick(label = "View fasting phase details") {
                     relevantPhases.lastOrNull()?.let { onPhaseClick(it) }
                     true

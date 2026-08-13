@@ -50,10 +50,9 @@ class FastingPhaseComponentsTest {
             )
         }
 
-        // Click at the top (0 degrees or -90 degrees in Canvas, which is POST_ABSORPTIVE start)
-        // Center is (150, 150)
+        // Compose touch coordinates are pixels, so derive the ring edge from the measured node.
         composeTestRule.onNodeWithContentDescription("View fasting phase details").performTouchInput {
-            click(center + androidx.compose.ui.geometry.Offset(0f, -100f))
+            click(androidx.compose.ui.geometry.Offset(center.x, 1f))
         }
 
         assertEquals(FastingPhase.POST_ABSORPTIVE, clickedPhase)
@@ -75,9 +74,9 @@ class FastingPhaseComponentsTest {
             )
         }
 
-        // Click at the 9 o'clock position (left)
+        // Click at the 9 o'clock position (left), independent of screen density.
         composeTestRule.onNodeWithContentDescription("View fasting phase details").performTouchInput {
-            click(center + androidx.compose.ui.geometry.Offset(-100f, 0f))
+            click(androidx.compose.ui.geometry.Offset(1f, center.y))
         }
 
         assertEquals(FastingPhase.METABOLIC_SWITCH, clickedPhase)
@@ -99,9 +98,9 @@ class FastingPhaseComponentsTest {
             )
         }
 
-        // Click anywhere in the ring area (e.g., top)
+        // Click the measured ring edge rather than assuming one pixel per dp.
         composeTestRule.onNodeWithContentDescription("View fasting phase details").performTouchInput {
-            click(center + androidx.compose.ui.geometry.Offset(0f, -100f))
+            click(androidx.compose.ui.geometry.Offset(center.x, 1f))
         }
 
         assertEquals(currentPhase, clickedPhase)

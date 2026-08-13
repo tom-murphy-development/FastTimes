@@ -53,7 +53,7 @@ class FastDaoTest {
         dao.insertFast(fast)
         val fasts = dao.getAllFasts().first()
         assertEquals(1, fasts.size)
-        assertEquals(1000, fasts[0].startTime)
+        assertEquals(1000L, fasts[0].startTime)
     }
 
     @Test
@@ -62,6 +62,6 @@ class FastDaoTest {
         val id = dao.insertFast(fast)
         dao.updateFastEndTime(id, 2000)
         val fasts = dao.getAllFasts().first()
-        assertEquals(2000, fasts[0].endTime)
+        assertEquals(2000L, fasts[0].endTime)
     }
 }

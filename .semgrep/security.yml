@@ -1,0 +1,63 @@
+rules:
+  - id: fasttimes.kotlin.security.weak-message-digest
+    languages: [kotlin]
+    severity: ERROR
+    message: Use a collision-resistant digest such as SHA-256 instead of MD5 or SHA-1.
+    metadata:
+      category: security
+      cwe: CWE-328
+      confidence: HIGH
+    pattern-either:
+      - pattern: MessageDigest.getInstance("MD5")
+      - pattern: MessageDigest.getInstance("SHA-1")
+      - pattern: java.security.MessageDigest.getInstance("MD5")
+      - pattern: java.security.MessageDigest.getInstance("SHA-1")
+
+  - id: fasttimes.kotlin.security.ecb-cipher
+    languages: [kotlin]
+    severity: ERROR
+    message: ECB mode leaks plaintext patterns; use an authenticated mode such as AES/GCM.
+    metadata:
+      category: security
+      cwe: CWE-327
+      confidence: HIGH
+    pattern-either:
+      - pattern: Cipher.getInstance("AES")
+      - pattern: javax.crypto.Cipher.getInstance("AES")
+      - patterns:
+          - pattern: Cipher.getInstance($TRANSFORMATION)
+          - metavariable-regex:
+              metavariable: $TRANSFORMATION
+              regex: '^"AES/ECB(?:/[^\"]*)?"$'
+      - patterns:
+          - pattern: javax.crypto.Cipher.getInstance($TRANSFORMATION)
+          - metavariable-regex:
+              metavariable: $TRANSFORMATION
+              regex: '^"AES/ECB(?:/[^\"]*)?"$'
+
+  - id: fasttimes.android.security.webview-file-url-access
+    languages: [kotlin]
+    severity: ERROR
+    message: Do not enable WebView file-URL cross-origin access.
+    metadata:
+      category: security
+      cwe: CWE-939
+      confidence: HIGH
+    pattern-either:
+      - pattern: $SETTINGS.allowFileAccessFromFileURLs = true
+      - pattern: $SETTINGS.allowUniversalAccessFromFileURLs = true
+      - pattern: $SETTINGS.setAllowFileAccessFromFileURLs(true)
+      - pattern: $SETTINGS.setAllowUniversalAccessFromFileURLs(true)
+
+  - id: fasttimes.android.security.pending-intent-without-mutability
+    languages: [kotlin]
+    severity: ERROR
+    message: PendingIntent must declare FLAG_IMMUTABLE or FLAG_MUTABLE explicitly.
+    metadata:
+      category: security
+      cwe: CWE-926
+      confidence: HIGH
+    pattern-either:
+      - pattern: PendingIntent.getActivity($CONTEXT, $REQUEST, $INTENT, 0)
+      - pattern: PendingIntent.getBroadcast($CONTEXT, $REQUEST, $INTENT, 0)
+      - pattern: PendingIntent.getService($CONTEXT, $REQUEST, $INTENT, 0)

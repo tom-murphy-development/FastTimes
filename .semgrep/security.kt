@@ -11,6 +11,10 @@ import javax.crypto.Cipher
 private fun weakDigests(algorithm: String) {
     // ruleid: fasttimes.kotlin.security.weak-message-digest
     MessageDigest.getInstance("MD5")
+    // ruleid: fasttimes.kotlin.security.weak-message-digest
+    MessageDigest.getInstance("md5")
+    // ruleid: fasttimes.kotlin.security.weak-message-digest
+    MessageDigest.getInstance("SHA1")
     // ok: fasttimes.kotlin.security.weak-message-digest
     MessageDigest.getInstance("SHA-256")
     // ok: fasttimes.kotlin.security.weak-message-digest
@@ -22,6 +26,8 @@ private fun insecureCipher() {
     Cipher.getInstance("AES")
     // ruleid: fasttimes.kotlin.security.ecb-cipher
     Cipher.getInstance("AES/ECB/PKCS5Padding")
+    // ruleid: fasttimes.kotlin.security.ecb-cipher
+    Cipher.getInstance("aes/ecb/pkcs5padding")
     // ok: fasttimes.kotlin.security.ecb-cipher
     Cipher.getInstance("AES/GCM/NoPadding")
 }
@@ -45,6 +51,17 @@ private fun pendingIntentMutability(context: Context, intent: Intent) {
     PendingIntent.getBroadcast(context, 0, intent, 0)
     // ruleid: fasttimes.android.security.pending-intent-without-mutability
     PendingIntent.getService(context, 0, intent, 0)
+    // ruleid: fasttimes.android.security.pending-intent-without-mutability
+    PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     // ok: fasttimes.android.security.pending-intent-without-mutability
     PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+    // ok: fasttimes.android.security.pending-intent-without-mutability
+    PendingIntent.getBroadcast(
+        context,
+        0,
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+    // ok: fasttimes.android.security.pending-intent-without-mutability
+    PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_MUTABLE)
 }

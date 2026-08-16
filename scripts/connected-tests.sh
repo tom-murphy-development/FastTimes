@@ -7,20 +7,24 @@ cd "$ROOT_DIR"
 validate_instrumentation_output() {
     local output_file=$1
     local transport_status=${2:-0}
+    # adb relays the runner through a pty, so real runs arrive CRLF-terminated and every
+    # end-of-line anchor below would miss. Strip CR once, then match the normalised text.
+    local output
+    output=$(tr -d '\r' < "$output_file")
 
     if (( transport_status != 0 )); then
         echo "Instrumentation transport failed with status $transport_status." >&2
         return 1
     fi
-    if grep -Eq '^(INSTRUMENTATION_FAILED|INSTRUMENTATION_ABORTED):|^INSTRUMENTATION_STATUS_CODE: -[12]$|FAILURES!!!|Process crashed|shortMsg=Process crashed' "$output_file"; then
+    if grep -Eq '^(INSTRUMENTATION_FAILED|INSTRUMENTATION_ABORTED):|^INSTRUMENTATION_STATUS_CODE: -[12]$|FAILURES!!!|Process crashed|shortMsg=Process crashed' <<<"$output"; then
         echo "Instrumentation runner reported a failure." >&2
         return 1
     fi
-    if ! grep -Eq '^OK \([1-9][0-9]* tests?\)$' "$output_file"; then
+    if ! grep -Eq '^OK \([1-9][0-9]* tests?\)$' <<<"$output"; then
         echo "Instrumentation did not report a non-empty successful JUnit run." >&2
         return 1
     fi
-    if ! grep -Eq '^INSTRUMENTATION_CODE: -1$' "$output_file"; then
+    if ! grep -Eq '^INSTRUMENTATION_CODE: -1$' <<<"$output"; then
         echo "Instrumentation did not report the Android success code." >&2
         return 1
     fi
@@ -45,10 +49,18 @@ FAILURES!!!
 Tests run: 1,  Failures: 1
 INSTRUMENTATION_CODE: -1
 EOF
+    # The shape adb actually emits: identical records terminated with CRLF.
+    sed 's/$/\r/' "$fixtures/pass.txt" > "$fixtures/pass-crlf.txt"
+    sed 's/$/\r/' "$fixtures/false-green.txt" > "$fixtures/false-green-crlf.txt"
 
     validate_instrumentation_output "$fixtures/pass.txt" 0
+    validate_instrumentation_output "$fixtures/pass-crlf.txt" 0
     if validate_instrumentation_output "$fixtures/false-green.txt" 0; then
         echo "Parser accepted a runner failure with a zero transport status." >&2
+        return 1
+    fi
+    if validate_instrumentation_output "$fixtures/false-green-crlf.txt" 0; then
+        echo "Parser accepted a CRLF runner failure." >&2
         return 1
     fi
     if validate_instrumentation_output "$fixtures/pass.txt" 42; then

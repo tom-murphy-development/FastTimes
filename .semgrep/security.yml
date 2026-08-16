@@ -7,11 +7,15 @@ rules:
       category: security
       cwe: CWE-328
       confidence: HIGH
-    pattern-either:
-      - pattern: MessageDigest.getInstance("MD5")
-      - pattern: MessageDigest.getInstance("SHA-1")
-      - pattern: java.security.MessageDigest.getInstance("MD5")
-      - pattern: java.security.MessageDigest.getInstance("SHA-1")
+    # JCA algorithm lookup is case-insensitive and accepts SHA1 as well as SHA-1,
+    # so the spellings below must all be caught, not just the canonical uppercase one.
+    patterns:
+      - pattern-either:
+          - pattern: MessageDigest.getInstance($ALGORITHM)
+          - pattern: java.security.MessageDigest.getInstance($ALGORITHM)
+      - metavariable-regex:
+          metavariable: $ALGORITHM
+          regex: '(?i)^"(md5|sha-?1)"$'
 
   - id: fasttimes.kotlin.security.ecb-cipher
     languages: [kotlin]
@@ -21,19 +25,14 @@ rules:
       category: security
       cwe: CWE-327
       confidence: HIGH
-    pattern-either:
-      - pattern: Cipher.getInstance("AES")
-      - pattern: javax.crypto.Cipher.getInstance("AES")
-      - patterns:
+    # Bare "AES" defaults to ECB, and the transformation string is case-insensitive.
+    patterns:
+      - pattern-either:
           - pattern: Cipher.getInstance($TRANSFORMATION)
-          - metavariable-regex:
-              metavariable: $TRANSFORMATION
-              regex: '^"AES/ECB(?:/[^\"]*)?"$'
-      - patterns:
           - pattern: javax.crypto.Cipher.getInstance($TRANSFORMATION)
-          - metavariable-regex:
-              metavariable: $TRANSFORMATION
-              regex: '^"AES/ECB(?:/[^\"]*)?"$'
+      - metavariable-regex:
+          metavariable: $TRANSFORMATION
+          regex: '(?i)^"aes(?:/ecb(?:/[^\"]*)?)?"$'
 
   - id: fasttimes.android.security.webview-file-url-access
     languages: [kotlin]
@@ -57,7 +56,13 @@ rules:
       category: security
       cwe: CWE-926
       confidence: HIGH
-    pattern-either:
-      - pattern: PendingIntent.getActivity($CONTEXT, $REQUEST, $INTENT, 0)
-      - pattern: PendingIntent.getBroadcast($CONTEXT, $REQUEST, $INTENT, 0)
-      - pattern: PendingIntent.getService($CONTEXT, $REQUEST, $INTENT, 0)
+    # Any flags expression that names neither mutability bit is a finding — a literal 0
+    # is only the most obvious spelling of it.
+    patterns:
+      - pattern-either:
+          - pattern: PendingIntent.getActivity($CONTEXT, $REQUEST, $INTENT, $FLAGS)
+          - pattern: PendingIntent.getBroadcast($CONTEXT, $REQUEST, $INTENT, $FLAGS)
+          - pattern: PendingIntent.getService($CONTEXT, $REQUEST, $INTENT, $FLAGS)
+      - metavariable-regex:
+          metavariable: $FLAGS
+          regex: '(?s)^(?!.*FLAG_(?:IMMUTABLE|MUTABLE)).*$'

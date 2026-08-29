@@ -9,13 +9,15 @@ rules:
       confidence: HIGH
     # JCA algorithm lookup is case-insensitive and accepts SHA1 as well as SHA-1,
     # so the spellings below must all be caught, not just the canonical uppercase one.
+    # The trailing `...` also covers the provider overloads, getInstance(algorithm,
+    # provider) and getInstance(algorithm, providerObject), which run the same primitive.
     patterns:
       - pattern-either:
-          - pattern: MessageDigest.getInstance($ALGORITHM)
-          - pattern: java.security.MessageDigest.getInstance($ALGORITHM)
+          - pattern: MessageDigest.getInstance($ALGORITHM, ...)
+          - pattern: java.security.MessageDigest.getInstance($ALGORITHM, ...)
       - metavariable-regex:
           metavariable: $ALGORITHM
-          regex: '(?i)^"(md5|sha-?1)"$'
+          regex: '(?i)^"\s*(md5|sha-?1)\s*"$'
 
   - id: fasttimes.kotlin.security.ecb-cipher
     languages: [kotlin]
@@ -26,13 +28,16 @@ rules:
       cwe: CWE-327
       confidence: HIGH
     # Bare "AES" defaults to ECB, and the transformation string is case-insensitive.
+    # JCA tokenizes the transformation on "/" and trims each component, so padded
+    # spellings resolve to the same weak primitive and must match too. The trailing
+    # `...` covers the provider overloads.
     patterns:
       - pattern-either:
-          - pattern: Cipher.getInstance($TRANSFORMATION)
-          - pattern: javax.crypto.Cipher.getInstance($TRANSFORMATION)
+          - pattern: Cipher.getInstance($TRANSFORMATION, ...)
+          - pattern: javax.crypto.Cipher.getInstance($TRANSFORMATION, ...)
       - metavariable-regex:
           metavariable: $TRANSFORMATION
-          regex: '(?i)^"aes(?:/ecb(?:/[^\"]*)?)?"$'
+          regex: '(?i)^"\s*aes\s*(?:/\s*ecb\s*(?:/[^"]*)?)?"$'
 
   - id: fasttimes.android.security.webview-file-url-access
     languages: [kotlin]
@@ -57,7 +62,11 @@ rules:
       cwe: CWE-926
       confidence: HIGH
     # Any flags expression that names neither mutability bit is a finding — a literal 0
-    # is only the most obvious spelling of it.
+    # is only the most obvious spelling of it. A branching expression is a finding even
+    # when it does name one, because this rule is syntactic: it cannot prove the branch
+    # that omits the bit is unreachable, and `if (x) FLAG_IMMUTABLE else FLAG_UPDATE_CURRENT`
+    # is a real unsafe spelling that merely contains the safe substring. Spell the flags
+    # unconditionally, or branch outside the argument.
     patterns:
       - pattern-either:
           - pattern: PendingIntent.getActivity($CONTEXT, $REQUEST, $INTENT, $FLAGS)
@@ -65,4 +74,4 @@ rules:
           - pattern: PendingIntent.getService($CONTEXT, $REQUEST, $INTENT, $FLAGS)
       - metavariable-regex:
           metavariable: $FLAGS
-          regex: '(?s)^(?!.*FLAG_(?:IMMUTABLE|MUTABLE)).*$'
+          regex: '(?s)^(?:(?!.*FLAG_(?:IMMUTABLE|MUTABLE)).*|.*\b(?:if|when)\b.*)$'

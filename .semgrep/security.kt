@@ -15,8 +15,14 @@ private fun weakDigests(algorithm: String) {
     MessageDigest.getInstance("md5")
     // ruleid: fasttimes.kotlin.security.weak-message-digest
     MessageDigest.getInstance("SHA1")
+    // ruleid: fasttimes.kotlin.security.weak-message-digest
+    MessageDigest.getInstance("MD5", "BC")
+    // ruleid: fasttimes.kotlin.security.weak-message-digest
+    MessageDigest.getInstance(" MD5 ")
     // ok: fasttimes.kotlin.security.weak-message-digest
     MessageDigest.getInstance("SHA-256")
+    // ok: fasttimes.kotlin.security.weak-message-digest
+    MessageDigest.getInstance("SHA-256", "BC")
     // ok: fasttimes.kotlin.security.weak-message-digest
     MessageDigest.getInstance(algorithm)
 }
@@ -28,8 +34,14 @@ private fun insecureCipher() {
     Cipher.getInstance("AES/ECB/PKCS5Padding")
     // ruleid: fasttimes.kotlin.security.ecb-cipher
     Cipher.getInstance("aes/ecb/pkcs5padding")
+    // ruleid: fasttimes.kotlin.security.ecb-cipher
+    Cipher.getInstance("AES/ECB/PKCS5Padding", "BC")
+    // ruleid: fasttimes.kotlin.security.ecb-cipher
+    Cipher.getInstance(" AES / ECB / PKCS5Padding ")
     // ok: fasttimes.kotlin.security.ecb-cipher
     Cipher.getInstance("AES/GCM/NoPadding")
+    // ok: fasttimes.kotlin.security.ecb-cipher
+    Cipher.getInstance("AES/GCM/NoPadding", "BC")
 }
 
 @Suppress("DEPRECATION")
@@ -44,7 +56,8 @@ private fun insecureWebViewSettings(settings: WebSettings) {
     settings.allowUniversalAccessFromFileURLs = false
 }
 
-private fun pendingIntentMutability(context: Context, intent: Intent) {
+@Suppress("UNUSED_PARAMETER")
+private fun pendingIntentMutability(context: Context, intent: Intent, mutable: Boolean) {
     // ruleid: fasttimes.android.security.pending-intent-without-mutability
     PendingIntent.getActivity(context, 0, intent, 0)
     // ruleid: fasttimes.android.security.pending-intent-without-mutability
@@ -53,6 +66,13 @@ private fun pendingIntentMutability(context: Context, intent: Intent) {
     PendingIntent.getService(context, 0, intent, 0)
     // ruleid: fasttimes.android.security.pending-intent-without-mutability
     PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+    // ruleid: fasttimes.android.security.pending-intent-without-mutability
+    PendingIntent.getBroadcast(
+        context,
+        0,
+        intent,
+        if (mutable) PendingIntent.FLAG_MUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+    )
     // ok: fasttimes.android.security.pending-intent-without-mutability
     PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     // ok: fasttimes.android.security.pending-intent-without-mutability

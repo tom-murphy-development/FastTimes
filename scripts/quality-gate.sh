@@ -11,8 +11,8 @@ java_major=$(java -XshowSettings:properties -version 2>&1 | awk -F'= ' '/java.sp
 }
 
 sdk_root=${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}
-[[ -n "$sdk_root" && -f "$sdk_root/platforms/android-37/android.jar" ]] || {
-    echo "Set ANDROID_SDK_ROOT or ANDROID_HOME to an SDK containing API 37." >&2
+[[ -n "$sdk_root" && -f "$sdk_root/platforms/android-35/android.jar" ]] || {
+    echo "Set ANDROID_SDK_ROOT or ANDROID_HOME to an SDK containing API 35." >&2
     exit 1
 }
 

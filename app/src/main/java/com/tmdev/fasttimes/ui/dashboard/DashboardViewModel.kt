@@ -99,6 +99,10 @@ class DashboardViewModel @Inject constructor(
     private val _completedFast = MutableStateFlow<Fast?>(null)
     val completedFast: StateFlow<Fast?> = _completedFast.asStateFlow()
 
+    val useExpressiveTheme: StateFlow<Boolean> = settingsRepository.userData
+        .map { it.useExpressiveTheme }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val profiles: StateFlow<List<FastingProfile>> = fastingProfileRepository.getProfiles()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

@@ -180,6 +180,7 @@ fun DashboardScreen(
     val stats by viewModel.stats.collectAsState()
     val showAlarmPermissionRationale by viewModel.showAlarmPermissionRationale.collectAsState()
     val completedFast by viewModel.completedFast.collectAsState()
+    val useExpressiveTheme by viewModel.useExpressiveTheme.collectAsState()
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val locale = LocalConfiguration.current.locales[0]
@@ -802,7 +803,8 @@ fun DashboardScreen(
                 PerformanceSummary(
                     fastsThisMonth = "${stats.fastsThisMonth}",
                     longestFastThisMonth = longestFastDuration,
-                    onStatisticsClick = onStatisticsClick
+                    onStatisticsClick = onStatisticsClick,
+                    useExpressiveTheme = useExpressiveTheme
                 )
 
                 // History Section - only shown if streak is less than 2

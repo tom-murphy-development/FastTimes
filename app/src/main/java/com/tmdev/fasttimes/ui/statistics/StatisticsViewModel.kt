@@ -102,7 +102,8 @@ data class StatisticsUiState(
     val averageStartTime: LocalTime? = null,
     val mostFrequentDay: DayOfWeek? = null,
     val firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val useExpressiveTheme: Boolean = false
 )
 
 /**
@@ -123,8 +124,9 @@ class StatisticsViewModel @Inject constructor(
         _chartPeriod,
         settingsRepository.firstDayOfWeek.map { 
             try { DayOfWeek.valueOf(it.uppercase()) } catch (e: Exception) { DayOfWeek.MONDAY }
-        }
-    ) { fasts, period, chartPeriod, firstDayOfWeek ->
+        },
+        settingsRepository.userData
+    ) { fasts, period, chartPeriod, firstDayOfWeek, userData ->
         val completedFasts = fasts.filter { it.endTime != null }
         
         // Base stats (always calculated for the top section/all-time)
@@ -210,7 +212,8 @@ class StatisticsViewModel @Inject constructor(
             averageStartTime = averageStartTime,
             mostFrequentDay = mostFrequentDay,
             firstDayOfWeek = firstDayOfWeek,
-            isLoading = false
+            isLoading = false,
+            useExpressiveTheme = userData.useExpressiveTheme
         )
     }.stateIn(
         scope = viewModelScope,

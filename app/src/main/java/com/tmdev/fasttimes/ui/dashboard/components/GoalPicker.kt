@@ -18,16 +18,18 @@ package com.tmdev.fasttimes.ui.dashboard.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -36,9 +38,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tmdev.fasttimes.data.profile.FastingProfile
 import com.tmdev.fasttimes.data.profile.durationMinutes
@@ -46,9 +50,6 @@ import com.tmdev.fasttimes.ui.theme.spacing
 
 /** Minimum touch target, kept above the 48 dp floor at every font scale. */
 private val MinTargetHeight = 56.dp
-
-/** Reserved width for the duration glyph so every row's name column starts on the same axis. */
-private val DurationColumnWidth = 64.dp
 
 /**
  * The dashboard's primary task: pick a fasting goal and start it.
@@ -58,12 +59,13 @@ private val DurationColumnWidth = 64.dp
  * every other goal is an [OutlinedButton]. There are no nested cards, and every shape is a
  * [MaterialTheme.shapes] token so the geometry is identical on every launch.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GoalPicker(
     profiles: List<FastingProfile>,
     onStartFast: (FastingProfile) -> Unit,
     onManageProfilesClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val recommended = recommendedProfile(profiles)
     val remaining = profiles.filter { it !== recommended }
@@ -99,8 +101,19 @@ fun GoalPicker(
             RecommendedGoal(profile = profile, onStartFast = onStartFast)
         }
 
-        remaining.forEach { profile ->
-            GoalRow(profile = profile, onStartFast = onStartFast)
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+            maxItemsInEachRow = 2
+        ) {
+            remaining.forEach { profile ->
+                GoalCard(
+                    profile = profile,
+                    onStartFast = onStartFast,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
@@ -163,41 +176,37 @@ private fun RecommendedGoal(
 }
 
 @Composable
-private fun GoalRow(
+private fun GoalCard(
     profile: FastingProfile,
     onStartFast: (FastingProfile) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    OutlinedButton(
+    ElevatedCard(
         onClick = { onStartFast(profile) },
         modifier = modifier
-            .fillMaxWidth()
             .defaultMinSize(minHeight = MinTargetHeight),
         shape = MaterialTheme.shapes.large,
-        contentPadding = PaddingValues(
-            horizontal = MaterialTheme.spacing.medium,
-            vertical = MaterialTheme.spacing.small
-        ),
         content = {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(MaterialTheme.spacing.medium)
                     .semantics {
                         contentDescription = profile.accessibilityLabel()
                     },
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = profile.durationLabel(),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.widthIn(min = DurationColumnWidth)
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = profile.displayName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f)
+                    style = MaterialTheme.typography.labelLarge,
+                    textAlign = TextAlign.Center
                 )
             }
         }

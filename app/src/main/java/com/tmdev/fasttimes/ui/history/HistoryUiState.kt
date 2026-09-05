@@ -39,5 +39,6 @@ data class HistoryUiState(
     val longestFastInMonth: Fast? = null,
     val averageFastDurationInMonth: Long = 0L,
     val editingFastId: Long? = null,
-    val firstDayOfWeek: String = "Sunday"
+    val firstDayOfWeek: String = "Sunday",
+    val useExpressiveTheme: Boolean = false
 )

@@ -305,11 +305,25 @@ fun SettingsScreen(
                 ) {
                     Icon(imageVector = Icons.Default.CheckCircleOutline, contentDescription = null)
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = "Use Expressive Progress Indicator", style = settingsTextStyle)
+                    Text(text = "Use Wavy Progress Indicator", style = settingsTextStyle)
                     Spacer(modifier = Modifier.weight(1f))
                     Switch(
                         checked = uiState.useWavyIndicator,
                         onCheckedChange = viewModel::onUseWavyIndicatorChanged
+                    )
+                }
+                SettingsDivider()
+                Row(
+                    modifier = settingsRowModifier,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(text = "Use Expressive Shapes", style = settingsTextStyle)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = uiState.useExpressiveTheme,
+                        onCheckedChange = viewModel::onUseExpressiveThemeChanged
                     )
                 }
                 SettingsDivider()

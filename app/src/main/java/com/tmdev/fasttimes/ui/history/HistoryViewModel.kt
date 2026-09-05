@@ -127,8 +127,9 @@ class HistoryViewModel @Inject constructor(
         historyMonth,
         _selectedDay,
         _editingFastId,
-        settingsRepository.firstDayOfWeek
-    ) { month, selectedDay, editingFastId, firstDayOfWeek ->
+        settingsRepository.firstDayOfWeek,
+        settingsRepository.userData
+    ) { month, selectedDay, editingFastId, firstDayOfWeek, userData ->
         val displayedMonth = month.yearMonth
         val fastsInMonth = month.fastsInMonth
         
@@ -155,7 +156,8 @@ class HistoryViewModel @Inject constructor(
             longestFastInMonth = fastsInMonth.maxByOrNull { it.duration() },
             averageFastDurationInMonth = averageDuration,
             editingFastId = editingFastId,
-            firstDayOfWeek = firstDayOfWeek
+            firstDayOfWeek = firstDayOfWeek,
+            useExpressiveTheme = userData.useExpressiveTheme
         )
     }.stateIn(
         scope = viewModelScope,

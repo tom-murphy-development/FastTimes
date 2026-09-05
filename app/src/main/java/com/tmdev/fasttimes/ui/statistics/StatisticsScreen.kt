@@ -61,6 +61,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -75,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tmdev.fasttimes.ui.components.ExpressiveStatCard
+import com.tmdev.fasttimes.ui.components.rememberRandomExpressiveShape
 import com.tmdev.fasttimes.ui.formatDuration
 import com.tmdev.fasttimes.ui.theme.FastTimesPreviewTheme
 import com.tmdev.fasttimes.ui.theme.FastTimesTheme
@@ -85,6 +87,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -104,6 +107,11 @@ fun StatisticsScreen(
 ) {
     val state by viewModel.statisticsState.collectAsState()
     val locale = LocalConfiguration.current.locales[0]
+
+    // Generate random stable expressive shapes for the summary cards.
+    val streakShape = if (state.useExpressiveTheme) rememberRandomExpressiveShape(seed = remember { Random.nextInt() }) else MaterialTheme.shapes.large
+    val averageShape = if (state.useExpressiveTheme) rememberRandomExpressiveShape(seed = remember { Random.nextInt() }) else MaterialTheme.shapes.large
+    val consistencyShape = if (state.useExpressiveTheme) rememberRandomExpressiveShape(seed = remember { Random.nextInt() }) else MaterialTheme.shapes.large
 
     var allTimeExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -294,6 +302,7 @@ fun StatisticsScreen(
                                 unit = "days",
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                shape = streakShape,
                                 height = MaterialTheme.spacing.performanceStatCardHeight
                             )
                         } else {
@@ -304,6 +313,7 @@ fun StatisticsScreen(
                                 unit = "completed",
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                shape = streakShape,
                                 height = MaterialTheme.spacing.performanceStatCardHeight
                             )
                         }
@@ -319,6 +329,7 @@ fun StatisticsScreen(
                             },
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            shape = averageShape,
                             height = MaterialTheme.spacing.performanceStatCardHeight
                         )
                         
@@ -329,6 +340,7 @@ fun StatisticsScreen(
                             unit = "goals met",
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            shape = consistencyShape,
                             height = MaterialTheme.spacing.performanceStatCardHeight
                         )
                     }

@@ -171,8 +171,7 @@ fun FastTimesNavHost() {
                         HistoryScreen(
                             onViewFastDetails = { fastId ->
                                 navController.navigate("history/$fastId")
-                            },
-                            onSwipeBack = { scope.launch { draggableState.closeHistory() } }
+                            }
                         )
                     }
                 )

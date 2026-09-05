@@ -16,7 +16,6 @@
  */
 package com.tmdev.fasttimes.ui.history
 
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,7 +40,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,7 +57,6 @@ import java.util.Locale
 fun HistoryScreen(
     onViewFastDetails: (Long) -> Unit,
     onBackClick: (() -> Unit)? = null,
-    onSwipeBack: (() -> Unit)? = null,
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -81,13 +78,6 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(p)
                 .padding(MaterialTheme.spacing.medium)
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures { _, dragAmount ->
-                        if (dragAmount > 50) { // Threshold for swipe right
-                            onSwipeBack?.invoke()
-                        }
-                    }
-                }
         ) {
             CalendarView(
                 uiState = uiState,

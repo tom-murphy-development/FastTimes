@@ -20,12 +20,12 @@ ksp {
 
 android {
     namespace = "com.tmdev.fasttimes"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.tmdev.fasttimes"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 5
         versionName = "1.0.4"
 

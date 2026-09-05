@@ -1,6 +1,3 @@
-import org.gradle.api.tasks.testing.Test
-import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
-import org.gradle.testing.jacoco.tasks.JacocoReport
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -158,8 +155,14 @@ tasks.register<JacocoReport>("jacocoFossDebugReport") {
 
     sourceDirectories.setFrom(files("src/main/java", "src/foss/java", "src/debug/java"))
     classDirectories.setFrom(
-        layout.buildDirectory.dir("intermediates/classes/fossDebug/transformFossDebugClassesWithAsm/dirs")
-            .map { directory -> fileTree(directory).matching { exclude(generatedClassExclusions) } }
+        files(
+            fileTree(layout.buildDirectory.dir("intermediates/javac/fossDebug/classes")) {
+                exclude(generatedClassExclusions)
+            },
+            fileTree(layout.buildDirectory.dir("intermediates/kotlin-classes/fossDebug")) {
+                exclude(generatedClassExclusions)
+            }
+        )
     )
     executionData.setFrom(layout.buildDirectory.file("jacoco/testFossDebugUnitTest.exec"))
 

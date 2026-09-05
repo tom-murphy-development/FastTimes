@@ -60,7 +60,7 @@ jobs:
           if-no-files-found: error
 
   instrumentation:
-    name: Connected instrumentation (API 36)
+    name: Connected instrumentation (API 37)
     runs-on: ubuntu-latest
 
     steps:
@@ -76,17 +76,12 @@ jobs:
           distribution: temurin
           cache: gradle
 
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
       - name: Run connected tests
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
-          api-level: 36
+          api-level: 37
+          target: google_apis
           arch: x86_64
-          profile: pixel_6
+          ram-size: 4096M
           disable-animations: true
           script: ANDROID_SERIAL=emulator-5554 scripts/connected-tests.sh

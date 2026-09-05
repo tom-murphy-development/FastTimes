@@ -16,9 +16,11 @@
  */
 package com.tmdev.fasttimes.ui.statistics
 
+import com.tmdev.fasttimes.data.AppTheme
 import com.tmdev.fasttimes.data.fast.Fast
 import com.tmdev.fasttimes.data.fast.FastsRepository
 import com.tmdev.fasttimes.data.settings.SettingsRepository
+import com.tmdev.fasttimes.data.settings.UserData
 import com.tmdev.fasttimes.ui.dashboard.MainCoroutineRule
 import io.mockk.every
 import io.mockk.mockk
@@ -35,6 +37,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.time.Duration.Companion.hours
@@ -56,6 +59,18 @@ class StatisticsViewModelTest {
         
         every { fastsRepository.getFasts() } returns flowOf(emptyList())
         every { settingsRepository.firstDayOfWeek } returns flowOf("MONDAY")
+        every { settingsRepository.userData } returns flowOf(
+            UserData(
+                fastingGoal = Duration.ofHours(16),
+                theme = AppTheme.SYSTEM,
+                seedColor = null,
+                accentColor = null,
+                useWavyIndicator = false,
+                useExpressiveTheme = false,
+                useSystemColors = true,
+                showFastingPhases = true
+            )
+        )
     }
 
     @Test

@@ -42,7 +42,8 @@ jobs:
           build-mode: manual
 
       - name: Build application for CodeQL
-        run: ./gradlew --no-daemon assembleFossDebug
+        # CodeQL must observe compilation, not restore classes from Gradle's cache.
+        run: ./gradlew --no-daemon --no-build-cache --rerun-tasks assembleFossDebug
 
       - name: Analyze
         uses: github/codeql-action/analyze@c4dd10e44af883a891fe31ced449bcb4a6728b9b # v3.37.6

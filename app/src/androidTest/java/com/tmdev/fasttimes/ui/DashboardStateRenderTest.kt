@@ -66,6 +66,7 @@ class DashboardStateRenderTest {
         every { mockViewModel.favoriteProfile } returns MutableStateFlow(null)
         every { mockViewModel.showAlarmPermissionRationale } returns MutableStateFlow(false)
         every { mockViewModel.completedFast } returns MutableStateFlow(null)
+        every { mockViewModel.useExpressiveTheme } returns MutableStateFlow(false)
     }
 
     private fun renderDashboard(

@@ -59,6 +59,7 @@ class ResponsiveLayoutTest {
         every { mockDashboardViewModel.favoriteProfile } returns (MutableStateFlow(null))
         every { mockDashboardViewModel.showAlarmPermissionRationale } returns (MutableStateFlow(false))
         every { mockDashboardViewModel.completedFast } returns (MutableStateFlow(null))
+        every { mockDashboardViewModel.useExpressiveTheme } returns MutableStateFlow(false)
         
         // Default state: No fast in progress
         every { mockDashboardViewModel.uiState } returns (MutableStateFlow(DashboardUiState.NoFast(
